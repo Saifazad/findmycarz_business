@@ -1,0 +1,28 @@
+import 'package:flutter/material.dart';
+
+class SizeConfig {
+  static late MediaQueryData _mediaQueryData;
+  static late double screenWidth;
+  static late double screenHeight;
+  static late double blockSizeHorizontal;
+  static late double blockSizeVertical;
+
+  void init(BuildContext context){
+    _mediaQueryData = MediaQuery.of(context);
+    screenWidth = _mediaQueryData.size.width;
+    screenHeight = _mediaQueryData.size.height;
+
+
+    // Screen ko 100 hisson mein baant diya
+    blockSizeHorizontal = screenWidth/100;
+    blockSizeVertical = screenHeight/100;
+  }
+
+  static bool get isTablet =>  screenWidth >  600;
+  static bool get isMobile => screenWidth <=  600;
+
+}
+// helper function where we used in code
+
+double getRelativeHeight(double percentage) =>  SizeConfig.blockSizeVertical * percentage;
+double getRelativeWidth(double percentage) => SizeConfig.blockSizeHorizontal * percentage;
