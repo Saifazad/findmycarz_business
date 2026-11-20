@@ -13,6 +13,7 @@ class AuthViewModel extends ChangeNotifier {
   String? _token;
   String? _userName;
   String? _userEmail;
+  String? _profileImageUrl;
   UserRole _role = UserRole.unknown;
   String? _errorMessage;
 
@@ -21,6 +22,7 @@ class AuthViewModel extends ChangeNotifier {
   String? get token => _token;
   String? get userName => _userName;
   String? get userEmail => _userEmail;
+  String? get profileImageUrl => _profileImageUrl;
   UserRole get role => _role;
   String? get errorMessage => _errorMessage;
 
@@ -31,6 +33,7 @@ class AuthViewModel extends ChangeNotifier {
   static const String _kRole = "business_user_role";
   static const String _kName = "business_user_name";
   static const String _kEmail = "business_user_email";
+  static const String _kImage = "business_user_image";
 
   Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
@@ -38,6 +41,7 @@ class AuthViewModel extends ChangeNotifier {
     final savedRole = prefs.getString(_kRole);
     _userName = prefs.getString(_kName);
     _userEmail = prefs.getString(_kEmail);
+    _profileImageUrl = prefs.getString(_kImage);
 
     if (_token != null && _token!.isNotEmpty) {
       _isLoggedIn = true;
@@ -70,6 +74,7 @@ class AuthViewModel extends ChangeNotifier {
         final userData = data['user'] ?? data['admin'] ?? {};
         _userName = userData['name'] ?? 'Authorized User';
         _userEmail = userData['email'] ?? emailOrPhone;
+        _profileImageUrl = userData['profile_image'] ?? userData['avatar'];
         
         final roleStr = (userData['role'] ?? selectedRole ?? 'super_admin').toString();
         _role = _parseRole(roleStr);
@@ -118,12 +123,14 @@ class AuthViewModel extends ChangeNotifier {
     await prefs.remove(_kRole);
     await prefs.remove(_kName);
     await prefs.remove(_kEmail);
+    await prefs.remove(_kImage);
 
     _isLoggedIn = false;
     _token = null;
     _role = UserRole.unknown;
     _userName = null;
     _userEmail = null;
+    _profileImageUrl = null;
     notifyListeners();
   }
 
@@ -133,6 +140,7 @@ class AuthViewModel extends ChangeNotifier {
     await prefs.setString(_kRole, _roleToString(_role));
     if (_userName != null) await prefs.setString(_kName, _userName!);
     if (_userEmail != null) await prefs.setString(_kEmail, _userEmail!);
+    if (_profileImageUrl != null) await prefs.setString(_kImage, _profileImageUrl!);
   }
 
   UserRole _parseRole(String? roleStr) {

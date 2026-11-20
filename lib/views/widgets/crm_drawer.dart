@@ -8,7 +8,6 @@ import '../administrators/administrators_screen.dart';
 import '../cars/cars_screen.dart';
 import '../cars/my_inventory_screen.dart';
 import '../cars/owner_listed_cars_screen.dart';
-import '../payout/outward_payout_screen.dart';
 import '../leads/leads_list_screen.dart';
 import '../leads/insurance_leads_screen.dart';
 import '../contact/contact_screen.dart';
@@ -353,33 +352,6 @@ class CrmDrawer extends StatelessWidget {
                         MaterialPageRoute(
                             builder: (_) => const CrmRoleHierarchyScreen()),
                       );
-                    },
-                  ),
-                  if (authVM.isSuperAdmin)
-                    ListTile(
-                      leading: const Icon(Icons.payments_outlined,
-                          color: Color(0xFF003366)),
-                      title: Text("Outward Payouts",
-                          style:
-                              GoogleFonts.poppins(fontWeight: FontWeight.w500)),
-                      onTap: () {
-                        Navigator.pop(context);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => const OutwardPayoutScreen()),
-                        );
-                      },
-                    ),
-                  const Divider(),
-                  ListTile(
-                    leading: const Icon(Icons.directions_car_outlined,
-                        color: Color(0xFF003366)),
-                    title: Text("Inventory Fleet",
-                        style:
-                            GoogleFonts.poppins(fontWeight: FontWeight.w500)),
-                    onTap: () {
-                      Navigator.pop(context);
                     },
                   ),
                 ],
