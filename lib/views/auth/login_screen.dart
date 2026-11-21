@@ -36,7 +36,9 @@ class _LoginScreenState extends State<LoginScreen> {
       selectedRole: _selectedRole,
     );
 
-    if (success && mounted) {
+    if (!mounted) return;
+
+    if (success) {
       if (authVM.isSuperAdmin) {
         Navigator.pushReplacement(
           context,
@@ -48,6 +50,15 @@ class _LoginScreenState extends State<LoginScreen> {
           MaterialPageRoute(builder: (_) => const PartnerDashboardScreen()),
         );
       }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(authVM.errorMessage ?? "Invalid credentials. Please try again."),
+          backgroundColor: Colors.redAccent.shade700,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 4),
+        ),
+      );
     }
   }
 

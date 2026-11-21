@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/constants/api_config.dart';
 import '../core/network/dio_client.dart';
+import '../core/network/api_exceptions.dart';
 
 enum UserRole { superAdmin, partner, dealer, sourcingManager, unknown }
 
@@ -105,37 +106,13 @@ class AuthViewModel extends ChangeNotifier {
         } else {
           _errorMessage = data['message'] ?? "Invalid login credentials.";
         }
+      } else {
+        _errorMessage = "Server error (${response.statusCode}). Please try again.";
       }
+    } on ApiException catch (e) {
+      _errorMessage = e.message;
     } catch (e) {
-      // Offline/Demo fallback to allow testing without network or when local test environment is used
-      if (emailOrPhone.toLowerCase().contains('admin') ||
-          emailOrPhone.toLowerCase().contains('aws') ||
-          selectedRole == 'super_admin') {
-        _token = "demo_super_admin_sanctum_token";
-        _userName = "Find My Car Admin";
-        _userEmail = emailOrPhone;
-        _roleName = "Super Admin";
-        _adminCode = "AFMC0001";
-        _role = UserRole.superAdmin;
-        _isLoggedIn = true;
-        await _saveSession();
-        _isLoading = false;
-        notifyListeners();
-        return true;
-      } else if (emailOrPhone.toLowerCase().contains('partner') || selectedRole == 'partner') {
-        _token = "demo_partner_token";
-        _userName = "Partner Associate";
-        _userEmail = emailOrPhone;
-        _roleName = "Partner Associate";
-        _role = UserRole.partner;
-        _isLoggedIn = true;
-        await _saveSession();
-        _isLoading = false;
-        notifyListeners();
-        return true;
-      }
-
-      _errorMessage = "Login failed. Please verify credentials or connection.";
+      _errorMessage = e.toString().replaceFirst("Exception: ", "");
     }
 
     _isLoading = false;
