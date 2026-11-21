@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:developer' as dev;
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/api_config.dart';
 import 'api_exceptions.dart';
 
@@ -27,7 +28,23 @@ class DioClient {
       ),
     );
 
-    // Logging Interceptor for debugging in development mode using Dart VM Service Logger
+    // Dynamic Auth Token Interceptor (Bearer Token - Laravel Sanctum)
+    _dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) async {
+          try {
+            final prefs = await SharedPreferences.getInstance();
+            final token = prefs.getString('business_auth_token');
+            if (token != null && token.isNotEmpty) {
+              options.headers['Authorization'] = 'Bearer $token';
+            }
+          } catch (_) {}
+          return handler.next(options);
+        },
+      ),
+    );
+
+    // Logging Interceptor for debugging in development mode
     if (kDebugMode) {
       _dio.interceptors.add(VMDeveloperLogInterceptor());
     }

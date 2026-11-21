@@ -17,6 +17,7 @@ import '../content_management/car_loans_screen.dart';
 import '../content_management/flash_news_screen.dart';
 import '../user_management/users_screen.dart';
 import '../user_management/crm_role_hierarchy_screen.dart';
+import '../profile/admin_profile_screen.dart';
 import '../auth/login_screen.dart';
 
 class CrmDrawer extends StatelessWidget {
@@ -67,6 +68,14 @@ class CrmDrawer extends StatelessWidget {
                   color: Colors.white70,
                 ),
               ),
+              onDetailsPressed: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const AdminProfileScreen()),
+                );
+              },
             ),
 
             // Navigation Items
@@ -351,6 +360,37 @@ class CrmDrawer extends StatelessWidget {
                         context,
                         MaterialPageRoute(
                             builder: (_) => const CrmRoleHierarchyScreen()),
+                      );
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.manage_accounts_outlined,
+                        color: Color(0xFF003366)),
+                    title: Text("Profile & Security",
+                        style:
+                            GoogleFonts.poppins(fontWeight: FontWeight.w500)),
+                    trailing: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF003366).withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        "Live",
+                        style: GoogleFonts.poppins(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF003366),
+                        ),
+                      ),
+                    ),
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const AdminProfileScreen()),
                       );
                     },
                   ),
