@@ -32,7 +32,7 @@ class AdministratorsScreen extends StatefulWidget {
 }
 
 class _AdministratorsScreenState extends State<AdministratorsScreen> {
-  bool _isDarkMode = false;
+  final bool _isDarkMode = false;
   String _searchQuery = "";
   String _activeStatusTab = "Approved"; // "Approved" or "UnApproved"
   int _entriesPerPage = 10;
@@ -451,20 +451,6 @@ class _AdministratorsScreenState extends State<AdministratorsScreen> {
           ),
         ),
         actions: [
-          IconButton(
-            tooltip: _isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode",
-            icon: Icon(
-              _isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_outlined,
-              color: _isDarkMode
-                  ? const Color(0xFFFBBF24)
-                  : const Color(0xFF334155),
-            ),
-            onPressed: () {
-              setState(() {
-                _isDarkMode = !_isDarkMode;
-              });
-            },
-          ),
           IconButton(
             icon: Icon(
               Icons.notifications_none_rounded,

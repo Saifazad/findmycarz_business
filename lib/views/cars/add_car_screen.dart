@@ -7,7 +7,15 @@ import '../widgets/admin_profile_avatar.dart';
 
 class AddCarScreen extends StatefulWidget {
   final String carUid;
-  const AddCarScreen({super.key, this.carUid = "#CARUID979"});
+  final dynamic existingVehicle;
+  final bool isEditMode;
+
+  const AddCarScreen({
+    super.key,
+    this.carUid = "#CARUID979",
+    this.existingVehicle,
+    this.isEditMode = false,
+  });
 
   @override
   State<AddCarScreen> createState() => _AddCarScreenState();
@@ -16,13 +24,16 @@ class AddCarScreen extends StatefulWidget {
 class _AddCarScreenState extends State<AddCarScreen> {
   final _formKey = GlobalKey<FormState>();
 
+  // 4-Step Wizard Stepper State
+  int _currentStep = 0;
+
   // Accordion Expand/Collapse States
   bool _primaryDetailsExpanded = true;
-  bool _seoMetadataExpanded = true;
+  bool _seoMetadataExpanded = false;
   bool _dragAndSortEnabled = true;
 
   // Publishing State (Image 1 & 2)
-  bool _publishingExpanded = true;
+  bool _publishingExpanded = false;
   String _publishingStatus = "Published";
   String _location = "...";
   String _homepageVisibility = "Show";
@@ -36,18 +47,18 @@ class _AddCarScreenState extends State<AddCarScreen> {
 
   // Home Sections & Tax Rules State (Image: media_1795250345980_1bcf08c7.png)
   List<String> _selectedHomeSections = [];
-  bool _homeSectionsExpanded = true;
+  bool _homeSectionsExpanded = false;
   bool _isAddingHomeSection = false;
   final _newHomeSectionNameCtrl = TextEditingController();
   bool _newHomeSectionPriceTabs = false;
   String _selectedRtoRule = ": Max ₹500,000 (12.00%)";
-  bool _rtoRulesExpanded = true;
+  bool _rtoRulesExpanded = false;
   bool _isAddingRtoRule = false;
   String _newRtoState = "State";
   final _newRtoMaxPriceCtrl = TextEditingController();
   final _newRtoPercentageCtrl = TextEditingController();
   String _selectedTcsRule = "Above ₹500,000 @ 12.00%";
-  bool _tcsRulesExpanded = true;
+  bool _tcsRulesExpanded = false;
   bool _isAddingTcsRule = false;
   final _newTcsAbovePriceCtrl = TextEditingController();
   final _newTcsPercentageCtrl = TextEditingController();
@@ -77,24 +88,24 @@ class _AddCarScreenState extends State<AddCarScreen> {
   ];
 
   // Make, Model & Features State
-  bool _manufacturerExpanded = true;
+  bool _manufacturerExpanded = false;
   final _manufacturerSearchCtrl = TextEditingController();
   bool _isAddingManufacturer = false;
   final _newManufacturerNameCtrl = TextEditingController();
   String? _newManufacturerImageMock;
-  bool _modelExpanded = true;
+  bool _modelExpanded = false;
   final _modelSearchCtrl = TextEditingController();
   bool _isAddingModel = false;
   final _newModelNameCtrl = TextEditingController();
-  bool _bodyTypeExpanded = true;
+  bool _bodyTypeExpanded = false;
   final _bodyTypeSearchCtrl = TextEditingController();
   bool _isAddingBodyType = false;
   final _newBodyTypeNameCtrl = TextEditingController();
-  bool _exteriorColorExpanded = true;
+  bool _exteriorColorExpanded = false;
   final _exteriorColorSearchCtrl = TextEditingController();
   bool _isAddingExteriorColor = false;
   final _newExteriorColorNameCtrl = TextEditingController();
-  bool _featuresExpanded = true;
+  bool _featuresExpanded = false;
   final _featuresSearchCtrl = TextEditingController();
   bool _isAddingFeature = false;
   final _newFeatureNameCtrl = TextEditingController();
@@ -105,6 +116,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
   List<String> _selectedFeatures = [];
 
   final Set<String> _hiddenManufacturers = {};
+  final Set<String> _hiddenModels = {};
   final Set<String> _hiddenBodyTypes = {};
   final Set<String> _hiddenExteriorColors = {};
   final Set<String> _hiddenFeatures = {};
@@ -163,6 +175,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
       "Alcazar",
       "Tucson",
       "Ioniq 5",
+      "Xcent",
     ],
     "Tata Motors": [
       "Nexon",
@@ -273,6 +286,267 @@ class _AddCarScreenState extends State<AddCarScreen> {
         widget.carUid.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
     _permanentUrlSlugCtrl.text =
         cleanUid.isNotEmpty ? cleanUid : "caruid979";
+    if (widget.isEditMode || widget.existingVehicle != null) {
+      _prefillExistingData();
+    }
+  }
+
+  void _prefillExistingData() {
+    final v = widget.existingVehicle;
+    if (v == null && !widget.isEditMode) return;
+
+    // 1. Vehicle Type
+    try {
+      final condition = (v?.condition ?? "").toString().toLowerCase();
+      if (condition.contains("new")) {
+        _vehicleType = "New car";
+      } else {
+        _vehicleType = "Used car";
+      }
+    } catch (_) {}
+
+    // 2. Status
+    try {
+      final avail = (v?.availability ?? v?.status ?? "").toString();
+      if (_statusOptions.contains(avail)) {
+        _status = avail;
+      }
+    } catch (_) {}
+
+    // 3. Make & Model
+    String makeModelStr = "";
+    try {
+      makeModelStr = (v?.makeModel ?? v?.title ?? "").toString();
+    } catch (_) {}
+
+    if (makeModelStr.isNotEmpty) {
+      _carNameCtrl.text = makeModelStr;
+
+      // Auto-detect manufacturer
+      final upper = makeModelStr.toUpperCase();
+      if (upper.contains("TOYOTA")) {
+        _selectedManufacturer = "Toyota";
+      } else if (upper.contains("HYUNDAI")) {
+        _selectedManufacturer = "Hyundai";
+      } else if (upper.contains("MARUTI")) {
+        _selectedManufacturer = "Maruti Suzuki";
+      } else if (upper.contains("BMW")) {
+        _selectedManufacturer = "BMW";
+      } else if (upper.contains("AUDI")) {
+        _selectedManufacturer = "AUDI";
+      } else if (upper.contains("TATA")) {
+        _selectedManufacturer = "Tata Motors";
+      } else if (upper.contains("MAHINDRA")) {
+        _selectedManufacturer = "Mahindra";
+      } else if (upper.contains("HONDA")) {
+        _selectedManufacturer = "Honda";
+      } else if (upper.contains("KIA")) {
+        _selectedManufacturer = "Kia";
+      }
+
+      // Auto-detect model
+      if (_modelsByManufacturer.containsKey(_selectedManufacturer)) {
+        final models = _modelsByManufacturer[_selectedManufacturer]!;
+        for (final m in models) {
+          if (upper.contains(m.toUpperCase())) {
+            _selectedModel = m;
+            break;
+          }
+        }
+      }
+
+      // Body Type
+      if (upper.contains("FORTUNER") ||
+          upper.contains("BREZZA") ||
+          upper.contains("THAR") ||
+          upper.contains("SCORPIO") ||
+          upper.contains("HARRIER")) {
+        _selectedBodyType = "5 DOOR STEEL SHELL";
+      } else if (upper.contains("XCENT") ||
+          upper.contains("CITY") ||
+          upper.contains("VERNA") ||
+          upper.contains("DZIRE") ||
+          upper.contains("AURA")) {
+        _selectedBodyType = "CAR (SEDAN)";
+      }
+    }
+
+    // 4. Year
+    try {
+      final y = (v?.year ?? v?.yearModel ?? "").toString();
+      if (y.isNotEmpty) {
+        _makeYearCtrl.text = y;
+      }
+    } catch (_) {}
+
+    // 5. Location & RTO
+    try {
+      final loc = (v?.location ?? "").toString();
+      if (loc.isNotEmpty) {
+        _location = loc;
+        final locUpper = loc.toUpperCase();
+        if (locUpper.contains("DEHRADUN") ||
+            locUpper.contains("UTTARANCHAL") ||
+            locUpper.contains("UTTARAKHAND")) {
+          _rtoCode = "UK-07 (Dehradun)";
+        } else if (locUpper.contains("BIKANER") ||
+            locUpper.contains("JAIPUR") ||
+            locUpper.contains("RAJASTHAN")) {
+          _rtoCode = "RJ-14 (Jaipur)";
+        } else if (locUpper.contains("DELHI")) {
+          _rtoCode = "DL-01 (Delhi North)";
+        } else if (locUpper.contains("NOIDA")) {
+          _rtoCode = "UP-16 (Noida)";
+        } else if (locUpper.contains("GURGAON")) {
+          _rtoCode = "HR-26 (Gurgaon)";
+        }
+      }
+    } catch (_) {}
+
+    // 6. Owner / Agent Name
+    try {
+      final owner =
+          (v?.agent ?? v?.ownerName ?? v?.company ?? "").toString();
+      if (owner.isNotEmpty) {
+        _ownerNameCtrl.text = owner;
+      }
+    } catch (_) {}
+
+    // 7. RC Number
+    final uidClean =
+        widget.carUid.replaceAll("#", "").replaceAll("-", "").trim();
+    if (_rtoCode.startsWith("UK-07")) {
+      _rcNumberCtrl.text =
+          "UK07AB${uidClean.length >= 4 ? uidClean.substring(uidClean.length - 4) : uidClean}";
+    } else if (_rtoCode.startsWith("RJ-14")) {
+      _rcNumberCtrl.text =
+          "RJ14CA${uidClean.length >= 4 ? uidClean.substring(uidClean.length - 4) : uidClean}";
+    } else {
+      _rcNumberCtrl.text =
+          "DL01AQ${uidClean.length >= 4 ? uidClean.substring(uidClean.length - 4) : uidClean}";
+    }
+
+    // 8. Seating capacity, Engine CC, Price, KMs
+    final mmUpper = makeModelStr.toUpperCase();
+    if (mmUpper.contains("FORTUNER") || mmUpper.contains("INNOVA")) {
+      _seatingCapacity = "7 Seater";
+      _engineCcCtrl.text = "2755";
+      _grossWeightCtrl.text = "2610";
+      _unladenWeightCtrl.text = "2180";
+      _askingPriceCtrl.text = "15,50,000";
+      _kmDrivenCtrl.text = "68,000";
+      _mileageCtrl.text = "14.2 km/l";
+      _fuelType = "Diesel";
+      _transmission = "Automatic";
+    } else if (mmUpper.contains("BREZZA")) {
+      _seatingCapacity = "5 Seater";
+      _engineCcCtrl.text = "1462";
+      _grossWeightCtrl.text = "1680";
+      _unladenWeightCtrl.text = "1180";
+      _askingPriceCtrl.text = "8,25,000";
+      _kmDrivenCtrl.text = "42,000";
+      _mileageCtrl.text = "17.0 km/l";
+      _fuelType = "Petrol";
+      _transmission = "Manual";
+    } else if (mmUpper.contains("XCENT")) {
+      _seatingCapacity = "5 Seater";
+      _engineCcCtrl.text = "1197";
+      _grossWeightCtrl.text = "1420";
+      _unladenWeightCtrl.text = "980";
+      _askingPriceCtrl.text = "3,85,000";
+      _kmDrivenCtrl.text = "55,000";
+      _mileageCtrl.text = "19.1 km/l";
+      _fuelType = "Diesel";
+      _transmission = "Manual";
+    } else {
+      _seatingCapacity = "5 Seater";
+      _engineCcCtrl.text = "1498";
+      _grossWeightCtrl.text = "1650";
+      _unladenWeightCtrl.text = "1150";
+      _askingPriceCtrl.text = "6,50,000";
+      _kmDrivenCtrl.text = "48,000";
+      _mileageCtrl.text = "16.5 km/l";
+      _fuelType = "Petrol";
+      _transmission = "Manual";
+    }
+
+    // Price override if available
+    try {
+      final p = (v?.price ?? "").toString();
+      if (p.isNotEmpty) {
+        _askingPriceCtrl.text = p;
+      }
+      final k = (v?.kms ?? "").toString();
+      if (k.isNotEmpty) {
+        _kmDrivenCtrl.text = k;
+      }
+    } catch (_) {}
+
+    // Technical details
+    _cylindersCtrl.text = "4";
+    _insuranceCompanyCtrl.text = "HDFC ERGO General Insurance";
+    _policyNumberCtrl.text = "POL2026887712";
+    _engineNumberCtrl.text = "1GD-FTV458921";
+    _chassisNumberCtrl.text = "MBJ11FE22K00124";
+    _financerCtrl.text = "HDFC Bank Ltd";
+    _discountCtrl.text = "25,000";
+    _fitnessValidUptoCtrl.text = "28 Nov 2028";
+    _registrationDateCtrl.text = "17 Nov 2020";
+    _insuranceExpiryCtrl.text = "15 Oct 2027";
+    _puccValidUptoCtrl.text = "12 Mar 2027";
+    _rcStatus = "Active";
+    _ownership = "1st Owner";
+
+    // Description
+    try {
+      final sub = (v?.subtitle ?? makeModelStr).toString();
+      _descriptionCtrl.text =
+          "$sub in excellent condition. Well-maintained, certified single-owner vehicle with complete service history.";
+    } catch (_) {}
+
+    // SEO
+    _metaTitleCtrl.text = "$makeModelStr | Find My Carz";
+    _metaKeywordsCtrl.text =
+        "used car, $makeModelStr, certified car, $_location";
+    _metaDescriptionCtrl.text =
+        "Buy certified $makeModelStr in $_location at best price with warranty and easy financing.";
+
+    // Publishing
+    try {
+      final st = (v?.status ?? "").toString().toLowerCase();
+      if (st == "inactive" || st == "draft") {
+        _publishingStatus = "Draft";
+      } else {
+        _publishingStatus = "Published";
+      }
+      final vis = (v?.visibility ?? "").toString().toLowerCase();
+      if (vis == "private" || vis == "hide") {
+        _homepageVisibility = "Hide";
+      } else {
+        _homepageVisibility = "Show";
+      }
+    } catch (_) {}
+
+    // Features & Colors
+    _selectedExteriorColor = "White";
+    _selectedFeatures = [
+      "Alloy Wheels",
+      "Bluetooth",
+      "Floor Mats",
+      "Electric side mirror",
+    ];
+
+    // Images
+    try {
+      final img = (v?.image ?? "").toString();
+      if (img.isNotEmpty) {
+        _uploadedImages.add(img);
+      } else {
+        _uploadedImages.add("assets/images/car1.webp");
+      }
+    } catch (_) {
+      _uploadedImages.add("assets/images/car1.webp");
+    }
   }
 
   // Dropdown States
@@ -506,7 +780,9 @@ class _AddCarScreenState extends State<AddCarScreen> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text("Vehicle ${widget.carUid} added successfully!"),
+        content: Text(widget.isEditMode
+            ? "Vehicle ${widget.carUid} updated successfully!"
+            : "Vehicle ${widget.carUid} added successfully!"),
         backgroundColor: const Color(0xFF008844),
       ),
     );
@@ -525,7 +801,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
           text: TextSpan(
             children: [
               TextSpan(
-                text: "Add new car ",
+                text: widget.isEditMode ? "Edit car " : "Add new car ",
                 style: GoogleFonts.poppins(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -550,81 +826,224 @@ class _AddCarScreenState extends State<AddCarScreen> {
       ),
       body: Form(
         key: _formKey,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 1. Primary Details Section (Card)
-              _buildPrimaryDetailsCard(),
-              const SizedBox(height: 14),
+        child: Column(
+          children: [
+            // Pinned/Fixed Stepper Header (stays fixed when scrolling)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              child: _buildStepperIndicator(),
+            ),
 
-              // 2. Individual Slim Action Tiles (from Image 1: Publishing, Manufacturer, Model, Body Type, Exterior Color, Features, Home Sections, RTO Rules, TCS Rules)
-              _buildSlimTilesSection(),
-              const SizedBox(height: 6),
+            // Scrollable Active Step Content & Navigation
+            Expanded(
+              child: SingleChildScrollView(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Active Step Content
+                    if (_currentStep == 0)
+                      _buildPrimaryDetailsCard()
+                    else if (_currentStep == 1) ...[
+                      _buildManufacturerCard(),
+                      const SizedBox(height: 14),
+                      _buildModelCard(),
+                    ] else if (_currentStep == 2) ...[
+                      _buildBodyTypeCard(),
+                      const SizedBox(height: 14),
+                      _buildExteriorColorCard(),
+                    ] else if (_currentStep == 3) ...[
+                      _buildFeaturesCard(),
+                      const SizedBox(height: 14),
+                      _buildHomeSectionsCard(),
+                      const SizedBox(height: 14),
+                      _buildRtoRulesCard(),
+                      const SizedBox(height: 14),
+                      _buildTcsRulesCard(),
+                      const SizedBox(height: 14),
+                      _buildPublishingCard(),
+                    ] else if (_currentStep == 4)
+                      _buildImageGalleryCard()
+                    else
+                      _buildSeoMetadataCard(),
 
-              // 3. Image Gallery Section (Card)
-              _buildImageGalleryCard(),
-              const SizedBox(height: 14),
+                    const SizedBox(height: 24),
 
-              // 4. SEO & Metadata Section (Card from Image 2)
-              _buildSeoMetadataCard(),
-              const SizedBox(height: 24),
-
-              // Bottom Action Buttons
-              Row(
-                children: [
-                  Expanded(
-                    flex: 2,
-                    child: ElevatedButton.icon(
-                      onPressed: _submitForm,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF003366),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        elevation: 0,
-                      ),
-                      icon: const Icon(Icons.check_circle_outline, size: 18),
-                      label: Text(
-                        "Save Vehicle",
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: const Color(0xFF64748B),
-                        side: const BorderSide(color: Color(0xFFCBD5E1)),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      child: Text(
-                        "Cancel",
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+                    // Bottom Step Navigation & Actions
+                    _buildStepNavigationButtons(),
+                    const SizedBox(height: 30),
+                  ],
+                ),
               ),
-              const SizedBox(height: 30),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
+    );
+  }
+
+  // Modern 6-Step Wizard Stepper Header
+  Widget _buildStepperIndicator() {
+    final stepTitles = [
+      "Primary Details",
+      "Make & Model",
+      "Body & Color",
+      "Features & Rules",
+      "Image Gallery",
+      "SEO & Metadata",
+    ];
+
+    return Container(
+      margin: EdgeInsets.zero,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x05000000),
+            blurRadius: 6,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Step Counter Badge & Title
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF003366),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  "Step ${_currentStep + 1} of 6",
+                  style: GoogleFonts.poppins(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                stepTitles[_currentStep],
+                style: GoogleFonts.poppins(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF0F172A),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+
+          // Linear Progress Bar
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: (_currentStep + 1) / 6,
+              backgroundColor: const Color(0xFFF1F5F9),
+              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF003366)),
+              minHeight: 5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Bottom Step Navigation Buttons
+  Widget _buildStepNavigationButtons() {
+    return Row(
+      children: [
+        // 1. Back Button (always present: goes to previous step, or exits screen on Step 1)
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: () {
+              if (_currentStep > 0) {
+                setState(() {
+                  _currentStep--;
+                });
+              } else {
+                Navigator.pop(context);
+              }
+            },
+            style: OutlinedButton.styleFrom(
+              foregroundColor: const Color(0xFF475569),
+              side: const BorderSide(color: Color(0xFFCBD5E1)),
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            icon: const Icon(Icons.arrow_back, size: 16),
+            label: Text(
+              "Back",
+              style: GoogleFonts.poppins(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+
+        // 2. Next / Save Vehicle Button
+        Expanded(
+          child: _currentStep < 5
+              ? ElevatedButton.icon(
+                  onPressed: () {
+                    setState(() {
+                      _currentStep++;
+                    });
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF003366),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    elevation: 0,
+                  ),
+                  icon: const Icon(Icons.arrow_forward, size: 16),
+                  label: Text(
+                    "Next",
+                    style: GoogleFonts.poppins(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                )
+              : ElevatedButton.icon(
+                  onPressed: _submitForm,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF008844),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    elevation: 0,
+                  ),
+                  icon: const Icon(Icons.check_circle_outline, size: 18),
+                  label: Text(
+                    "Save Vehicle",
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+        ),
+      ],
     );
   }
 
@@ -1078,40 +1497,6 @@ class _AddCarScreenState extends State<AddCarScreen> {
             ),
         ],
       ),
-    );
-  }
-
-  // ================= 2. INDIVIDUAL SLIM ACTION TILES (IMAGE 1) =================
-  Widget _buildSlimTilesSection() {
-    return Column(
-      children: [
-        // 1. Publishing Card (Image 2)
-        _buildPublishingCard(),
-
-        // 2. Manufacturer * (Card - Image 2)
-        _buildManufacturerCard(),
-
-        // 3. Model * (Card - Image 2)
-        _buildModelCard(),
-
-        // 4. Body Type (Card - Image 1)
-        _buildBodyTypeCard(),
-
-        // 5. Exterior Color * (Card - Image 2)
-        _buildExteriorColorCard(),
-
-        // 6. Features (Card - Image: media_1795247375638_4da3646e.png)
-        _buildFeaturesCard(),
-
-        // 7. Home Sections (Card - Image: media_1795250345980_1bcf08c7.png)
-        _buildHomeSectionsCard(),
-
-        // 8. RTO Rules (Card - Image: media_1795250427655_43ea47ea.png)
-        _buildRtoRulesCard(),
-
-        // 9. TCS Rules (Card - Image: media_1795251494893_a7a37d5e.png)
-        _buildTcsRulesCard(),
-      ],
     );
   }
 
@@ -2837,6 +3222,8 @@ class _AddCarScreenState extends State<AddCarScreen> {
     VoidCallback? onTapOverride,
     VoidCallback? onStateChange,
   }) {
+    final isHidden = _hiddenModels.contains(mod);
+
     return InkWell(
       onTap: onTapOverride ??
           () {
@@ -2860,9 +3247,11 @@ class _AddCarScreenState extends State<AddCarScreen> {
                   ? Icons.radio_button_checked
                   : Icons.radio_button_unchecked,
               size: 20,
-              color: isSelected
-                  ? const Color(0xFF2563EB)
-                  : const Color(0xFFCBD5E1),
+              color: isHidden
+                  ? const Color(0xFFCBD5E1)
+                  : (isSelected
+                      ? const Color(0xFF2563EB)
+                      : const Color(0xFFCBD5E1)),
             ),
             const SizedBox(width: 12),
 
@@ -2873,22 +3262,41 @@ class _AddCarScreenState extends State<AddCarScreen> {
                 style: GoogleFonts.poppins(
                   fontSize: 13.5,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                  color: const Color(0xFF0F172A),
+                  color: isHidden
+                      ? const Color(0xFF94A3B8)
+                      : const Color(0xFF0F172A),
+                  decoration: isHidden
+                      ? TextDecoration.lineThrough
+                      : TextDecoration.none,
+                  decorationColor: const Color(0xFF94A3B8),
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
 
-            // Action 1: Eye (View)
+            // Action 1: Eye (Toggle Hide)
             InkWell(
-              onTap: () => _viewModelDetails(mod),
+              onTap: () {
+                setState(() {
+                  if (_hiddenModels.contains(mod)) {
+                    _hiddenModels.remove(mod);
+                  } else {
+                    _hiddenModels.add(mod);
+                  }
+                });
+                onStateChange?.call();
+              },
               borderRadius: BorderRadius.circular(4),
-              child: const Padding(
-                padding: EdgeInsets.all(5),
+              child: Padding(
+                padding: const EdgeInsets.all(5),
                 child: Icon(
-                  Icons.visibility_outlined,
+                  isHidden
+                      ? Icons.visibility_off_outlined
+                      : Icons.remove_red_eye_outlined,
                   size: 19,
-                  color: Color(0xFF14B8A6),
+                  color: isHidden
+                      ? const Color(0xFF94A3B8)
+                      : const Color(0xFF14B8A6),
                 ),
               ),
             ),
@@ -2925,94 +3333,6 @@ class _AddCarScreenState extends State<AddCarScreen> {
           ],
         ),
       ),
-    );
-  }
-
-  void _viewModelDetails(String mod) {
-    showDialog(
-      context: context,
-      builder: (ctx) {
-        return AlertDialog(
-          backgroundColor: Colors.white,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          title: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFECFEFF),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: const Icon(Icons.directions_car_filled_rounded,
-                    color: Color(0xFF0891B2), size: 18),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  mod,
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFF0F172A),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFDCFCE7),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  "Status: Active Production Model",
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF15803D),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                "Manufacturer: ${_selectedManufacturer != 'Select' ? _selectedManufacturer : 'Generic / Multibrand'}",
-                style: GoogleFonts.poppins(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: const Color(0xFF475569),
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                "Supported Variants: Petrol, Diesel, CNG, Hybrid",
-                style: GoogleFonts.poppins(
-                  fontSize: 12,
-                  color: const Color(0xFF64748B),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(
-                "Close",
-                style: GoogleFonts.poppins(
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFF003366),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
     );
   }
 

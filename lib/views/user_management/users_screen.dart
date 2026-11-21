@@ -32,7 +32,7 @@ class UsersScreen extends StatefulWidget {
 }
 
 class _UsersScreenState extends State<UsersScreen> {
-  bool _isDarkMode = false;
+  final bool _isDarkMode = false;
   int _entriesPerPage = 10;
   int _currentPage = 1;
   String _searchQuery = "";
@@ -278,20 +278,6 @@ class _UsersScreenState extends State<UsersScreen> {
         ),
         actions: [
           IconButton(
-            tooltip: _isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode",
-            icon: Icon(
-              _isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_outlined,
-              color: _isDarkMode
-                  ? const Color(0xFFFBBF24)
-                  : const Color(0xFF334155),
-            ),
-            onPressed: () {
-              setState(() {
-                _isDarkMode = !_isDarkMode;
-              });
-            },
-          ),
-          IconButton(
             icon: Icon(
               Icons.notifications_none_rounded,
               color: _isDarkMode ? Colors.white : const Color(0xFF334155),
@@ -445,7 +431,7 @@ class _UsersScreenState extends State<UsersScreen> {
                             ? Colors.white
                             : const Color(0xFF1E293B),
                       ),
-                      items: [10, 20, 50, 100].map((int val) {
+                      items: [5, 10, 15, 20, 25].map((int val) {
                         return DropdownMenuItem<int>(
                           value: val,
                           child: Text("$val"),
