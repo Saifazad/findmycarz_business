@@ -1,3 +1,5 @@
+import 'crm_lead_model.dart';
+
 class AdminDashboardModel {
   final int totalCars;
   final int availableCars;
@@ -5,6 +7,10 @@ class AdminDashboardModel {
   final int ownerListedCars;
   final int myInventory;
   final int totalBrands;
+  final int totalLeads;
+  final int totalLogins;
+  final int totalDisbursed;
+  final int insuranceLeads;
 
   final LoanCategoryStats usedCarLoans;
   final LoanCategoryStats newCarLoans;
@@ -15,13 +21,20 @@ class AdminDashboardModel {
   final LoanCategoryStats homeLoans;
   final LoanCategoryStats lapLoans;
 
+  final List<CrmLeadModel> recentLeads;
+  final List<RecentCarItem> recentCars;
+
   AdminDashboardModel({
-    this.totalCars = 901,
-    this.availableCars = 602,
+    this.totalCars = 900,
+    this.availableCars = 601,
     this.soldCars = 299,
     this.ownerListedCars = 168,
-    this.myInventory = 901,
+    this.myInventory = 900,
     this.totalBrands = 43,
+    this.totalLeads = 69,
+    this.totalLogins = 5,
+    this.totalDisbursed = 10,
+    this.insuranceLeads = 11,
     LoanCategoryStats? usedCarLoans,
     LoanCategoryStats? newCarLoans,
     LoanCategoryStats? btTopupLoans,
@@ -30,12 +43,14 @@ class AdminDashboardModel {
     LoanCategoryStats? businessLoans,
     LoanCategoryStats? homeLoans,
     LoanCategoryStats? lapLoans,
+    List<CrmLeadModel>? recentLeads,
+    List<RecentCarItem>? recentCars,
   })  : usedCarLoans = usedCarLoans ??
             LoanCategoryStats(
-                files: 43, inBankLogin: 1, approved: 1, disbursed: 8, totalLeads: 43),
+                files: 43, inBankLogin: 1, approved: 1, disbursed: 7, totalLeads: 43),
         newCarLoans = newCarLoans ??
             LoanCategoryStats(
-                files: 2, inBankLogin: 0, approved: 0, disbursed: 0, totalLeads: 2),
+                files: 3, inBankLogin: 0, approved: 0, disbursed: 0, totalLeads: 3),
         btTopupLoans = btTopupLoans ??
             LoanCategoryStats(
                 files: 14, inBankLogin: 4, approved: 0, disbursed: 0, totalLeads: 14),
@@ -53,31 +68,52 @@ class AdminDashboardModel {
                 files: 1, inBankLogin: 0, approved: 0, disbursed: 0, totalLeads: 1),
         lapLoans = lapLoans ??
             LoanCategoryStats(
-                files: 1, inBankLogin: 0, approved: 0, disbursed: 1, totalLeads: 1);
+                files: 1, inBankLogin: 0, approved: 0, disbursed: 1, totalLeads: 1),
+        recentLeads = recentLeads ?? const [],
+        recentCars = recentCars ?? const [];
 
   factory AdminDashboardModel.fromJson(Map<String, dynamic> json) {
-    final carsData = json['car_management'] ?? json['cars'] ?? {};
-    final loansData = json['loans'] ?? json['loan_types'] ?? {};
+    final rootData = json['data'] is Map ? json['data'] as Map<String, dynamic> : json;
+    final stats = rootData['stats'] is Map ? rootData['stats'] as Map<String, dynamic> : rootData;
+    final loansData = rootData['loan_types_breakdown'] ?? rootData['loan_types'] ?? rootData['loans'] ?? {};
+
+    // Parse leads if present
+    List<CrmLeadModel> parsedLeads = [];
+    if (rootData['leads'] is List) {
+      parsedLeads = (rootData['leads'] as List)
+          .map((e) => CrmLeadModel.fromJson(e as Map<String, dynamic>))
+          .toList();
+    }
+
+    // Parse recent cars if present
+    List<RecentCarItem> parsedCars = [];
+    if (rootData['recent_cars'] is List) {
+      parsedCars = (rootData['recent_cars'] as List)
+          .map((e) => RecentCarItem.fromJson(e as Map<String, dynamic>))
+          .toList();
+    }
 
     return AdminDashboardModel(
-      totalCars: _parseInt(carsData['total_cars'] ?? json['total_cars'], 901),
-      availableCars:
-          _parseInt(carsData['available_cars'] ?? json['available_cars'], 602),
-      soldCars: _parseInt(carsData['sold_cars'] ?? json['sold_cars'], 299),
-      ownerListedCars: _parseInt(
-          carsData['owner_listed_cars'] ?? json['owner_listed_cars'], 168),
-      myInventory:
-          _parseInt(carsData['my_inventory'] ?? json['my_inventory'], 901),
-      totalBrands: _parseInt(carsData['brands'] ?? json['brands'], 43),
-      usedCarLoans: LoanCategoryStats.fromJson(loansData['used_car_loan']),
-      newCarLoans: LoanCategoryStats.fromJson(loansData['new_car_loan']),
-      btTopupLoans: LoanCategoryStats.fromJson(loansData['bt_topup_loan']),
-      refinanceLoans: LoanCategoryStats.fromJson(loansData['refinance_loan']),
-      personalLoans: LoanCategoryStats.fromJson(loansData['personal_loan']),
-      businessLoans: LoanCategoryStats.fromJson(loansData['business_loan']),
-      homeLoans: LoanCategoryStats.fromJson(loansData['home_loan']),
-      lapLoans: LoanCategoryStats.fromJson(
-          loansData['lap_loan'] ?? loansData['loan_against_property']),
+      totalCars: _parseInt(stats['total_cars'], 900),
+      availableCars: _parseInt(stats['available_cars'], 601),
+      soldCars: _parseInt(stats['sold_cars'], 299),
+      ownerListedCars: _parseInt(stats['owner_cars'] ?? stats['owner_listed_cars'], 168),
+      myInventory: _parseInt(stats['total_cars'], 900),
+      totalBrands: _parseInt(stats['total_brands'] ?? stats['brands'], 43),
+      totalLeads: _parseInt(stats['total_leads'], 69),
+      totalLogins: _parseInt(stats['total_login'], 5),
+      totalDisbursed: _parseInt(stats['total_disbursed'], 10),
+      insuranceLeads: _parseInt(stats['insurance_leads'], 11),
+      usedCarLoans: LoanCategoryStats.fromJson(loansData['USED_CAR_LOAN'] ?? loansData['used_car_loan']),
+      newCarLoans: LoanCategoryStats.fromJson(loansData['NEW_CAR_LOAN'] ?? loansData['new_car_loan']),
+      btTopupLoans: LoanCategoryStats.fromJson(loansData['BT_TOPUP_LOAN'] ?? loansData['bt_topup_loan']),
+      refinanceLoans: LoanCategoryStats.fromJson(loansData['CAR_LOAN_REFINANCE'] ?? loansData['refinance_loan']),
+      personalLoans: LoanCategoryStats.fromJson(loansData['PERSONAL_LOAN'] ?? loansData['personal_loan']),
+      businessLoans: LoanCategoryStats.fromJson(loansData['BUSINESS_LOAN'] ?? loansData['business_loan']),
+      homeLoans: LoanCategoryStats.fromJson(loansData['HOME_LOAN'] ?? loansData['home_loan']),
+      lapLoans: LoanCategoryStats.fromJson(loansData['LOAN_AGAINST_PROPERTIES'] ?? loansData['lap_loan']),
+      recentLeads: parsedLeads,
+      recentCars: parsedCars,
     );
   }
 
@@ -94,6 +130,8 @@ class LoanCategoryStats {
   final int approved;
   final int disbursed;
   final int totalLeads;
+  final String? name;
+  final String? colorHex;
 
   LoanCategoryStats({
     int files = 0,
@@ -101,23 +139,58 @@ class LoanCategoryStats {
     this.approved = 0,
     this.disbursed = 0,
     int? totalLeads,
+    this.name,
+    this.colorHex,
   })  : totalFiles = files,
         totalLeads = totalLeads ?? files;
 
   factory LoanCategoryStats.fromJson(dynamic json) {
-    if (json == null || json is! Map<String, dynamic>) {
+    if (json == null || json is! Map) {
       return LoanCategoryStats();
     }
-    final f = int.tryParse(json['total_files']?.toString() ??
-            json['files']?.toString() ??
-            '0') ??
-        0;
+
+    final total = json['total'] ?? json['files'] ?? json['total_leads'] ?? 0;
+    final inLogin = json['login_count'] ?? json['in_bank_login'] ?? json['login'] ?? 0;
+    final app = json['approved_count'] ?? json['approved'] ?? 0;
+    final disb = json['disbursed_count'] ?? json['disbursed'] ?? 0;
+
     return LoanCategoryStats(
-      files: f,
-      inBankLogin: int.tryParse(json['in_bank_login']?.toString() ?? '0') ?? 0,
-      approved: int.tryParse(json['approved']?.toString() ?? '0') ?? 0,
-      disbursed: int.tryParse(json['disbursed']?.toString() ?? '0') ?? 0,
-      totalLeads: int.tryParse(json['total_leads']?.toString() ?? '$f') ?? f,
+      files: int.tryParse(total.toString()) ?? 0,
+      inBankLogin: int.tryParse(inLogin.toString()) ?? 0,
+      approved: int.tryParse(app.toString()) ?? 0,
+      disbursed: int.tryParse(disb.toString()) ?? 0,
+      totalLeads: int.tryParse(total.toString()) ?? 0,
+      name: json['name']?.toString(),
+      colorHex: json['color']?.toString(),
+    );
+  }
+}
+
+class RecentCarItem {
+  final int id;
+  final String carName;
+  final String? registrationNumber;
+  final String? brand;
+  final double? price;
+  final String carStatus;
+
+  RecentCarItem({
+    required this.id,
+    required this.carName,
+    this.registrationNumber,
+    this.brand,
+    this.price,
+    this.carStatus = 'Available',
+  });
+
+  factory RecentCarItem.fromJson(Map<String, dynamic> json) {
+    return RecentCarItem(
+      id: json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? '0') ?? 0,
+      carName: json['car_name']?.toString() ?? 'Car',
+      registrationNumber: json['registration_number']?.toString(),
+      brand: json['brand']?.toString(),
+      price: double.tryParse(json['used_price']?.toString() ?? '0'),
+      carStatus: json['car_status']?.toString() ?? 'Available',
     );
   }
 }

@@ -10,9 +10,7 @@ import '../widgets/loan_pipeline_card.dart';
 import '../leads/leads_list_screen.dart';
 import '../leads/insurance_leads_screen.dart';
 import '../contact/contact_screen.dart';
-import '../cars/cars_screen.dart';
-import '../cars/my_inventory_screen.dart';
-import '../cars/owner_listed_cars_screen.dart';
+import '../profile/admin_profile_screen.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -309,7 +307,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             onPressed: () {},
           ),
           const SizedBox(width: 4),
-          const AdminProfileAvatar(),
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const AdminProfileScreen()),
+              );
+            },
+            child: const AdminProfileAvatar(),
+          ),
           const SizedBox(width: 14),
         ],
       ),

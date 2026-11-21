@@ -14,7 +14,7 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _loginController = TextEditingController(text: 'admin@findmycarz.com');
+  final TextEditingController _loginController = TextEditingController(text: 'awsdemoco');
   final TextEditingController _passwordController = TextEditingController(text: 'admin123');
   bool _obscurePassword = true;
   String _selectedRole = 'super_admin'; // 'super_admin' or 'partner'
@@ -36,7 +36,9 @@ class _LoginScreenState extends State<LoginScreen> {
       selectedRole: _selectedRole,
     );
 
-    if (success && mounted) {
+    if (!mounted) return;
+
+    if (success) {
       if (authVM.isSuperAdmin) {
         Navigator.pushReplacement(
           context,
@@ -48,6 +50,15 @@ class _LoginScreenState extends State<LoginScreen> {
           MaterialPageRoute(builder: (_) => const PartnerDashboardScreen()),
         );
       }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(authVM.errorMessage ?? "Invalid credentials. Please try again."),
+          backgroundColor: Colors.redAccent.shade700,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 4),
+        ),
+      );
     }
   }
 
