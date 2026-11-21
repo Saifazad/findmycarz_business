@@ -130,6 +130,14 @@ class _OwnerListedCarsScreenState extends State<OwnerListedCarsScreen> {
         backgroundColor: _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
         elevation: 0.5,
         leading: CustomBackButton(isDarkMode: _isDarkMode),
+        title: Text(
+          "Owner Listed Cars",
+          style: GoogleFonts.poppins(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: _isDarkMode ? Colors.white : const Color(0xFF0F172A),
+          ),
+        ),
         actions: [
           IconButton(
             tooltip: _isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode",

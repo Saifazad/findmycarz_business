@@ -344,7 +344,7 @@ class _InsuranceLeadsScreenState extends State<InsuranceLeadsScreen> {
         elevation: 0.5,
         leading: CustomBackButton(isDarkMode: _isDarkMode),
         title: Text(
-          "Admin Dashboard",
+          "Insurance Leads",
           style: GoogleFonts.poppins(
             fontSize: 18,
             fontWeight: FontWeight.bold,

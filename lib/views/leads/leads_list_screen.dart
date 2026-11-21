@@ -43,6 +43,21 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
   bool _isDarkMode = false;
   String _activeCategory = "All";
 
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialType != null && widget.initialType!.isNotEmpty) {
+      final initial = widget.initialType!.toLowerCase();
+      for (final cat in _categories) {
+        if (cat.label.toLowerCase().contains(initial) ||
+            initial.contains(cat.label.toLowerCase())) {
+          _activeCategory = cat.label;
+          break;
+        }
+      }
+    }
+  }
+
   final List<LoanCategoryFilter> _categories = const [
     LoanCategoryFilter(label: "All", count: 68),
     LoanCategoryFilter(label: "Used Car - Sale Purchase", count: 43),
@@ -494,7 +509,7 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
         elevation: 0.5,
         leading: CustomBackButton(isDarkMode: _isDarkMode),
         title: Text(
-          "Admin Dashboard",
+          "Loan Leads",
           style: GoogleFonts.poppins(
             fontSize: 18,
             fontWeight: FontWeight.bold,
