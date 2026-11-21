@@ -269,7 +269,7 @@ class _UsersScreenState extends State<UsersScreen> {
         elevation: 0.5,
         leading: CustomBackButton(isDarkMode: _isDarkMode),
         title: Text(
-          "Admin Dashboard",
+          "Users Management",
           style: GoogleFonts.poppins(
             fontSize: 18,
             fontWeight: FontWeight.bold,

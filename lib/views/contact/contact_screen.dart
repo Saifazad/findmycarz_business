@@ -327,7 +327,7 @@ class _ContactScreenState extends State<ContactScreen> {
         elevation: 0.5,
         leading: CustomBackButton(isDarkMode: _isDarkMode),
         title: Text(
-          "Admin Dashboard",
+          "Contact Enquiries",
           style: GoogleFonts.poppins(
             fontSize: 18,
             fontWeight: FontWeight.bold,

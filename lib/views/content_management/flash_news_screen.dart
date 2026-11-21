@@ -154,7 +154,7 @@ class _FlashNewsScreenState extends State<FlashNewsScreen> {
         elevation: 0.5,
         leading: CustomBackButton(isDarkMode: _isDarkMode),
         title: Text(
-          "Admin Dashboard",
+          "Flash News",
           style: GoogleFonts.poppins(
             fontSize: 18,
             fontWeight: FontWeight.bold,
