@@ -10,6 +10,9 @@ import '../widgets/loan_pipeline_card.dart';
 import '../leads/leads_list_screen.dart';
 import '../leads/insurance_leads_screen.dart';
 import '../contact/contact_screen.dart';
+import '../cars/cars_screen.dart';
+import '../cars/my_inventory_screen.dart';
+import '../cars/owner_listed_cars_screen.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -43,6 +46,111 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       MaterialPageRoute(
         builder: (_) => LeadsListScreen(initialType: initialType),
       ),
+    );
+  }
+
+  void _navigateToInsurance() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const InsuranceLeadsScreen(),
+      ),
+    );
+  }
+
+  void _navigateToContacts() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const ContactScreen(),
+      ),
+    );
+  }
+
+  void _showEnquiriesSupportSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Enquiries & Support",
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: _isDarkMode ? Colors.white : Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF06B6D4).withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.shield_outlined,
+                        color: Color(0xFF06B6D4), size: 20),
+                  ),
+                  title: Text(
+                    "Insurance Leads (10)",
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w600,
+                      color: _isDarkMode ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                  subtitle: Text(
+                    "View all active insurance applications",
+                    style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey),
+                  ),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 14),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _navigateToInsurance();
+                  },
+                ),
+                const Divider(),
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF8B5CF6).withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.mail_outline_rounded,
+                        color: Color(0xFF8B5CF6), size: 20),
+                  ),
+                  title: Text(
+                    "Contact Enquiries (5)",
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w600,
+                      color: _isDarkMode ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                  subtitle: Text(
+                    "View general customer contact requests",
+                    style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey),
+                  ),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 14),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _navigateToContacts();
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -287,7 +395,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     Row(
                       children: [
                         ElevatedButton.icon(
-                          onPressed: () {},
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => const CarsScreen()),
+                            );
+                          },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.white,
                             foregroundColor: const Color(0xFF003366),
@@ -364,7 +478,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     ],
                   ),
                   TextButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const CarsScreen()),
+                      );
+                    },
                     child: Row(
                       children: [
                         Text(
@@ -406,6 +526,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     actionText: "Browse",
                     actionColor: const Color(0xFF10B981),
                     isDarkMode: _isDarkMode,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const CarsScreen()),
+                      );
+                    },
                   ),
                   StatMetricCard(
                     title: "AVAILABLE",
@@ -421,6 +547,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     actionText: "View",
                     actionColor: const Color(0xFF10B981),
                     isDarkMode: _isDarkMode,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const CarsScreen()),
+                      );
+                    },
                   ),
                   StatMetricCard(
                     title: "SOLD CARS",
@@ -436,6 +568,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     actionText: "View",
                     actionColor: const Color(0xFFF97316),
                     isDarkMode: _isDarkMode,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const CarsScreen()),
+                      );
+                    },
                   ),
                   StatMetricCard(
                     title: "OWNER LISTED CARS",
@@ -451,6 +589,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     actionText: "Manage",
                     actionColor: const Color(0xFF06B6D4),
                     isDarkMode: _isDarkMode,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const OwnerListedCarsScreen()),
+                      );
+                    },
                   ),
                   StatMetricCard(
                     title: "MY INVENTORY",
@@ -465,6 +610,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     actionText: "Inventory",
                     actionColor: const Color(0xFF7C3AED),
                     isDarkMode: _isDarkMode,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const MyInventoryScreen()),
+                      );
+                    },
                   ),
                   StatMetricCard(
                     title: "BRANDS",
@@ -479,6 +631,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     actionText: "View",
                     actionColor: const Color(0xFFEF4444),
                     isDarkMode: _isDarkMode,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const CarsScreen()),
+                      );
+                    },
                   ),
                 ],
               ),
@@ -739,12 +897,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 child: Row(
                   children: [
                     // All Loan Leads Button
-                    InkWell(
+                    GestureDetector(
+                      behavior: HitTestBehavior.opaque,
                       onTap: () => _navigateToLeads("All"),
-                      borderRadius: BorderRadius.circular(8),
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 6),
+                            horizontal: 12, vertical: 7),
                         decoration: BoxDecoration(
                           color: const Color(0xFF0284C7),
                           borderRadius: BorderRadius.circular(8),
@@ -753,7 +911,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             const Icon(Icons.format_list_bulleted_rounded,
-                                size: 13, color: Colors.white),
+                                size: 14, color: Colors.white),
                             const SizedBox(width: 5),
                             Text(
                               "All Loan Leads",
@@ -770,18 +928,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     const SizedBox(width: 8),
 
                     // Insurance (10) Button
-                    InkWell(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => const InsuranceLeadsScreen()),
-                        );
-                      },
-                      borderRadius: BorderRadius.circular(8),
+                    GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: _navigateToInsurance,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 6),
+                            horizontal: 12, vertical: 7),
                         decoration: BoxDecoration(
                           color: _isDarkMode
                               ? const Color(0xFF083344)
@@ -793,7 +945,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             const Icon(Icons.shield_outlined,
-                                size: 13, color: Color(0xFF06B6D4)),
+                                size: 14, color: Color(0xFF06B6D4)),
                             const SizedBox(width: 5),
                             Text(
                               "Insurance (10)",
@@ -810,18 +962,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     const SizedBox(width: 8),
 
                     // Contacts (5) Button
-                    InkWell(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => const ContactScreen()),
-                        );
-                      },
-                      borderRadius: BorderRadius.circular(8),
+                    GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: _navigateToContacts,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 6),
+                            horizontal: 12, vertical: 7),
                         decoration: BoxDecoration(
                           color: _isDarkMode
                               ? const Color(0xFF2E1065)
@@ -833,7 +979,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             const Icon(Icons.mail_outline_rounded,
-                                size: 13, color: Color(0xFF8B5CF6)),
+                                size: 14, color: Color(0xFF8B5CF6)),
                             const SizedBox(width: 5),
                             Text(
                               "Contacts (5)",
@@ -917,13 +1063,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         ? const Color(0xFF064E3B).withValues(alpha: 0.3)
                         : const Color(0xFFF0FDFA),
                     accentBarColor: const Color(0xFF6366F1),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => const ContactScreen()),
-                      );
-                    },
+                    onTap: _showEnquiriesSupportSheet,
                   ),
                 ],
               ),
