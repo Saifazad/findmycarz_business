@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../models/admin_profile_model.dart';
 import '../../viewmodels/auth_viewmodel.dart';
@@ -80,11 +81,46 @@ class _AdminProfileScreenState extends State<AdminProfileScreen>
     }
   }
 
+  String _formatDob(String? raw) {
+    if (raw == null || raw.trim().isEmpty || raw == "null") {
+      return "Not specified";
+    }
+    try {
+      final parsed = DateTime.tryParse(raw);
+      if (parsed != null) {
+        return DateFormat("dd MMM yyyy").format(parsed.toLocal());
+      }
+    } catch (_) {}
+    if (raw.contains('T')) {
+      return raw.split('T').first;
+    }
+    return raw;
+  }
+
   void _populateEditForm(AdminProfileModel profile) {
     _nameController.text = profile.fullName ?? profile.username ?? "";
     _phoneController.text = profile.phone ?? "";
     _altPhoneController.text = profile.altPhone ?? "";
-    _dobController.text = profile.dob ?? "";
+    
+    if (profile.dob != null && profile.dob!.isNotEmpty && profile.dob != "null") {
+      try {
+        final parsed = DateTime.tryParse(profile.dob!);
+        if (parsed != null) {
+          final local = parsed.toLocal();
+          _dobController.text =
+              "${local.year}-${local.month.toString().padLeft(2, '0')}-${local.day.toString().padLeft(2, '0')}";
+        } else {
+          _dobController.text = profile.dob!.contains('T')
+              ? profile.dob!.split('T').first
+              : profile.dob!;
+        }
+      } catch (_) {
+        _dobController.text = profile.dob!;
+      }
+    } else {
+      _dobController.text = "";
+    }
+
     if (profile.gender != null &&
         (profile.gender == "Male" || profile.gender == "Female" || profile.gender == "Other")) {
       _selectedGender = profile.gender!;
@@ -183,9 +219,19 @@ class _AdminProfileScreenState extends State<AdminProfileScreen>
   }
 
   Future<void> _pickDate() async {
+    DateTime initial = DateTime(1995, 1, 1);
+    if (_dobController.text.isNotEmpty) {
+      try {
+        final parsed = DateTime.tryParse(_dobController.text);
+        if (parsed != null && parsed.isBefore(DateTime.now())) {
+          initial = parsed;
+        }
+      } catch (_) {}
+    }
+
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: DateTime(1995, 1, 1),
+      initialDate: initial,
       firstDate: DateTime(1950),
       lastDate: DateTime.now(),
       builder: (context, child) {
@@ -421,7 +467,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen>
                     Icons.person_pin_outlined, "Gender", profile?.gender ?? "Not specified"),
                 const Divider(height: 1, indent: 56),
                 _buildInfoTile(
-                    Icons.cake_outlined, "Date of Birth", profile?.dob ?? "Not specified"),
+                    Icons.cake_outlined, "Date of Birth", _formatDob(profile?.dob)),
                 const Divider(height: 1, indent: 56),
                 _buildInfoTile(
                     Icons.security, "Role Code", profile?.role?.code ?? "SA"),
