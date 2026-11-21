@@ -106,14 +106,20 @@ class MetaModuleOption {
   final bool hasAdd;
   final bool hasEdit;
   final bool hasDelete;
+  final bool hasStatus;
+  final bool hasAssign;
+  final bool hasCarStatus;
 
   MetaModuleOption({
     required this.id,
     required this.name,
-    this.hasView = false,
+    this.hasView = true,
     this.hasAdd = false,
     this.hasEdit = false,
     this.hasDelete = false,
+    this.hasStatus = false,
+    this.hasAssign = false,
+    this.hasCarStatus = false,
   });
 
   factory MetaModuleOption.fromJson(Map<String, dynamic> json) {
@@ -124,6 +130,12 @@ class MetaModuleOption {
       hasAdd: json['has_add'] == 1 || json['has_add'] == true,
       hasEdit: json['has_edit'] == 1 || json['has_edit'] == true,
       hasDelete: json['has_delete'] == 1 || json['has_delete'] == true,
+      hasStatus: json['has_status'] == 1 || json['has_status'] == true,
+      hasAssign: json['has_assigned_to'] == 1 ||
+          json['has_assigned_to'] == true ||
+          json['has_assign'] == 1 ||
+          json['has_assign'] == true,
+      hasCarStatus: json['has_car_status'] == 1 || json['has_car_status'] == true,
     );
   }
 }

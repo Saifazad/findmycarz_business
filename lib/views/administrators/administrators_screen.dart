@@ -8,6 +8,8 @@ import '../../models/administrator_meta_model.dart';
 import '../../viewmodels/administrators_viewmodel.dart';
 import '../widgets/crm_drawer.dart';
 import '../widgets/custom_back_button.dart';
+import '../user_management/crm_role_hierarchy_screen.dart';
+import 'add_administrator_screen.dart';
 
 class AdministratorsScreen extends StatefulWidget {
   const AdministratorsScreen({super.key});
@@ -277,6 +279,16 @@ class _AdministratorsScreenState extends State<AdministratorsScreen> {
         elevation: 0.5,
         actions: [
           IconButton(
+            tooltip: "CRM Roles & Hierarchy",
+            icon: const Icon(Icons.account_tree_outlined, color: Color(0xFF003366)),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const CrmRoleHierarchyScreen()),
+              );
+            },
+          ),
+          IconButton(
             tooltip: "Form Meta & Role Options",
             icon: const Icon(Icons.tune_rounded, color: Color(0xFF003366)),
             onPressed: () => _openMetaOptionsSheet(context, vm.metaOptions),
@@ -441,6 +453,26 @@ class _AdministratorsScreenState extends State<AdministratorsScreen> {
               ),
           ],
         ),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: const Color(0xFF003366),
+        icon: const Icon(Icons.person_add_alt_1_rounded, color: Colors.white),
+        label: Text(
+          "Add Administrator",
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.w600,
+            fontSize: 13,
+            color: Colors.white,
+          ),
+        ),
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const AddAdministratorScreen(),
+            ),
+          );
+        },
       ),
     );
   }
