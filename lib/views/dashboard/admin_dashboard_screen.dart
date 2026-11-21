@@ -13,6 +13,7 @@ import '../contact/contact_screen.dart';
 import '../cars/cars_screen.dart';
 import '../cars/my_inventory_screen.dart';
 import '../cars/owner_listed_cars_screen.dart';
+import '../cars/add_car_screen.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -399,7 +400,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (_) => const CarsScreen()),
+                                  builder: (_) => const AddCarScreen()),
                             );
                           },
                           style: ElevatedButton.styleFrom(

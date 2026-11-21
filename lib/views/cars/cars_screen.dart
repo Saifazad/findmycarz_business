@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../widgets/crm_drawer.dart';
 import '../widgets/custom_back_button.dart';
 import '../widgets/admin_profile_avatar.dart';
+import 'add_car_screen.dart';
 
 class InventoryVehicle {
   final String id;
@@ -155,7 +156,7 @@ class _CarsScreenState extends State<CarsScreen> {
     }).toList();
   }
 
-  void _showAddVehicleModal() {
+  void showAddVehicleModal() {
     final uidCtrl =
         TextEditingController(text: "#CARUID0${970 + _vehicles.length}");
     final makeModelCtrl = TextEditingController();
@@ -633,7 +634,13 @@ class _CarsScreenState extends State<CarsScreen> {
                   child: SizedBox(
                     height: 42,
                     child: ElevatedButton.icon(
-                      onPressed: _showAddVehicleModal,
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const AddCarScreen()),
+                        );
+                      },
                       icon: const Icon(Icons.add, size: 16, color: Colors.white),
                       label: Text(
                         "Add Vehicle",
