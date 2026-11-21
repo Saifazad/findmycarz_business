@@ -138,6 +138,14 @@ class AuthViewModel extends ChangeNotifier {
     } catch (_) {}
   }
 
+  Future<void> updateLocalProfile({String? name, String? phone, String? avatarUrl}) async {
+    if (name != null) _userName = name;
+    if (phone != null) _userPhone = phone;
+    if (avatarUrl != null) _avatarUrl = avatarUrl;
+    await _saveSession();
+    notifyListeners();
+  }
+
   Future<void> logout() async {
     try {
       await _dioClient.post(ApiConfig.authLogout);
