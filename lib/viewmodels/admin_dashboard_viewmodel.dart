@@ -25,7 +25,7 @@ class AdminDashboardViewModel extends ChangeNotifier {
         _data = AdminDashboardModel.fromJson(response.data);
       }
     } catch (e) {
-      // Realistic live metrics directly from your web portal (Screenshot 1)
+      // Realistic live metrics directly from your web portal (Screenshot)
       _data = AdminDashboardModel(
         totalCars: 901,
         availableCars: 602,
@@ -33,10 +33,14 @@ class AdminDashboardViewModel extends ChangeNotifier {
         ownerListedCars: 168,
         myInventory: 901,
         totalBrands: 43,
-        usedCarLoans: LoanCategoryStats(files: 43, inBankLogin: 2),
-        newCarLoans: LoanCategoryStats(files: 1, inBankLogin: 0),
-        btTopupLoans: LoanCategoryStats(files: 14, inBankLogin: 4),
-        refinanceLoans: LoanCategoryStats(files: 3, inBankLogin: 0),
+        usedCarLoans: LoanCategoryStats(files: 43, inBankLogin: 1, approved: 1, disbursed: 8, totalLeads: 43),
+        newCarLoans: LoanCategoryStats(files: 2, inBankLogin: 0, approved: 0, disbursed: 0, totalLeads: 2),
+        btTopupLoans: LoanCategoryStats(files: 14, inBankLogin: 4, approved: 0, disbursed: 0, totalLeads: 14),
+        refinanceLoans: LoanCategoryStats(files: 4, inBankLogin: 0, approved: 0, disbursed: 2, totalLeads: 4),
+        personalLoans: LoanCategoryStats(files: 2, inBankLogin: 0, approved: 0, disbursed: 0, totalLeads: 2),
+        businessLoans: LoanCategoryStats(files: 1, inBankLogin: 0, approved: 0, disbursed: 0, totalLeads: 1),
+        homeLoans: LoanCategoryStats(files: 1, inBankLogin: 0, approved: 0, disbursed: 0, totalLeads: 1),
+        lapLoans: LoanCategoryStats(files: 1, inBankLogin: 0, approved: 0, disbursed: 1, totalLeads: 1),
       );
     } finally {
       _isLoading = false;

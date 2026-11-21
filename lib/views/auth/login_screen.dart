@@ -166,7 +166,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     : null,
                               ),
                               child: Text(
-                                "Partner / Dealer",
+                                "Administrator",
                                 textAlign: TextAlign.center,
                                 style: GoogleFonts.poppins(
                                   fontSize: 12,
@@ -260,7 +260,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: authVM.isLoading
                         ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                         : Text(
-                            "Secure Login",
+                            "Login",
                             style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.bold),
                           ),
                   ),

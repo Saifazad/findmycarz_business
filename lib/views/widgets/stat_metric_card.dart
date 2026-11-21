@@ -10,6 +10,12 @@ class StatMetricCard extends StatelessWidget {
   final String subtitle;
   final String actionText;
   final VoidCallback? onTap;
+  final bool isDarkMode;
+  final Color? iconColor;
+  final Color? iconBgColor;
+  final Color? subtitleColor;
+  final Color? actionColor;
+  final Color? titleColor;
 
   const StatMetricCard({
     super.key,
@@ -21,24 +27,43 @@ class StatMetricCard extends StatelessWidget {
     required this.subtitle,
     required this.actionText,
     this.onTap,
+    this.isDarkMode = false,
+    this.iconColor,
+    this.iconBgColor,
+    this.subtitleColor,
+    this.actionColor,
+    this.titleColor,
   });
 
   @override
   Widget build(BuildContext context) {
+    final effectiveTitleColor = titleColor ??
+        (isDarkMode ? Colors.grey.shade200 : const Color(0xFF1E293B));
+    final effectiveIconColor = iconColor ?? accentColor;
+    final effectiveIconBgColor =
+        iconBgColor ?? accentColor.withValues(alpha: isDarkMode ? 0.25 : 0.12);
+    final effectiveSubtitleColor = subtitleColor ??
+        (isDarkMode ? Colors.grey.shade300 : const Color(0xFF334155));
+    final effectiveActionColor = actionColor ??
+        (isDarkMode ? Colors.grey.shade300 : const Color(0xFF334155));
+
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(14),
       child: Container(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey.shade200),
+          color: isDarkMode ? const Color(0xFF1E293B) : Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color:
+                isDarkMode ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.02),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+              color: Colors.black.withValues(alpha: isDarkMode ? 0.2 : 0.02),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
             ),
           ],
         ),
@@ -46,6 +71,7 @@ class StatMetricCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
+            // Top Row: Title & Mini Icon Badge
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -55,55 +81,71 @@ class StatMetricCard extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.poppins(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.grey.shade600,
-                      letterSpacing: 0.5,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: effectiveTitleColor,
+                      letterSpacing: 0.3,
                     ),
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.all(6),
+                  padding: const EdgeInsets.all(5),
                   decoration: BoxDecoration(
-                    color: accentColor.withOpacity(0.12),
-                    borderRadius: BorderRadius.circular(8),
+                    color: effectiveIconBgColor,
+                    borderRadius: BorderRadius.circular(7),
                   ),
-                  child: Icon(icon, size: 16, color: accentColor),
+                  child: Icon(icon, size: 14, color: effectiveIconColor),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 4),
+
+            // Middle: Big Metric Number
             Text(
               count,
               style: GoogleFonts.poppins(
-                fontSize: 24,
+                fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: countColor,
+                color: (countColor == Colors.black87 && isDarkMode)
+                    ? Colors.white
+                    : countColor,
                 letterSpacing: -0.5,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 4),
+
+            // Bottom: Subtitle & Action Link
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  subtitle,
-                  style: GoogleFonts.poppins(
-                    fontSize: 10,
-                    color: Colors.grey.shade500,
+                Expanded(
+                  child: Text(
+                    subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.poppins(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: effectiveSubtitleColor,
+                    ),
                   ),
                 ),
                 Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       actionText,
                       style: GoogleFonts.poppins(
-                        fontSize: 10,
+                        fontSize: 9.5,
                         fontWeight: FontWeight.w600,
-                        color: Colors.grey.shade700,
+                        color: effectiveActionColor,
                       ),
                     ),
-                    Icon(Icons.chevron_right, size: 12, color: Colors.grey.shade700),
+                    Icon(
+                      Icons.chevron_right,
+                      size: 11,
+                      color: effectiveActionColor,
+                    ),
                   ],
                 ),
               ],
@@ -114,4 +156,3 @@ class StatMetricCard extends StatelessWidget {
     );
   }
 }
-
