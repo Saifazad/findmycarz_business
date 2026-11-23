@@ -1,3 +1,6 @@
+import 'package:findmycarz_business/views/cars/cars_screen.dart';
+import 'package:findmycarz_business/views/cars/my_inventory_screen.dart';
+import 'package:findmycarz_business/views/cars/owner_listed_cars_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -112,7 +115,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   ),
                   subtitle: Text(
                     "View all active insurance applications",
-                    style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey),
+                    style:
+                        GoogleFonts.poppins(fontSize: 12, color: Colors.grey),
                   ),
                   trailing: const Icon(Icons.arrow_forward_ios, size: 14),
                   onTap: () {
@@ -140,7 +144,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   ),
                   subtitle: Text(
                     "View general customer contact requests",
-                    style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey),
+                    style:
+                        GoogleFonts.poppins(fontSize: 12, color: Colors.grey),
                   ),
                   trailing: const Icon(Icons.arrow_forward_ios, size: 14),
                   onTap: () {
@@ -491,8 +496,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(
-                            builder: (_) => const CarsScreen()),
+                        MaterialPageRoute(builder: (_) => const CarsScreen()),
                       );
                     },
                     child: Row(

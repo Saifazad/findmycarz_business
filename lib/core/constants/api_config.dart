@@ -15,6 +15,8 @@ class ApiConfig {
   // Dashboard & Leads Endpoints
   static const String dashboard = "/dashboard";
   static const String administrators = "/administrators";
+  static const String administratorsMeta = "/administrators/meta/options";
+  static const String roles = "/roles";
   static const String crmLeads = "/leads";
   static const String updateLeadStatus = "/leads/update-status";
 
