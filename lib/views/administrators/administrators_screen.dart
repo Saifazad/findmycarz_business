@@ -127,12 +127,11 @@ class _AdministratorsScreenState extends State<AdministratorsScreen> {
               admin.status.toLowerCase() == "active")
           : admin.status.toLowerCase() == "unapproved";
 
-      final matchesSearch = admin.name
-              .toLowerCase()
-              .contains(_searchQuery.toLowerCase()) ||
-          admin.email.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          admin.phone.contains(_searchQuery) ||
-          admin.role.toLowerCase().contains(_searchQuery.toLowerCase());
+      final matchesSearch =
+          admin.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+              admin.email.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+              admin.phone.contains(_searchQuery) ||
+              admin.role.toLowerCase().contains(_searchQuery.toLowerCase());
 
       return matchesStatus && matchesSearch;
     }).toList();
@@ -366,17 +365,20 @@ class _AdministratorsScreenState extends State<AdministratorsScreen> {
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       filled: true,
-      fillColor: _isDarkMode ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+      fillColor:
+          _isDarkMode ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
         borderSide: BorderSide(
-          color: _isDarkMode ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+          color:
+              _isDarkMode ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
         ),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
         borderSide: BorderSide(
-          color: _isDarkMode ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+          color:
+              _isDarkMode ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
         ),
       ),
       focusedBorder: OutlineInputBorder(
@@ -452,9 +454,8 @@ class _AdministratorsScreenState extends State<AdministratorsScreen> {
         ),
         actions: [
           IconButton(
-<<<<<<< HEAD
-=======
-            tooltip: _isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode",
+            tooltip:
+                _isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode",
             icon: Icon(
               _isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_outlined,
               color: _isDarkMode
@@ -468,7 +469,6 @@ class _AdministratorsScreenState extends State<AdministratorsScreen> {
             },
           ),
           IconButton(
->>>>>>> parent of 2e72acd (Merge pull request #5 from Saifazad/feat/api-suite-integration)
             icon: Icon(
               Icons.notifications_none_rounded,
               color: _isDarkMode ? Colors.white : const Color(0xFF334155),
@@ -607,7 +607,8 @@ class _AdministratorsScreenState extends State<AdministratorsScreen> {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: _isDarkMode ? 0.2 : 0.02),
+                    color: Colors.black
+                        .withValues(alpha: _isDarkMode ? 0.2 : 0.02),
                     blurRadius: 4,
                     offset: const Offset(0, 1),
                   ),
