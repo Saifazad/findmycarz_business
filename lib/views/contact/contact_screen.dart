@@ -34,7 +34,7 @@ class ContactScreen extends StatefulWidget {
 }
 
 class _ContactScreenState extends State<ContactScreen> {
-  bool _isDarkMode = false;
+  final bool _isDarkMode = false;
   int _entriesPerPage = 10;
   String _searchQuery = "";
   bool _selectAll = false;
@@ -292,9 +292,10 @@ class _ContactScreenState extends State<ContactScreen> {
               label,
               style: GoogleFonts.poppins(
                 fontSize: 12,
+                fontWeight: FontWeight.w600,
                 color: _isDarkMode
-                    ? Colors.grey.shade400
-                    : const Color(0xFF64748B),
+                    ? Colors.grey.shade300
+                    : const Color(0xFF475569),
               ),
             ),
           ),
@@ -336,21 +337,6 @@ class _ContactScreenState extends State<ContactScreen> {
         ),
         actions: [
           IconButton(
-            tooltip:
-                _isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode",
-            icon: Icon(
-              _isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_outlined,
-              color: _isDarkMode
-                  ? const Color(0xFFFBBF24)
-                  : const Color(0xFF334155),
-            ),
-            onPressed: () {
-              setState(() {
-                _isDarkMode = !_isDarkMode;
-              });
-            },
-          ),
-          IconButton(
             icon: Icon(
               Icons.notifications_none_rounded,
               color: _isDarkMode ? Colors.white : const Color(0xFF334155),
@@ -367,55 +353,6 @@ class _ContactScreenState extends State<ContactScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. Heading Row: Circular (<) button + "Contact Enquiries"
-            Row(
-              children: [
-                InkWell(
-                  onTap: () => Navigator.maybePop(context),
-                  borderRadius: BorderRadius.circular(20),
-                  child: Container(
-                    width: 34,
-                    height: 34,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color:
-                          _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-                      border: Border.all(
-                        color: _isDarkMode
-                            ? const Color(0xFF334155)
-                            : const Color(0xFFE2E8F0),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black
-                              .withValues(alpha: _isDarkMode ? 0.2 : 0.03),
-                          blurRadius: 4,
-                          offset: const Offset(0, 1),
-                        ),
-                      ],
-                    ),
-                    alignment: Alignment.center,
-                    child: Icon(
-                      Icons.chevron_left,
-                      size: 20,
-                      color:
-                          _isDarkMode ? Colors.white : const Color(0xFF334155),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  "Contact Enquiries",
-                  style: GoogleFonts.poppins(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: _isDarkMode ? Colors.white : const Color(0xFF0F172A),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-
             // 2. Action Row: [ ] Select all  +  [ 🗑 Delete Selected (0) ]
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -596,7 +533,7 @@ class _ContactScreenState extends State<ContactScreen> {
                             ? Colors.white
                             : const Color(0xFF1E293B),
                       ),
-                      items: [10, 25, 50, 100].map((int val) {
+                      items: [5, 10, 15, 20, 25].map((int val) {
                         return DropdownMenuItem<int>(
                           value: val,
                           child: Text("$val"),
@@ -756,9 +693,10 @@ class _ContactScreenState extends State<ContactScreen> {
                                 "Phone",
                                 style: GoogleFonts.poppins(
                                   fontSize: 11.5,
+                                  fontWeight: FontWeight.w600,
                                   color: _isDarkMode
-                                      ? Colors.grey.shade400
-                                      : const Color(0xFF64748B),
+                                      ? Colors.grey.shade300
+                                      : const Color(0xFF475569),
                                 ),
                               ),
                             ),
@@ -767,7 +705,7 @@ class _ContactScreenState extends State<ContactScreen> {
                                 enq.phone,
                                 style: GoogleFonts.poppins(
                                   fontSize: 12,
-                                  fontWeight: FontWeight.w600,
+                                  fontWeight: FontWeight.bold,
                                   color: _isDarkMode
                                       ? Colors.white
                                       : const Color(0xFF0F172A),
@@ -787,9 +725,10 @@ class _ContactScreenState extends State<ContactScreen> {
                                 "Email",
                                 style: GoogleFonts.poppins(
                                   fontSize: 11.5,
+                                  fontWeight: FontWeight.w600,
                                   color: _isDarkMode
-                                      ? Colors.grey.shade400
-                                      : const Color(0xFF64748B),
+                                      ? Colors.grey.shade300
+                                      : const Color(0xFF475569),
                                 ),
                               ),
                             ),
@@ -798,7 +737,7 @@ class _ContactScreenState extends State<ContactScreen> {
                                 enq.email,
                                 style: GoogleFonts.poppins(
                                   fontSize: 12,
-                                  fontWeight: FontWeight.w600,
+                                  fontWeight: FontWeight.bold,
                                   color: _isDarkMode
                                       ? Colors.white
                                       : const Color(0xFF0F172A),
@@ -818,9 +757,10 @@ class _ContactScreenState extends State<ContactScreen> {
                                 "City",
                                 style: GoogleFonts.poppins(
                                   fontSize: 11.5,
+                                  fontWeight: FontWeight.w600,
                                   color: _isDarkMode
-                                      ? Colors.grey.shade400
-                                      : const Color(0xFF64748B),
+                                      ? Colors.grey.shade300
+                                      : const Color(0xFF475569),
                                 ),
                               ),
                             ),
@@ -829,7 +769,7 @@ class _ContactScreenState extends State<ContactScreen> {
                                 enq.city,
                                 style: GoogleFonts.poppins(
                                   fontSize: 12,
-                                  fontWeight: FontWeight.w600,
+                                  fontWeight: FontWeight.bold,
                                   color: _isDarkMode
                                       ? Colors.white
                                       : const Color(0xFF0F172A),
@@ -858,9 +798,10 @@ class _ContactScreenState extends State<ContactScreen> {
                               enq.date,
                               style: GoogleFonts.poppins(
                                 fontSize: 11,
+                                fontWeight: FontWeight.w600,
                                 color: _isDarkMode
-                                    ? Colors.grey.shade400
-                                    : const Color(0xFF64748B),
+                                    ? Colors.grey.shade300
+                                    : const Color(0xFF475569),
                               ),
                             ),
                             Row(

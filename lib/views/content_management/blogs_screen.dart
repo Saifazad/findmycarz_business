@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../widgets/crm_drawer.dart';
 import '../widgets/custom_back_button.dart';
 import '../widgets/admin_profile_avatar.dart';
+import 'add_new_blog_screen.dart';
 
 class BlogItem {
   final String id;
@@ -30,7 +31,7 @@ class BlogsScreen extends StatefulWidget {
 }
 
 class _BlogsScreenState extends State<BlogsScreen> {
-  bool _isDarkMode = false;
+  final bool _isDarkMode = false;
   int _entriesPerPage = 10;
   String _searchQuery = "";
 
@@ -95,149 +96,6 @@ class _BlogsScreenState extends State<BlogsScreen> {
           b.author.toLowerCase().contains(q) ||
           b.date.toLowerCase().contains(q);
     }).toList();
-  }
-
-  void _showAddBlogDialog() {
-    final titleCtrl = TextEditingController();
-    final authorCtrl = TextEditingController(text: "Admin");
-    bool isActive = true;
-
-    showDialog(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          backgroundColor: _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: Text(
-            "Add New Blog",
-            style: GoogleFonts.poppins(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-              color: _isDarkMode ? Colors.white : const Color(0xFF0F172A),
-            ),
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Blog Title",
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color:
-                        _isDarkMode ? Colors.white70 : const Color(0xFF334155),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                TextField(
-                  controller: titleCtrl,
-                  decoration: InputDecoration(
-                    hintText: "Enter blog title...",
-                    hintStyle: GoogleFonts.poppins(fontSize: 12),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 10),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  "Author",
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color:
-                        _isDarkMode ? Colors.white70 : const Color(0xFF334155),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                TextField(
-                  controller: authorCtrl,
-                  decoration: InputDecoration(
-                    hintText: "Author name...",
-                    hintStyle: GoogleFonts.poppins(fontSize: 12),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 10),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "Status: ${isActive ? 'Active' : 'Inactive'}",
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: isActive
-                            ? const Color(0xFF0F766E)
-                            : const Color(0xFFDC2626),
-                      ),
-                    ),
-                    Switch(
-                      value: isActive,
-                      activeThumbColor: const Color(0xFF00A3FF),
-                      onChanged: (val) {
-                        setDialogState(() {
-                          isActive = val;
-                        });
-                      },
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text("Cancel"),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF00A3FF),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              onPressed: () {
-                if (titleCtrl.text.trim().isEmpty) return;
-                setState(() {
-                  _blogs.insert(
-                    0,
-                    BlogItem(
-                      id: "BLOG-${DateTime.now().millisecondsSinceEpoch}",
-                      title: titleCtrl.text.trim(),
-                      author: authorCtrl.text.trim().isEmpty
-                          ? "Admin"
-                          : authorCtrl.text.trim(),
-                      date: "Today",
-                      isActive: isActive,
-                    ),
-                  );
-                });
-                Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text("Blog added successfully!"),
-                    backgroundColor: Color(0xFF0F766E),
-                  ),
-                );
-              },
-              child:
-                  const Text("Add Blog", style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   void _showEditBlogDialog(BlogItem blog) {
@@ -427,7 +285,7 @@ class _BlogsScreenState extends State<BlogsScreen> {
         elevation: 0.5,
         leading: CustomBackButton(isDarkMode: _isDarkMode),
         title: Text(
-          "Blogs Management",
+          "Manage Blogs",
           style: GoogleFonts.poppins(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -435,21 +293,6 @@ class _BlogsScreenState extends State<BlogsScreen> {
           ),
         ),
         actions: [
-          IconButton(
-            tooltip:
-                _isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode",
-            icon: Icon(
-              _isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_outlined,
-              color: _isDarkMode
-                  ? const Color(0xFFFBBF24)
-                  : const Color(0xFF334155),
-            ),
-            onPressed: () {
-              setState(() {
-                _isDarkMode = !_isDarkMode;
-              });
-            },
-          ),
           IconButton(
             icon: Icon(
               Icons.notifications_none_rounded,
@@ -467,24 +310,39 @@ class _BlogsScreenState extends State<BlogsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. Heading Row: Manage Blogs + "+ Add New Blog"
+            // 1. Heading Row: "All Blogs" (Left) + "+ Add New Blog" Button (Right)
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  "Manage Blogs",
+                  "All Blogs",
                   style: GoogleFonts.poppins(
-                    fontSize: 18,
+                    fontSize: 14,
                     fontWeight: FontWeight.bold,
-                    color: _isDarkMode ? Colors.white : const Color(0xFF0F172A),
+                    color: _isDarkMode
+                        ? Colors.grey.shade300
+                        : const Color(0xFF1E293B),
                   ),
                 ),
                 ElevatedButton(
-                  onPressed: _showAddBlogDialog,
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => AddNewBlogScreen(
+                          onBlogAdded: (newBlog) {
+                            setState(() {
+                              _blogs.insert(0, newBlog);
+                            });
+                          },
+                        ),
+                      ),
+                    );
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF007BFF),
                     padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -494,11 +352,11 @@ class _BlogsScreenState extends State<BlogsScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const Icon(Icons.add, size: 16, color: Colors.white),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: 5),
                       Text(
                         "Add New Blog",
                         style: GoogleFonts.poppins(
-                          fontSize: 12,
+                          fontSize: 12.5,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
                         ),
@@ -509,19 +367,6 @@ class _BlogsScreenState extends State<BlogsScreen> {
               ],
             ),
             const SizedBox(height: 12),
-
-            // 2. Subheading: "All Blogs"
-            Text(
-              "All Blogs",
-              style: GoogleFonts.poppins(
-                fontSize: 13.5,
-                fontWeight: FontWeight.bold,
-                color: _isDarkMode
-                    ? Colors.grey.shade300
-                    : const Color(0xFF1E293B),
-              ),
-            ),
-            const SizedBox(height: 10),
 
             // 3. Search and Entries Row: [ 🔍 Search... ] [ 10 ⌄ ]
             Row(
@@ -607,7 +452,7 @@ class _BlogsScreenState extends State<BlogsScreen> {
                             ? Colors.white
                             : const Color(0xFF1E293B),
                       ),
-                      items: [10, 25, 50, 100].map((int val) {
+                      items: [5, 10, 15, 20, 25].map((int val) {
                         return DropdownMenuItem<int>(
                           value: val,
                           child: Text("$val"),
