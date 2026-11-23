@@ -1,3 +1,6 @@
+import 'package:findmycarz_business/views/cars/cars_screen.dart';
+import 'package:findmycarz_business/views/cars/my_inventory_screen.dart';
+import 'package:findmycarz_business/views/cars/owner_listed_cars_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -10,9 +13,6 @@ import '../widgets/loan_pipeline_card.dart';
 import '../leads/leads_list_screen.dart';
 import '../leads/insurance_leads_screen.dart';
 import '../contact/contact_screen.dart';
-import '../cars/cars_screen.dart';
-import '../cars/my_inventory_screen.dart';
-import '../cars/owner_listed_cars_screen.dart';
 import '../cars/add_car_screen.dart';
 import '../profile/admin_profile_screen.dart';
 
@@ -112,7 +112,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   ),
                   subtitle: Text(
                     "View all active insurance applications",
-                    style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey),
+                    style:
+                        GoogleFonts.poppins(fontSize: 12, color: Colors.grey),
                   ),
                   trailing: const Icon(Icons.arrow_forward_ios, size: 14),
                   onTap: () {
@@ -140,7 +141,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   ),
                   subtitle: Text(
                     "View general customer contact requests",
-                    style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey),
+                    style:
+                        GoogleFonts.poppins(fontSize: 12, color: Colors.grey),
                   ),
                   trailing: const Icon(Icons.arrow_forward_ios, size: 14),
                   onTap: () {
@@ -292,9 +294,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         ),
         actions: [
           IconButton(
-            tooltip: _isDarkMode ? "Dark Mode" : "Light Mode",
+            tooltip: _isDarkMode ? "Light Mode" : "Dark Mode",
             icon: Icon(
-              _isDarkMode ? Icons.dark_mode_outlined : Icons.light_mode_outlined,
+              _isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_outlined,
               color: _isDarkMode ? const Color(0xFFFBBF24) : Colors.black87,
             ),
             onPressed: () {
@@ -491,8 +493,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(
-                            builder: (_) => const CarsScreen()),
+                        MaterialPageRoute(builder: (_) => const CarsScreen()),
                       );
                     },
                     child: Row(

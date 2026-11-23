@@ -50,7 +50,7 @@ class CarsScreen extends StatefulWidget {
 }
 
 class _CarsScreenState extends State<CarsScreen> {
-  final bool _isDarkMode = false;
+  bool _isDarkMode = false;
   String _activeTab = "All Cars"; // "All Cars", "New Cars", "Used Cars"
   int _entriesPerPage = 10;
   int _currentPage = 1;
@@ -595,6 +595,20 @@ class _CarsScreenState extends State<CarsScreen> {
           ),
         ),
         actions: [
+          IconButton(
+            tooltip: _isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode",
+            icon: Icon(
+              _isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_outlined,
+              color: _isDarkMode
+                  ? const Color(0xFFFBBF24)
+                  : const Color(0xFF334155),
+            ),
+            onPressed: () {
+              setState(() {
+                _isDarkMode = !_isDarkMode;
+              });
+            },
+          ),
           IconButton(
             icon: Icon(
               Icons.notifications_none_rounded,
@@ -1417,14 +1431,10 @@ class _CarsScreenState extends State<CarsScreen> {
   }
 
   void _editVehicle(InventoryVehicle v) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => AddCarScreen(
-          carUid: v.id,
-          existingVehicle: v,
-          isEditMode: true,
-        ),
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Editing ${v.id} - ${v.makeModel}"),
+        backgroundColor: const Color(0xFF00A3FF),
       ),
     );
   }
@@ -1432,120 +1442,44 @@ class _CarsScreenState extends State<CarsScreen> {
   void _deleteVehicle(InventoryVehicle v) {
     showDialog(
       context: context,
-      builder: (ctx) => Dialog(
+      builder: (ctx) => AlertDialog(
         backgroundColor: _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
+        title: Text(
+          "Delete Vehicle",
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.bold,
+            color: _isDarkMode ? Colors.white : Colors.black87,
+          ),
         ),
-        clipBehavior: Clip.antiAlias,
-        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Header
-            Container(
-              color: const Color(0xFFEF4D56),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    "Confirm Delete?",
-                    style: GoogleFonts.poppins(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  InkWell(
-                    onTap: () => Navigator.pop(ctx),
-                    child: const Icon(
-                      Icons.close,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            // Body Content
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 20, 16, 28),
-              child: Text(
-                "This action cannot be undone. Checks for dependencies will be performed.",
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  color: _isDarkMode ? Colors.white70 : const Color(0xFF4A5568),
-                  height: 1.4,
+        content: Text(
+          "Are you sure you want to delete ${v.id} (${v.makeModel})?",
+          style: GoogleFonts.poppins(
+            color: _isDarkMode ? Colors.white70 : Colors.black54,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            style:
+                ElevatedButton.styleFrom(backgroundColor: const Color(0xFFDC2626)),
+            onPressed: () {
+              setState(() {
+                _vehicles.remove(v);
+              });
+              Navigator.pop(ctx);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text("Vehicle deleted successfully!"),
+                  backgroundColor: Color(0xFFDC2626),
                 ),
-              ),
-            ),
-            // Actions
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF95A0C5),
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      minimumSize: const Size(74, 36),
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                    ),
-                    onPressed: () => Navigator.pop(ctx),
-                    child: Text(
-                      "Cancel",
-                      style: GoogleFonts.poppins(
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFEF4D56),
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      minimumSize: const Size(70, 36),
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _vehicles.remove(v);
-                      });
-                      Navigator.pop(ctx);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Vehicle deleted successfully!"),
-                          backgroundColor: Color(0xFFEF4D56),
-                        ),
-                      );
-                    },
-                    child: Text(
-                      "Delete",
-                      style: GoogleFonts.poppins(
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+              );
+            },
+            child: const Text("Delete", style: TextStyle(color: Colors.white)),
+          ),
+        ],
       ),
     );
   }
