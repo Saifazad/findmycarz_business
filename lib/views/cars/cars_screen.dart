@@ -50,7 +50,7 @@ class CarsScreen extends StatefulWidget {
 }
 
 class _CarsScreenState extends State<CarsScreen> {
-  final bool _isDarkMode = false;
+  bool _isDarkMode = false;
   String _activeTab = "All Cars"; // "All Cars", "New Cars", "Used Cars"
   int _entriesPerPage = 10;
   int _currentPage = 1;
@@ -595,6 +595,20 @@ class _CarsScreenState extends State<CarsScreen> {
           ),
         ),
         actions: [
+          IconButton(
+            tooltip: _isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode",
+            icon: Icon(
+              _isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_outlined,
+              color: _isDarkMode
+                  ? const Color(0xFFFBBF24)
+                  : const Color(0xFF334155),
+            ),
+            onPressed: () {
+              setState(() {
+                _isDarkMode = !_isDarkMode;
+              });
+            },
+          ),
           IconButton(
             icon: Icon(
               Icons.notifications_none_rounded,
@@ -1417,14 +1431,10 @@ class _CarsScreenState extends State<CarsScreen> {
   }
 
   void _editVehicle(InventoryVehicle v) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => AddCarScreen(
-          carUid: v.id,
-          existingVehicle: v,
-          isEditMode: true,
-        ),
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Editing ${v.id} - ${v.makeModel}"),
+        backgroundColor: const Color(0xFF00A3FF),
       ),
     );
   }

@@ -7,15 +7,7 @@ import '../widgets/admin_profile_avatar.dart';
 
 class AddCarScreen extends StatefulWidget {
   final String carUid;
-  final dynamic existingVehicle;
-  final bool isEditMode;
-
-  const AddCarScreen({
-    super.key,
-    this.carUid = "#CARUID979",
-    this.existingVehicle,
-    this.isEditMode = false,
-  });
+  const AddCarScreen({super.key, this.carUid = "#CARUID979"});
 
   @override
   State<AddCarScreen> createState() => _AddCarScreenState();
@@ -24,16 +16,13 @@ class AddCarScreen extends StatefulWidget {
 class _AddCarScreenState extends State<AddCarScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  // 4-Step Wizard Stepper State
-  int _currentStep = 0;
-
   // Accordion Expand/Collapse States
   bool _primaryDetailsExpanded = true;
-  bool _seoMetadataExpanded = false;
+  bool _seoMetadataExpanded = true;
   bool _dragAndSortEnabled = true;
 
   // Publishing State (Image 1 & 2)
-  bool _publishingExpanded = false;
+  bool _publishingExpanded = true;
   String _publishingStatus = "Published";
   String _location = "...";
   String _homepageVisibility = "Show";
@@ -45,81 +34,61 @@ class _AddCarScreenState extends State<AddCarScreen> {
     "Archived",
   ];
 
-  // Home Sections & Tax Rules State (Image: media_1795250345980_1bcf08c7.png)
+  // Home Sections & Tax Rules State (Image 1)
   List<String> _selectedHomeSections = [];
-  bool _homeSectionsExpanded = false;
-  bool _isAddingHomeSection = false;
-  final _newHomeSectionNameCtrl = TextEditingController();
-  bool _newHomeSectionPriceTabs = false;
-  String _selectedRtoRule = ": Max ₹500,000 (12.00%)";
-  bool _rtoRulesExpanded = false;
-  bool _isAddingRtoRule = false;
-  String _newRtoState = "State";
-  final _newRtoMaxPriceCtrl = TextEditingController();
-  final _newRtoPercentageCtrl = TextEditingController();
-  String _selectedTcsRule = "Above ₹500,000 @ 12.00%";
-  bool _tcsRulesExpanded = false;
-  bool _isAddingTcsRule = false;
-  final _newTcsAbovePriceCtrl = TextEditingController();
-  final _newTcsPercentageCtrl = TextEditingController();
+  String _selectedRtoRule = "1 rule";
+  String _selectedTcsRule = "1 rule";
 
-  final List<Map<String, dynamic>> _homeSectionsList = [
-    {"name": "Certified Car", "priceTabs": false},
-    {"name": "Electric Car", "priceTabs": false},
-    {"name": "Explore Hatchbacks by Price", "priceTabs": true},
-    {"name": "Explore Sedans by Price", "priceTabs": true},
-    {"name": "Explore SUVs by Price", "priceTabs": true},
-    {"name": "Inspected Cars", "priceTabs": false},
+  final List<String> _homeSectionsList = [
+    "Featured Vehicles",
+    "Popular & Trending Cars",
+    "Hot Deals of the Week",
+    "Budget Friendly (< ₹5 Lakhs)",
+    "Verified & Certified Cars",
+    "Luxury & Premium Segment",
+    "Recently Added Stock",
+    "Zero Down Payment Eligible",
   ];
 
-  final List<Map<String, dynamic>> _rtoRulesList = [
-    {
-      "state": "",
-      "maxPrice": "500,000",
-      "percentage": "12.00",
-    },
+  final List<String> _rtoRulesList = [
+    "1 rule",
+    "Standard State RTO Rule (8% Life Time Tax)",
+    "Delhi/NCR Transfer & Hypothecation Fee",
+    "Commercial Vehicle Permitted Tax Rule",
+    "Zero Tax Exemption Rule",
   ];
 
-  final List<Map<String, dynamic>> _tcsRulesList = [
-    {
-      "abovePrice": "500,000",
-      "percentage": "12.00",
-    },
+  final List<String> _tcsRulesList = [
+    "1 rule",
+    "1% TCS Applicable (Transaction above ₹10 Lakhs)",
+    "No TCS Applicable (< ₹10 Lakhs)",
+    "Form 27C TCS Exemption Submitted",
+    "Section 206C(1F) Motor Vehicle Sale Rule",
   ];
 
   // Make, Model & Features State
-  bool _manufacturerExpanded = false;
+  bool _manufacturerExpanded = true;
   final _manufacturerSearchCtrl = TextEditingController();
   bool _isAddingManufacturer = false;
   final _newManufacturerNameCtrl = TextEditingController();
   String? _newManufacturerImageMock;
-  bool _modelExpanded = false;
+  bool _modelExpanded = true;
   final _modelSearchCtrl = TextEditingController();
   bool _isAddingModel = false;
   final _newModelNameCtrl = TextEditingController();
-  bool _bodyTypeExpanded = false;
+  bool _bodyTypeExpanded = true;
   final _bodyTypeSearchCtrl = TextEditingController();
   bool _isAddingBodyType = false;
   final _newBodyTypeNameCtrl = TextEditingController();
-  bool _exteriorColorExpanded = false;
+  bool _exteriorColorExpanded = true;
   final _exteriorColorSearchCtrl = TextEditingController();
   bool _isAddingExteriorColor = false;
   final _newExteriorColorNameCtrl = TextEditingController();
-  bool _featuresExpanded = false;
-  final _featuresSearchCtrl = TextEditingController();
-  bool _isAddingFeature = false;
-  final _newFeatureNameCtrl = TextEditingController();
   String _selectedManufacturer = "Select";
   String _selectedModel = "Select manufacturer first";
   String _selectedBodyType = "Select";
   String _selectedExteriorColor = "Select";
   List<String> _selectedFeatures = [];
-
-  final Set<String> _hiddenManufacturers = {};
-  final Set<String> _hiddenModels = {};
-  final Set<String> _hiddenBodyTypes = {};
-  final Set<String> _hiddenExteriorColors = {};
-  final Set<String> _hiddenFeatures = {};
 
   final List<String> _manufacturers = [
     "AUDI",
@@ -175,7 +144,6 @@ class _AddCarScreenState extends State<AddCarScreen> {
       "Alcazar",
       "Tucson",
       "Ioniq 5",
-      "Xcent",
     ],
     "Tata Motors": [
       "Nexon",
@@ -239,12 +207,26 @@ class _AddCarScreenState extends State<AddCarScreen> {
   ];
 
   final List<String> _featuresList = [
+    "Leather Seat Upholstery",
+    "Ventilated Front Seats",
+    "LED Projector Headlamps",
+    "Wireless Phone Charger",
+    "Power Windows (Front & Rear)",
+    "Steering Mounted Audio Controls",
+    "Electronic Stability Control (ESC)",
+    "Hill Hold Assist",
+    "Tyre Pressure Monitoring System (TPMS)",
+    "Electrically Foldable ORVMs",
+    "Airbags (Driver & Passenger)",
+    "Anti-Lock Braking System (ABS) with EBD",
+    "Electric Sunroof",
     "Alloy Wheels",
-    "Auxiliary Heating",
-    "Bluetooth",
-    "Electric side mirror",
-    "Exterior - extra clean",
-    "Floor Mats",
+    "Touchscreen Infotainment System",
+    "Apple CarPlay & Android Auto",
+    "Reverse Parking Camera with Sensors",
+    "Push Button Start / Stop",
+    "Automatic Climate Control",
+    "Cruise Control",
   ];
 
   // Primary Details Controllers
@@ -286,267 +268,6 @@ class _AddCarScreenState extends State<AddCarScreen> {
         widget.carUid.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
     _permanentUrlSlugCtrl.text =
         cleanUid.isNotEmpty ? cleanUid : "caruid979";
-    if (widget.isEditMode || widget.existingVehicle != null) {
-      _prefillExistingData();
-    }
-  }
-
-  void _prefillExistingData() {
-    final v = widget.existingVehicle;
-    if (v == null && !widget.isEditMode) return;
-
-    // 1. Vehicle Type
-    try {
-      final condition = (v?.condition ?? "").toString().toLowerCase();
-      if (condition.contains("new")) {
-        _vehicleType = "New car";
-      } else {
-        _vehicleType = "Used car";
-      }
-    } catch (_) {}
-
-    // 2. Status
-    try {
-      final avail = (v?.availability ?? v?.status ?? "").toString();
-      if (_statusOptions.contains(avail)) {
-        _status = avail;
-      }
-    } catch (_) {}
-
-    // 3. Make & Model
-    String makeModelStr = "";
-    try {
-      makeModelStr = (v?.makeModel ?? v?.title ?? "").toString();
-    } catch (_) {}
-
-    if (makeModelStr.isNotEmpty) {
-      _carNameCtrl.text = makeModelStr;
-
-      // Auto-detect manufacturer
-      final upper = makeModelStr.toUpperCase();
-      if (upper.contains("TOYOTA")) {
-        _selectedManufacturer = "Toyota";
-      } else if (upper.contains("HYUNDAI")) {
-        _selectedManufacturer = "Hyundai";
-      } else if (upper.contains("MARUTI")) {
-        _selectedManufacturer = "Maruti Suzuki";
-      } else if (upper.contains("BMW")) {
-        _selectedManufacturer = "BMW";
-      } else if (upper.contains("AUDI")) {
-        _selectedManufacturer = "AUDI";
-      } else if (upper.contains("TATA")) {
-        _selectedManufacturer = "Tata Motors";
-      } else if (upper.contains("MAHINDRA")) {
-        _selectedManufacturer = "Mahindra";
-      } else if (upper.contains("HONDA")) {
-        _selectedManufacturer = "Honda";
-      } else if (upper.contains("KIA")) {
-        _selectedManufacturer = "Kia";
-      }
-
-      // Auto-detect model
-      if (_modelsByManufacturer.containsKey(_selectedManufacturer)) {
-        final models = _modelsByManufacturer[_selectedManufacturer]!;
-        for (final m in models) {
-          if (upper.contains(m.toUpperCase())) {
-            _selectedModel = m;
-            break;
-          }
-        }
-      }
-
-      // Body Type
-      if (upper.contains("FORTUNER") ||
-          upper.contains("BREZZA") ||
-          upper.contains("THAR") ||
-          upper.contains("SCORPIO") ||
-          upper.contains("HARRIER")) {
-        _selectedBodyType = "5 DOOR STEEL SHELL";
-      } else if (upper.contains("XCENT") ||
-          upper.contains("CITY") ||
-          upper.contains("VERNA") ||
-          upper.contains("DZIRE") ||
-          upper.contains("AURA")) {
-        _selectedBodyType = "CAR (SEDAN)";
-      }
-    }
-
-    // 4. Year
-    try {
-      final y = (v?.year ?? v?.yearModel ?? "").toString();
-      if (y.isNotEmpty) {
-        _makeYearCtrl.text = y;
-      }
-    } catch (_) {}
-
-    // 5. Location & RTO
-    try {
-      final loc = (v?.location ?? "").toString();
-      if (loc.isNotEmpty) {
-        _location = loc;
-        final locUpper = loc.toUpperCase();
-        if (locUpper.contains("DEHRADUN") ||
-            locUpper.contains("UTTARANCHAL") ||
-            locUpper.contains("UTTARAKHAND")) {
-          _rtoCode = "UK-07 (Dehradun)";
-        } else if (locUpper.contains("BIKANER") ||
-            locUpper.contains("JAIPUR") ||
-            locUpper.contains("RAJASTHAN")) {
-          _rtoCode = "RJ-14 (Jaipur)";
-        } else if (locUpper.contains("DELHI")) {
-          _rtoCode = "DL-01 (Delhi North)";
-        } else if (locUpper.contains("NOIDA")) {
-          _rtoCode = "UP-16 (Noida)";
-        } else if (locUpper.contains("GURGAON")) {
-          _rtoCode = "HR-26 (Gurgaon)";
-        }
-      }
-    } catch (_) {}
-
-    // 6. Owner / Agent Name
-    try {
-      final owner =
-          (v?.agent ?? v?.ownerName ?? v?.company ?? "").toString();
-      if (owner.isNotEmpty) {
-        _ownerNameCtrl.text = owner;
-      }
-    } catch (_) {}
-
-    // 7. RC Number
-    final uidClean =
-        widget.carUid.replaceAll("#", "").replaceAll("-", "").trim();
-    if (_rtoCode.startsWith("UK-07")) {
-      _rcNumberCtrl.text =
-          "UK07AB${uidClean.length >= 4 ? uidClean.substring(uidClean.length - 4) : uidClean}";
-    } else if (_rtoCode.startsWith("RJ-14")) {
-      _rcNumberCtrl.text =
-          "RJ14CA${uidClean.length >= 4 ? uidClean.substring(uidClean.length - 4) : uidClean}";
-    } else {
-      _rcNumberCtrl.text =
-          "DL01AQ${uidClean.length >= 4 ? uidClean.substring(uidClean.length - 4) : uidClean}";
-    }
-
-    // 8. Seating capacity, Engine CC, Price, KMs
-    final mmUpper = makeModelStr.toUpperCase();
-    if (mmUpper.contains("FORTUNER") || mmUpper.contains("INNOVA")) {
-      _seatingCapacity = "7 Seater";
-      _engineCcCtrl.text = "2755";
-      _grossWeightCtrl.text = "2610";
-      _unladenWeightCtrl.text = "2180";
-      _askingPriceCtrl.text = "15,50,000";
-      _kmDrivenCtrl.text = "68,000";
-      _mileageCtrl.text = "14.2 km/l";
-      _fuelType = "Diesel";
-      _transmission = "Automatic";
-    } else if (mmUpper.contains("BREZZA")) {
-      _seatingCapacity = "5 Seater";
-      _engineCcCtrl.text = "1462";
-      _grossWeightCtrl.text = "1680";
-      _unladenWeightCtrl.text = "1180";
-      _askingPriceCtrl.text = "8,25,000";
-      _kmDrivenCtrl.text = "42,000";
-      _mileageCtrl.text = "17.0 km/l";
-      _fuelType = "Petrol";
-      _transmission = "Manual";
-    } else if (mmUpper.contains("XCENT")) {
-      _seatingCapacity = "5 Seater";
-      _engineCcCtrl.text = "1197";
-      _grossWeightCtrl.text = "1420";
-      _unladenWeightCtrl.text = "980";
-      _askingPriceCtrl.text = "3,85,000";
-      _kmDrivenCtrl.text = "55,000";
-      _mileageCtrl.text = "19.1 km/l";
-      _fuelType = "Diesel";
-      _transmission = "Manual";
-    } else {
-      _seatingCapacity = "5 Seater";
-      _engineCcCtrl.text = "1498";
-      _grossWeightCtrl.text = "1650";
-      _unladenWeightCtrl.text = "1150";
-      _askingPriceCtrl.text = "6,50,000";
-      _kmDrivenCtrl.text = "48,000";
-      _mileageCtrl.text = "16.5 km/l";
-      _fuelType = "Petrol";
-      _transmission = "Manual";
-    }
-
-    // Price override if available
-    try {
-      final p = (v?.price ?? "").toString();
-      if (p.isNotEmpty) {
-        _askingPriceCtrl.text = p;
-      }
-      final k = (v?.kms ?? "").toString();
-      if (k.isNotEmpty) {
-        _kmDrivenCtrl.text = k;
-      }
-    } catch (_) {}
-
-    // Technical details
-    _cylindersCtrl.text = "4";
-    _insuranceCompanyCtrl.text = "HDFC ERGO General Insurance";
-    _policyNumberCtrl.text = "POL2026887712";
-    _engineNumberCtrl.text = "1GD-FTV458921";
-    _chassisNumberCtrl.text = "MBJ11FE22K00124";
-    _financerCtrl.text = "HDFC Bank Ltd";
-    _discountCtrl.text = "25,000";
-    _fitnessValidUptoCtrl.text = "28 Nov 2028";
-    _registrationDateCtrl.text = "17 Nov 2020";
-    _insuranceExpiryCtrl.text = "15 Oct 2027";
-    _puccValidUptoCtrl.text = "12 Mar 2027";
-    _rcStatus = "Active";
-    _ownership = "1st Owner";
-
-    // Description
-    try {
-      final sub = (v?.subtitle ?? makeModelStr).toString();
-      _descriptionCtrl.text =
-          "$sub in excellent condition. Well-maintained, certified single-owner vehicle with complete service history.";
-    } catch (_) {}
-
-    // SEO
-    _metaTitleCtrl.text = "$makeModelStr | Find My Carz";
-    _metaKeywordsCtrl.text =
-        "used car, $makeModelStr, certified car, $_location";
-    _metaDescriptionCtrl.text =
-        "Buy certified $makeModelStr in $_location at best price with warranty and easy financing.";
-
-    // Publishing
-    try {
-      final st = (v?.status ?? "").toString().toLowerCase();
-      if (st == "inactive" || st == "draft") {
-        _publishingStatus = "Draft";
-      } else {
-        _publishingStatus = "Published";
-      }
-      final vis = (v?.visibility ?? "").toString().toLowerCase();
-      if (vis == "private" || vis == "hide") {
-        _homepageVisibility = "Hide";
-      } else {
-        _homepageVisibility = "Show";
-      }
-    } catch (_) {}
-
-    // Features & Colors
-    _selectedExteriorColor = "White";
-    _selectedFeatures = [
-      "Alloy Wheels",
-      "Bluetooth",
-      "Floor Mats",
-      "Electric side mirror",
-    ];
-
-    // Images
-    try {
-      final img = (v?.image ?? "").toString();
-      if (img.isNotEmpty) {
-        _uploadedImages.add(img);
-      } else {
-        _uploadedImages.add("assets/images/car1.webp");
-      }
-    } catch (_) {
-      _uploadedImages.add("assets/images/car1.webp");
-    }
   }
 
   // Dropdown States
@@ -657,13 +378,6 @@ class _AddCarScreenState extends State<AddCarScreen> {
     _newBodyTypeNameCtrl.dispose();
     _exteriorColorSearchCtrl.dispose();
     _newExteriorColorNameCtrl.dispose();
-    _featuresSearchCtrl.dispose();
-    _newFeatureNameCtrl.dispose();
-    _newHomeSectionNameCtrl.dispose();
-    _newRtoMaxPriceCtrl.dispose();
-    _newRtoPercentageCtrl.dispose();
-    _newTcsAbovePriceCtrl.dispose();
-    _newTcsPercentageCtrl.dispose();
     super.dispose();
   }
 
@@ -780,9 +494,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(widget.isEditMode
-            ? "Vehicle ${widget.carUid} updated successfully!"
-            : "Vehicle ${widget.carUid} added successfully!"),
+        content: Text("Vehicle ${widget.carUid} added successfully!"),
         backgroundColor: const Color(0xFF008844),
       ),
     );
@@ -801,7 +513,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
           text: TextSpan(
             children: [
               TextSpan(
-                text: widget.isEditMode ? "Edit car " : "Add new car ",
+                text: "Add new car ",
                 style: GoogleFonts.poppins(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -826,224 +538,81 @@ class _AddCarScreenState extends State<AddCarScreen> {
       ),
       body: Form(
         key: _formKey,
-        child: Column(
-          children: [
-            // Pinned/Fixed Stepper Header (stays fixed when scrolling)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-              child: _buildStepperIndicator(),
-            ),
-
-            // Scrollable Active Step Content & Navigation
-            Expanded(
-              child: SingleChildScrollView(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Active Step Content
-                    if (_currentStep == 0)
-                      _buildPrimaryDetailsCard()
-                    else if (_currentStep == 1) ...[
-                      _buildManufacturerCard(),
-                      const SizedBox(height: 14),
-                      _buildModelCard(),
-                    ] else if (_currentStep == 2) ...[
-                      _buildBodyTypeCard(),
-                      const SizedBox(height: 14),
-                      _buildExteriorColorCard(),
-                    ] else if (_currentStep == 3) ...[
-                      _buildFeaturesCard(),
-                      const SizedBox(height: 14),
-                      _buildHomeSectionsCard(),
-                      const SizedBox(height: 14),
-                      _buildRtoRulesCard(),
-                      const SizedBox(height: 14),
-                      _buildTcsRulesCard(),
-                      const SizedBox(height: 14),
-                      _buildPublishingCard(),
-                    ] else if (_currentStep == 4)
-                      _buildImageGalleryCard()
-                    else
-                      _buildSeoMetadataCard(),
-
-                    const SizedBox(height: 24),
-
-                    // Bottom Step Navigation & Actions
-                    _buildStepNavigationButtons(),
-                    const SizedBox(height: 30),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // Modern 6-Step Wizard Stepper Header
-  Widget _buildStepperIndicator() {
-    final stepTitles = [
-      "Primary Details",
-      "Make & Model",
-      "Body & Color",
-      "Features & Rules",
-      "Image Gallery",
-      "SEO & Metadata",
-    ];
-
-    return Container(
-      margin: EdgeInsets.zero,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x05000000),
-            blurRadius: 6,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Step Counter Badge & Title
-          Row(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF003366),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  "Step ${_currentStep + 1} of 6",
-                  style: GoogleFonts.poppins(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+              // 1. Primary Details Section (Card)
+              _buildPrimaryDetailsCard(),
+              const SizedBox(height: 14),
+
+              // 2. Individual Slim Action Tiles (from Image 1: Publishing, Manufacturer, Model, Body Type, Exterior Color, Features, Home Sections, RTO Rules, TCS Rules)
+              _buildSlimTilesSection(),
+              const SizedBox(height: 6),
+
+              // 3. Image Gallery Section (Card)
+              _buildImageGalleryCard(),
+              const SizedBox(height: 14),
+
+              // 4. SEO & Metadata Section (Card from Image 2)
+              _buildSeoMetadataCard(),
+              const SizedBox(height: 24),
+
+              // Bottom Action Buttons
+              Row(
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: ElevatedButton.icon(
+                      onPressed: _submitForm,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF003366),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        elevation: 0,
+                      ),
+                      icon: const Icon(Icons.check_circle_outline, size: 18),
+                      label: Text(
+                        "Save Vehicle",
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF64748B),
+                        side: const BorderSide(color: Color(0xFFCBD5E1)),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: Text(
+                        "Cancel",
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 8),
-              Text(
-                stepTitles[_currentStep],
-                style: GoogleFonts.poppins(
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF0F172A),
-                ),
-              ),
+              const SizedBox(height: 30),
             ],
           ),
-          const SizedBox(height: 10),
-
-          // Linear Progress Bar
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: (_currentStep + 1) / 6,
-              backgroundColor: const Color(0xFFF1F5F9),
-              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF003366)),
-              minHeight: 5,
-            ),
-          ),
-        ],
+        ),
       ),
-    );
-  }
-
-  // Bottom Step Navigation Buttons
-  Widget _buildStepNavigationButtons() {
-    return Row(
-      children: [
-        // 1. Back Button (always present: goes to previous step, or exits screen on Step 1)
-        Expanded(
-          child: OutlinedButton.icon(
-            onPressed: () {
-              if (_currentStep > 0) {
-                setState(() {
-                  _currentStep--;
-                });
-              } else {
-                Navigator.pop(context);
-              }
-            },
-            style: OutlinedButton.styleFrom(
-              foregroundColor: const Color(0xFF475569),
-              side: const BorderSide(color: Color(0xFFCBD5E1)),
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            icon: const Icon(Icons.arrow_back, size: 16),
-            label: Text(
-              "Back",
-              style: GoogleFonts.poppins(
-                fontSize: 13.5,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-
-        // 2. Next / Save Vehicle Button
-        Expanded(
-          child: _currentStep < 5
-              ? ElevatedButton.icon(
-                  onPressed: () {
-                    setState(() {
-                      _currentStep++;
-                    });
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF003366),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    elevation: 0,
-                  ),
-                  icon: const Icon(Icons.arrow_forward, size: 16),
-                  label: Text(
-                    "Next",
-                    style: GoogleFonts.poppins(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                )
-              : ElevatedButton.icon(
-                  onPressed: _submitForm,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF008844),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    elevation: 0,
-                  ),
-                  icon: const Icon(Icons.check_circle_outline, size: 18),
-                  label: Text(
-                    "Save Vehicle",
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-        ),
-      ],
     );
   }
 
@@ -1496,6 +1065,162 @@ class _AddCarScreenState extends State<AddCarScreen> {
               ),
             ),
         ],
+      ),
+    );
+  }
+
+  // ================= 2. INDIVIDUAL SLIM ACTION TILES (IMAGE 1) =================
+  Widget _buildSlimTilesSection() {
+    return Column(
+      children: [
+        // 1. Publishing Card (Image 2)
+        _buildPublishingCard(),
+
+        // 2. Manufacturer * (Card - Image 2)
+        _buildManufacturerCard(),
+
+        // 3. Model * (Card - Image 2)
+        _buildModelCard(),
+
+        // 4. Body Type (Card - Image 1)
+        _buildBodyTypeCard(),
+
+        // 5. Exterior Color * (Card - Image 2)
+        _buildExteriorColorCard(),
+
+        // 6. Features
+        _buildSlimActionTile(
+          leadingIcon: const Icon(
+            Icons.view_list_rounded,
+            color: Color(0xFF10B981),
+            size: 20,
+          ),
+          title: "Features",
+          rightText: _selectedFeatures.isNotEmpty
+              ? "${_selectedFeatures.length} selected"
+              : null,
+          onTap: _showFeaturesPicker,
+        ),
+
+        // 7. Home Sections
+        _buildSlimActionTile(
+          leadingIcon: const Icon(
+            Icons.meeting_room_outlined,
+            color: Color(0xFFEF4444),
+            size: 20,
+          ),
+          title: "Home Sections",
+          rightText: _selectedHomeSections.isNotEmpty
+              ? "${_selectedHomeSections.length} selected"
+              : null,
+          onTap: _showHomeSectionsPicker,
+        ),
+
+        // 8. RTO Rules
+        _buildSlimActionTile(
+          leadingIcon: const Icon(
+            Icons.architecture_rounded,
+            color: Color(0xFFF97316),
+            size: 20,
+          ),
+          title: "RTO Rules",
+          rightText: _selectedRtoRule,
+          onTap: _showRtoRulesPicker,
+        ),
+
+        // 9. TCS Rules
+        _buildSlimActionTile(
+          leadingIcon: const Icon(
+            Icons.auto_awesome,
+            color: Color(0xFF06B6D4),
+            size: 19,
+          ),
+          title: "TCS Rules",
+          rightText: _selectedTcsRule,
+          onTap: _showTcsRulesPicker,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSlimActionTile({
+    required Widget leadingIcon,
+    required String title,
+    bool isRequired = false,
+    String? rightText,
+    required VoidCallback onTap,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 24,
+                height: 24,
+                child: Center(child: leadingIcon),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: RichText(
+                  text: TextSpan(
+                    children: [
+                      TextSpan(
+                        text: title,
+                        style: GoogleFonts.poppins(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF0F172A),
+                        ),
+                      ),
+                      if (isRequired)
+                        TextSpan(
+                          text: " *",
+                          style: GoogleFonts.poppins(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.red,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+              if (rightText != null && rightText.isNotEmpty) ...[
+                Text(
+                  rightText,
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFF64748B),
+                  ),
+                ),
+                const SizedBox(width: 4),
+              ],
+              const Icon(
+                Icons.chevron_right_rounded,
+                size: 20,
+                color: Color(0xFF94A3B8),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -2124,8 +1849,6 @@ class _AddCarScreenState extends State<AddCarScreen> {
     VoidCallback? onTapOverride,
     VoidCallback? onStateChange,
   }) {
-    final isHidden = _hiddenManufacturers.contains(mfg);
-
     return InkWell(
       onTap: onTapOverride ??
           () {
@@ -2147,19 +1870,14 @@ class _AddCarScreenState extends State<AddCarScreen> {
                   ? Icons.radio_button_checked
                   : Icons.radio_button_unchecked,
               size: 20,
-              color: isHidden
-                  ? const Color(0xFFCBD5E1)
-                  : (isSelected
-                      ? const Color(0xFF2563EB)
-                      : const Color(0xFFCBD5E1)),
+              color: isSelected
+                  ? const Color(0xFF2563EB)
+                  : const Color(0xFFCBD5E1),
             ),
             const SizedBox(width: 12),
 
             // Brand Logo container
-            Opacity(
-              opacity: isHidden ? 0.45 : 1.0,
-              child: _buildBrandLogoWidget(mfg),
-            ),
+            _buildBrandLogoWidget(mfg),
             const SizedBox(width: 12),
 
             // Manufacturer Name
@@ -2169,41 +1887,22 @@ class _AddCarScreenState extends State<AddCarScreen> {
                 style: GoogleFonts.poppins(
                   fontSize: 13.5,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                  color: isHidden
-                      ? const Color(0xFF94A3B8)
-                      : const Color(0xFF0F172A),
-                  decoration: isHidden
-                      ? TextDecoration.lineThrough
-                      : TextDecoration.none,
-                  decorationColor: const Color(0xFF94A3B8),
+                  color: const Color(0xFF0F172A),
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
 
-            // Action 1: Eye (Toggle Hide)
+            // Action 1: Eye (View)
             InkWell(
-              onTap: () {
-                setState(() {
-                  if (_hiddenManufacturers.contains(mfg)) {
-                    _hiddenManufacturers.remove(mfg);
-                  } else {
-                    _hiddenManufacturers.add(mfg);
-                  }
-                });
-                onStateChange?.call();
-              },
+              onTap: () => _viewManufacturerDetails(mfg),
               borderRadius: BorderRadius.circular(4),
-              child: Padding(
-                padding: const EdgeInsets.all(5),
+              child: const Padding(
+                padding: EdgeInsets.all(5),
                 child: Icon(
-                  isHidden
-                      ? Icons.visibility_off_outlined
-                      : Icons.remove_red_eye_outlined,
+                  Icons.visibility_outlined,
                   size: 19,
-                  color: isHidden
-                      ? const Color(0xFF94A3B8)
-                      : const Color(0xFF14B8A6),
+                  color: Color(0xFF14B8A6),
                 ),
               ),
             ),
@@ -2214,14 +1913,12 @@ class _AddCarScreenState extends State<AddCarScreen> {
               onTap: () =>
                   _editManufacturerDialog(mfg, onUpdated: onStateChange),
               borderRadius: BorderRadius.circular(4),
-              child: Padding(
-                padding: const EdgeInsets.all(5),
+              child: const Padding(
+                padding: EdgeInsets.all(5),
                 child: Icon(
                   Icons.edit_outlined,
                   size: 18,
-                  color: isHidden
-                      ? const Color(0xFFCBD5E1)
-                      : const Color(0xFF94A3B8),
+                  color: Color(0xFF94A3B8),
                 ),
               ),
             ),
@@ -2232,14 +1929,12 @@ class _AddCarScreenState extends State<AddCarScreen> {
               onTap: () =>
                   _deleteManufacturerDialog(mfg, onDeleted: onStateChange),
               borderRadius: BorderRadius.circular(4),
-              child: Padding(
-                padding: const EdgeInsets.all(5),
+              child: const Padding(
+                padding: EdgeInsets.all(5),
                 child: Icon(
                   Icons.delete_outline_rounded,
                   size: 19,
-                  color: isHidden
-                      ? const Color(0xFFCBD5E1)
-                      : const Color(0xFF94A3B8),
+                  color: Color(0xFF94A3B8),
                 ),
               ),
             ),
@@ -2358,6 +2053,100 @@ class _AddCarScreenState extends State<AddCarScreen> {
     );
   }
 
+  void _viewManufacturerDetails(String mfg) {
+    final models = _modelsByManufacturer[mfg] ?? ["Standard Model Variants"];
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          title: Row(
+            children: [
+              _buildBrandLogoWidget(mfg),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  mfg,
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF0F172A),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFDCFCE7),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  "Status: Active Brand",
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF15803D),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                "Registered Models (${models.length}):",
+                style: GoogleFonts.poppins(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF64748B),
+                ),
+              ),
+              const SizedBox(height: 6),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: models.map((mod) {
+                  return Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      mod,
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: const Color(0xFF334155),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(
+                "Close",
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF003366),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   void _editManufacturerDialog(String mfg, {VoidCallback? onUpdated}) {
     final editCtrl = TextEditingController(text: mfg);
@@ -3222,8 +3011,6 @@ class _AddCarScreenState extends State<AddCarScreen> {
     VoidCallback? onTapOverride,
     VoidCallback? onStateChange,
   }) {
-    final isHidden = _hiddenModels.contains(mod);
-
     return InkWell(
       onTap: onTapOverride ??
           () {
@@ -3247,11 +3034,9 @@ class _AddCarScreenState extends State<AddCarScreen> {
                   ? Icons.radio_button_checked
                   : Icons.radio_button_unchecked,
               size: 20,
-              color: isHidden
-                  ? const Color(0xFFCBD5E1)
-                  : (isSelected
-                      ? const Color(0xFF2563EB)
-                      : const Color(0xFFCBD5E1)),
+              color: isSelected
+                  ? const Color(0xFF2563EB)
+                  : const Color(0xFFCBD5E1),
             ),
             const SizedBox(width: 12),
 
@@ -3262,41 +3047,22 @@ class _AddCarScreenState extends State<AddCarScreen> {
                 style: GoogleFonts.poppins(
                   fontSize: 13.5,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                  color: isHidden
-                      ? const Color(0xFF94A3B8)
-                      : const Color(0xFF0F172A),
-                  decoration: isHidden
-                      ? TextDecoration.lineThrough
-                      : TextDecoration.none,
-                  decorationColor: const Color(0xFF94A3B8),
+                  color: const Color(0xFF0F172A),
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
 
-            // Action 1: Eye (Toggle Hide)
+            // Action 1: Eye (View)
             InkWell(
-              onTap: () {
-                setState(() {
-                  if (_hiddenModels.contains(mod)) {
-                    _hiddenModels.remove(mod);
-                  } else {
-                    _hiddenModels.add(mod);
-                  }
-                });
-                onStateChange?.call();
-              },
+              onTap: () => _viewModelDetails(mod),
               borderRadius: BorderRadius.circular(4),
-              child: Padding(
-                padding: const EdgeInsets.all(5),
+              child: const Padding(
+                padding: EdgeInsets.all(5),
                 child: Icon(
-                  isHidden
-                      ? Icons.visibility_off_outlined
-                      : Icons.remove_red_eye_outlined,
+                  Icons.visibility_outlined,
                   size: 19,
-                  color: isHidden
-                      ? const Color(0xFF94A3B8)
-                      : const Color(0xFF14B8A6),
+                  color: Color(0xFF14B8A6),
                 ),
               ),
             ),
@@ -3333,6 +3099,94 @@ class _AddCarScreenState extends State<AddCarScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  void _viewModelDetails(String mod) {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFECFEFF),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: const Icon(Icons.directions_car_filled_rounded,
+                    color: Color(0xFF0891B2), size: 18),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  mod,
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF0F172A),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFDCFCE7),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  "Status: Active Production Model",
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF15803D),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                "Manufacturer: ${_selectedManufacturer != 'Select' ? _selectedManufacturer : 'Generic / Multibrand'}",
+                style: GoogleFonts.poppins(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFF475569),
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                "Supported Variants: Petrol, Diesel, CNG, Hybrid",
+                style: GoogleFonts.poppins(
+                  fontSize: 12,
+                  color: const Color(0xFF64748B),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(
+                "Close",
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF003366),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -4032,8 +3886,6 @@ class _AddCarScreenState extends State<AddCarScreen> {
     VoidCallback? onTapOverride,
     VoidCallback? onStateChange,
   }) {
-    final isHidden = _hiddenBodyTypes.contains(bt);
-
     return InkWell(
       onTap: onTapOverride ??
           () {
@@ -4052,31 +3904,26 @@ class _AddCarScreenState extends State<AddCarScreen> {
                   ? Icons.radio_button_checked
                   : Icons.radio_button_unchecked,
               size: 20,
-              color: isHidden
-                  ? const Color(0xFFCBD5E1)
-                  : (isSelected
-                      ? const Color(0xFF2563EB)
-                      : const Color(0xFFCBD5E1)),
+              color: isSelected
+                  ? const Color(0xFF2563EB)
+                  : const Color(0xFFCBD5E1),
             ),
             const SizedBox(width: 12),
 
             // Car icon badge
-            Opacity(
-              opacity: isHidden ? 0.45 : 1.0,
-              child: Container(
-                width: 38,
-                height: 26,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
-                ),
-                child: const Center(
-                  child: Icon(
-                    Icons.directions_car_rounded,
-                    size: 16,
-                    color: Color(0xFF0F172A),
-                  ),
+            Container(
+              width: 38,
+              height: 26,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: const Center(
+                child: Icon(
+                  Icons.directions_car_rounded,
+                  size: 16,
+                  color: Color(0xFF0F172A),
                 ),
               ),
             ),
@@ -4089,41 +3936,22 @@ class _AddCarScreenState extends State<AddCarScreen> {
                 style: GoogleFonts.poppins(
                   fontSize: 13.5,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                  color: isHidden
-                      ? const Color(0xFF94A3B8)
-                      : const Color(0xFF0F172A),
-                  decoration: isHidden
-                      ? TextDecoration.lineThrough
-                      : TextDecoration.none,
-                  decorationColor: const Color(0xFF94A3B8),
+                  color: const Color(0xFF0F172A),
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
 
-            // Action 1: Eye (Toggle Hide)
+            // Action 1: Eye (View)
             InkWell(
-              onTap: () {
-                setState(() {
-                  if (_hiddenBodyTypes.contains(bt)) {
-                    _hiddenBodyTypes.remove(bt);
-                  } else {
-                    _hiddenBodyTypes.add(bt);
-                  }
-                });
-                onStateChange?.call();
-              },
+              onTap: () => _viewBodyTypeDetails(bt),
               borderRadius: BorderRadius.circular(4),
-              child: Padding(
-                padding: const EdgeInsets.all(5),
+              child: const Padding(
+                padding: EdgeInsets.all(5),
                 child: Icon(
-                  isHidden
-                      ? Icons.visibility_off_outlined
-                      : Icons.remove_red_eye_outlined,
+                  Icons.visibility_outlined,
                   size: 19,
-                  color: isHidden
-                      ? const Color(0xFF94A3B8)
-                      : const Color(0xFF14B8A6),
+                  color: Color(0xFF14B8A6),
                 ),
               ),
             ),
@@ -4133,14 +3961,12 @@ class _AddCarScreenState extends State<AddCarScreen> {
             InkWell(
               onTap: () => _editBodyTypeDialog(bt, onUpdated: onStateChange),
               borderRadius: BorderRadius.circular(4),
-              child: Padding(
-                padding: const EdgeInsets.all(5),
+              child: const Padding(
+                padding: EdgeInsets.all(5),
                 child: Icon(
                   Icons.edit_outlined,
                   size: 18,
-                  color: isHidden
-                      ? const Color(0xFFCBD5E1)
-                      : const Color(0xFF94A3B8),
+                  color: Color(0xFF94A3B8),
                 ),
               ),
             ),
@@ -4150,20 +3976,106 @@ class _AddCarScreenState extends State<AddCarScreen> {
             InkWell(
               onTap: () => _deleteBodyTypeDialog(bt, onDeleted: onStateChange),
               borderRadius: BorderRadius.circular(4),
-              child: Padding(
-                padding: const EdgeInsets.all(5),
+              child: const Padding(
+                padding: EdgeInsets.all(5),
                 child: Icon(
                   Icons.delete_outline_rounded,
                   size: 19,
-                  color: isHidden
-                      ? const Color(0xFFCBD5E1)
-                      : const Color(0xFF94A3B8),
+                  color: Color(0xFF94A3B8),
                 ),
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  void _viewBodyTypeDetails(String bt) {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF3E8FF),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: const Icon(Icons.local_shipping_outlined,
+                    color: Color(0xFF7C3AED), size: 18),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  bt,
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF0F172A),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFDCFCE7),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  "Status: Active Standard Category",
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF15803D),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                "Category: Official Vehicle Body Classification",
+                style: GoogleFonts.poppins(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFF475569),
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                "Used for RTO registration & vehicle specification filtering.",
+                style: GoogleFonts.poppins(
+                  fontSize: 12,
+                  color: const Color(0xFF64748B),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(
+                "Close",
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF003366),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -4833,8 +4745,6 @@ class _AddCarScreenState extends State<AddCarScreen> {
     VoidCallback? onTapOverride,
     VoidCallback? onStateChange,
   }) {
-    final isHidden = _hiddenExteriorColors.contains(name);
-
     return InkWell(
       onTap: onTapOverride ??
           () {
@@ -4853,29 +4763,24 @@ class _AddCarScreenState extends State<AddCarScreen> {
                   ? Icons.radio_button_checked
                   : Icons.radio_button_unchecked,
               size: 20,
-              color: isHidden
-                  ? const Color(0xFFCBD5E1)
-                  : (isSelected
-                      ? const Color(0xFF2563EB)
-                      : const Color(0xFFCBD5E1)),
+              color: isSelected
+                  ? const Color(0xFF2563EB)
+                  : const Color(0xFFCBD5E1),
             ),
             const SizedBox(width: 12),
 
             // Color circle
-            Opacity(
-              opacity: isHidden ? 0.45 : 1.0,
-              child: Container(
-                width: 16,
-                height: 16,
-                decoration: BoxDecoration(
-                  color: color,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: border
-                        ? const Color(0xFFCBD5E1)
-                        : color,
-                    width: 1,
-                  ),
+            Container(
+              width: 16,
+              height: 16,
+              decoration: BoxDecoration(
+                color: color,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: border
+                      ? const Color(0xFFCBD5E1)
+                      : color,
+                  width: 1,
                 ),
               ),
             ),
@@ -4888,41 +4793,22 @@ class _AddCarScreenState extends State<AddCarScreen> {
                 style: GoogleFonts.poppins(
                   fontSize: 13.5,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                  color: isHidden
-                      ? const Color(0xFF94A3B8)
-                      : const Color(0xFF0F172A),
-                  decoration: isHidden
-                      ? TextDecoration.lineThrough
-                      : TextDecoration.none,
-                  decorationColor: const Color(0xFF94A3B8),
+                  color: const Color(0xFF0F172A),
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
 
-            // Action 1: Eye (Toggle Hide)
+            // Action 1: Eye (View)
             InkWell(
-              onTap: () {
-                setState(() {
-                  if (_hiddenExteriorColors.contains(name)) {
-                    _hiddenExteriorColors.remove(name);
-                  } else {
-                    _hiddenExteriorColors.add(name);
-                  }
-                });
-                onStateChange?.call();
-              },
+              onTap: () => _viewExteriorColorDetails(name, color),
               borderRadius: BorderRadius.circular(4),
-              child: Padding(
-                padding: const EdgeInsets.all(5),
+              child: const Padding(
+                padding: EdgeInsets.all(5),
                 child: Icon(
-                  isHidden
-                      ? Icons.visibility_off_outlined
-                      : Icons.remove_red_eye_outlined,
+                  Icons.visibility_outlined,
                   size: 19,
-                  color: isHidden
-                      ? const Color(0xFF94A3B8)
-                      : const Color(0xFF14B8A6),
+                  color: Color(0xFF14B8A6),
                 ),
               ),
             ),
@@ -4933,14 +4819,12 @@ class _AddCarScreenState extends State<AddCarScreen> {
               onTap: () =>
                   _editExteriorColorDialog(name, onUpdated: onStateChange),
               borderRadius: BorderRadius.circular(4),
-              child: Padding(
-                padding: const EdgeInsets.all(5),
+              child: const Padding(
+                padding: EdgeInsets.all(5),
                 child: Icon(
                   Icons.edit_outlined,
                   size: 18,
-                  color: isHidden
-                      ? const Color(0xFFCBD5E1)
-                      : const Color(0xFF94A3B8),
+                  color: Color(0xFF94A3B8),
                 ),
               ),
             ),
@@ -4951,20 +4835,106 @@ class _AddCarScreenState extends State<AddCarScreen> {
               onTap: () =>
                   _deleteExteriorColorDialog(name, onDeleted: onStateChange),
               borderRadius: BorderRadius.circular(4),
-              child: Padding(
-                padding: const EdgeInsets.all(5),
+              child: const Padding(
+                padding: EdgeInsets.all(5),
                 child: Icon(
                   Icons.delete_outline_rounded,
                   size: 19,
-                  color: isHidden
-                      ? const Color(0xFFCBD5E1)
-                      : const Color(0xFF94A3B8),
+                  color: Color(0xFF94A3B8),
                 ),
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  void _viewExteriorColorDetails(String name, Color color) {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          title: Row(
+            children: [
+              Container(
+                width: 22,
+                height: 22,
+                decoration: BoxDecoration(
+                  color: color,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: const Color(0xFFCBD5E1)),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  name,
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF0F172A),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFDCFCE7),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  "Status: Active Standard Finish",
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF15803D),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                "Shade: Official Automotive OEM Grade Paint",
+                style: GoogleFonts.poppins(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFF475569),
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                "Used for vehicle body exterior styling & customer catalog filter.",
+                style: GoogleFonts.poppins(
+                  fontSize: 12,
+                  color: const Color(0xFF64748B),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(
+                "Close",
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF003366),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -5251,3123 +5221,6 @@ class _AddCarScreenState extends State<AddCarScreen> {
               ),
               child: Text(
                 "Save",
-                style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  // -------------------------------------------------------------
-  // Features Methods (Matching Image: media_1795247375638_4da3646e.png)
-  // -------------------------------------------------------------
-  Widget _buildFeaturesCard() {
-    final search = _featuresSearchCtrl.text.trim().toLowerCase();
-    final filtered = _featuresList.where((f) {
-      return f.toLowerCase().contains(search);
-    }).toList();
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header (Collapsible)
-          InkWell(
-            onTap: () {
-              setState(() {
-                _featuresExpanded = !_featuresExpanded;
-              });
-            },
-            onLongPress: _showFeaturesPicker,
-            borderRadius: BorderRadius.circular(10),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.format_list_bulleted_rounded,
-                    color: Color(0xFF10B981),
-                    size: 20,
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    "Features",
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFF0F172A),
-                    ),
-                  ),
-                  if (!_featuresExpanded && _selectedFeatures.isNotEmpty) ...[
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFECFDF5),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        "${_selectedFeatures.length} selected",
-                        style: GoogleFonts.poppins(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF059669),
-                        ),
-                      ),
-                    ),
-                  ],
-                  const Spacer(),
-                  Icon(
-                    _featuresExpanded
-                        ? Icons.keyboard_arrow_down_rounded
-                        : Icons.keyboard_arrow_up_rounded,
-                    size: 22,
-                    color: const Color(0xFF64748B),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          if (_featuresExpanded) ...[
-            const Divider(height: 1, thickness: 1, color: Color(0xFFE2E8F0)),
-
-            // Search Bar: Find features...
-            Padding(
-              padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
-              child: TextField(
-                controller: _featuresSearchCtrl,
-                onChanged: (_) => setState(() {}),
-                style: GoogleFonts.poppins(
-                  fontSize: 13,
-                  color: const Color(0xFF0F172A),
-                ),
-                decoration: InputDecoration(
-                  hintText: "Find features...",
-                  hintStyle: GoogleFonts.poppins(
-                    fontSize: 12.5,
-                    color: const Color(0xFF94A3B8),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 10,
-                  ),
-                  filled: true,
-                  fillColor: const Color(0xFFF8FAFC),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: Color(0xFF003366)),
-                  ),
-                  isDense: true,
-                ),
-              ),
-            ),
-
-            // List of Features with Checkbox
-            Container(
-              constraints: const BoxConstraints(maxHeight: 280),
-              child: filtered.isEmpty
-                  ? Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Center(
-                        child: Text(
-                          "No feature found",
-                          style: GoogleFonts.poppins(
-                            fontSize: 13,
-                            color: const Color(0xFF94A3B8),
-                          ),
-                        ),
-                      ),
-                    )
-                  : ListView.separated(
-                      shrinkWrap: true,
-                      padding: EdgeInsets.zero,
-                      itemCount: filtered.length,
-                      separatorBuilder: (_, __) => const Divider(
-                        height: 1,
-                        thickness: 1,
-                        color: Color(0xFFF1F5F9),
-                      ),
-                      itemBuilder: (ctx, i) {
-                        final feature = filtered[i];
-                        final isChecked = _selectedFeatures.contains(feature);
-                        return _buildFeatureRowItem(feature, isChecked);
-                      },
-                    ),
-            ),
-
-            const Divider(height: 1, thickness: 1, color: Color(0xFFE2E8F0)),
-
-            // Footer Button: + Add Entry
-            InkWell(
-              onTap: () {
-                setState(() {
-                  _isAddingFeature = !_isAddingFeature;
-                });
-              },
-              borderRadius: _isAddingFeature
-                  ? BorderRadius.zero
-                  : const BorderRadius.vertical(bottom: Radius.circular(10)),
-              child: Container(
-                width: double.infinity,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
-                  borderRadius: _isAddingFeature
-                      ? BorderRadius.zero
-                      : const BorderRadius.vertical(bottom: Radius.circular(10)),
-                ),
-                child: Text(
-                  "+ Add Entry",
-                  style: GoogleFonts.poppins(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFF059669),
-                  ),
-                ),
-              ),
-            ),
-
-            // Inline Add Feature Form (Matching Image: media_1795247375638_4da3646e.png)
-            if (_isAddingFeature) ...[
-              const Divider(height: 1, thickness: 1, color: Color(0xFFE2E8F0)),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          "Add Feature ",
-                          style: GoogleFonts.poppins(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF1E293B),
-                          ),
-                        ),
-                        Text(
-                          "Feature Name",
-                          style: GoogleFonts.poppins(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: const Color(0xFF4338CA),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-
-                    Container(
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 44,
-                            height: double.infinity,
-                            decoration: const BoxDecoration(
-                              border: Border(
-                                right: BorderSide(color: Color(0xFFE2E8F0)),
-                              ),
-                            ),
-                            alignment: Alignment.center,
-                            child: const Icon(
-                              Icons.drive_file_rename_outline_rounded,
-                              size: 18,
-                              color: Color(0xFF64748B),
-                            ),
-                          ),
-                          Expanded(
-                            child: TextField(
-                              controller: _newFeatureNameCtrl,
-                              autofocus: true,
-                              style: GoogleFonts.poppins(
-                                fontSize: 13.5,
-                                color: const Color(0xFF0F172A),
-                              ),
-                              decoration: InputDecoration(
-                                hintText: "Name",
-                                hintStyle: GoogleFonts.poppins(
-                                  fontSize: 13,
-                                  color: const Color(0xFF94A3B8),
-                                ),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 10,
-                                ),
-                                border: InputBorder.none,
-                                isDense: true,
-                              ),
-                              onSubmitted: (_) => _saveNewFeature(),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 14),
-
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        ElevatedButton(
-                          onPressed: _saveNewFeature,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF14B8A6),
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 18, vertical: 8),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                          ),
-                          child: Text(
-                            "Save",
-                            style: GoogleFonts.poppins(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        ElevatedButton(
-                          onPressed: () {
-                            setState(() {
-                              _isAddingFeature = false;
-                              _newFeatureNameCtrl.clear();
-                            });
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF818CF8),
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                          ),
-                          child: Text(
-                            "Cancel",
-                            style: GoogleFonts.poppins(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFeatureRowItem(
-    String feature,
-    bool isChecked, {
-    VoidCallback? onTapOverride,
-    VoidCallback? onStateChange,
-  }) {
-    final isHidden = _hiddenFeatures.contains(feature);
-
-    return InkWell(
-      onTap: onTapOverride ??
-          () {
-            setState(() {
-              if (_selectedFeatures.contains(feature)) {
-                _selectedFeatures.remove(feature);
-              } else {
-                _selectedFeatures.add(feature);
-              }
-            });
-            onStateChange?.call();
-          },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        child: Row(
-          children: [
-            // Checkbox (Square with rounded corners)
-            Container(
-              width: 18,
-              height: 18,
-              decoration: BoxDecoration(
-                color: isHidden
-                    ? Colors.transparent
-                    : (isChecked ? const Color(0xFF2563EB) : Colors.transparent),
-                borderRadius: BorderRadius.circular(4),
-                border: Border.all(
-                  color: isHidden
-                      ? const Color(0xFFE2E8F0)
-                      : (isChecked
-                          ? const Color(0xFF2563EB)
-                          : const Color(0xFFCBD5E1)),
-                  width: 1.3,
-                ),
-              ),
-              child: (!isHidden && isChecked)
-                  ? const Icon(
-                      Icons.check,
-                      size: 13,
-                      color: Colors.white,
-                    )
-                  : null,
-            ),
-            const SizedBox(width: 12),
-
-            // Feature Name
-            Expanded(
-              child: Text(
-                feature,
-                style: GoogleFonts.poppins(
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.w500,
-                  color: isHidden
-                      ? const Color(0xFF94A3B8)
-                      : const Color(0xFF0F172A),
-                  decoration: isHidden
-                      ? TextDecoration.lineThrough
-                      : TextDecoration.none,
-                  decorationColor: const Color(0xFF94A3B8),
-                ),
-              ),
-            ),
-
-            // Action Icons (👁️ View, ✏️ Edit, 🗑️ Delete)
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                InkWell(
-                  onTap: () {
-                    setState(() {
-                      if (_hiddenFeatures.contains(feature)) {
-                        _hiddenFeatures.remove(feature);
-                      } else {
-                        _hiddenFeatures.add(feature);
-                      }
-                    });
-                    onStateChange?.call();
-                  },
-                  borderRadius: BorderRadius.circular(4),
-                  child: Padding(
-                    padding: const EdgeInsets.all(4),
-                    child: Icon(
-                      isHidden
-                          ? Icons.visibility_off_outlined
-                          : Icons.remove_red_eye_outlined,
-                      size: 18,
-                      color: isHidden
-                          ? const Color(0xFF94A3B8)
-                          : const Color(0xFF14B8A6),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 6),
-                InkWell(
-                  onTap: () => _editFeatureDialogCard(
-                    feature,
-                    onUpdated: () {
-                      setState(() {});
-                      onStateChange?.call();
-                    },
-                  ),
-                  borderRadius: BorderRadius.circular(4),
-                  child: Padding(
-                    padding: const EdgeInsets.all(4),
-                    child: Icon(
-                      Icons.edit_outlined,
-                      size: 18,
-                      color: isHidden
-                          ? const Color(0xFFCBD5E1)
-                          : const Color(0xFF94A3B8),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 6),
-                InkWell(
-                  onTap: () => _deleteFeatureDialogCard(
-                    feature,
-                    onDeleted: () {
-                      setState(() {});
-                      onStateChange?.call();
-                    },
-                  ),
-                  borderRadius: BorderRadius.circular(4),
-                  child: Padding(
-                    padding: const EdgeInsets.all(4),
-                    child: Icon(
-                      Icons.delete_outline_rounded,
-                      size: 18,
-                      color: isHidden
-                          ? const Color(0xFFCBD5E1)
-                          : const Color(0xFF94A3B8),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _saveNewFeature() {
-    final val = _newFeatureNameCtrl.text.trim();
-    if (val.isNotEmpty) {
-      setState(() {
-        if (!_featuresList.contains(val)) {
-          _featuresList.insert(0, val);
-        }
-        if (!_selectedFeatures.contains(val)) {
-          _selectedFeatures.add(val);
-        }
-        _isAddingFeature = false;
-        _newFeatureNameCtrl.clear();
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Feature '$val' added successfully!"),
-          backgroundColor: const Color(0xFF059669),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
-  }
-
-  void _editFeatureDialogCard(String feature, {VoidCallback? onUpdated}) {
-    final editCtrl = TextEditingController(text: feature);
-    showDialog(
-      context: context,
-      builder: (ctx) {
-        return AlertDialog(
-          backgroundColor: Colors.white,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          title: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF1F5F9),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: const Icon(Icons.edit_outlined,
-                    color: Color(0xFF64748B), size: 20),
-              ),
-              const SizedBox(width: 10),
-              Text(
-                "Edit Feature",
-                style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF0F172A),
-                ),
-              ),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "Feature Name *",
-                style: GoogleFonts.poppins(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: const Color(0xFF64748B),
-                ),
-              ),
-              const SizedBox(height: 6),
-              TextField(
-                controller: editCtrl,
-                autofocus: true,
-                style: GoogleFonts.poppins(
-                  fontSize: 13.5,
-                  color: const Color(0xFF0F172A),
-                ),
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
-                  ),
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(
-                "Cancel",
-                style: GoogleFonts.poppins(color: const Color(0xFF64748B)),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final newName = editCtrl.text.trim();
-                if (newName.isNotEmpty && newName != feature) {
-                  setState(() {
-                    final idx = _featuresList.indexOf(feature);
-                    if (idx != -1) {
-                      _featuresList[idx] = newName;
-                    }
-                    if (_selectedFeatures.contains(feature)) {
-                      _selectedFeatures.remove(feature);
-                      _selectedFeatures.add(newName);
-                    }
-                  });
-                  onUpdated?.call();
-                }
-                Navigator.pop(ctx);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF14B8A6),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8)),
-              ),
-              child: Text(
-                "Save",
-                style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _deleteFeatureDialogCard(String feature, {VoidCallback? onDeleted}) {
-    showDialog(
-      context: context,
-      builder: (ctx) {
-        return AlertDialog(
-          backgroundColor: Colors.white,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          title: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFEE2E2),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: const Icon(Icons.delete_outline_rounded,
-                    color: Color(0xFFDC2626), size: 18),
-              ),
-              const SizedBox(width: 10),
-              Text(
-                "Delete Feature",
-                style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF0F172A),
-                ),
-              ),
-            ],
-          ),
-          content: Text(
-            "Are you sure you want to remove \"$feature\" from features list?",
-            style: GoogleFonts.poppins(
-              fontSize: 13,
-              color: const Color(0xFF475569),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(
-                "Cancel",
-                style: GoogleFonts.poppins(color: const Color(0xFF64748B)),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  _featuresList.remove(feature);
-                  _selectedFeatures.remove(feature);
-                });
-                onDeleted?.call();
-                Navigator.pop(ctx);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFDC2626),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8)),
-              ),
-              child: Text(
-                "Delete",
-                style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  // -------------------------------------------------------------
-  // Home Sections Methods (Matching Image: media_1795250345980_1bcf08c7.png)
-  // -------------------------------------------------------------
-  Widget _buildHomeSectionsCard() {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header (Collapsible)
-          InkWell(
-            onTap: () {
-              setState(() {
-                _homeSectionsExpanded = !_homeSectionsExpanded;
-              });
-            },
-            onLongPress: _showHomeSectionsPicker,
-            borderRadius: BorderRadius.circular(10),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.desktop_windows_outlined,
-                    color: Color(0xFFF87171),
-                    size: 20,
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    "Home Sections",
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFF0F172A),
-                    ),
-                  ),
-                  if (!_homeSectionsExpanded && _selectedHomeSections.isNotEmpty) ...[
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFECFDF5),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        "${_selectedHomeSections.length} selected",
-                        style: GoogleFonts.poppins(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF059669),
-                        ),
-                      ),
-                    ),
-                  ],
-                  const Spacer(),
-                  Icon(
-                    _homeSectionsExpanded
-                        ? Icons.keyboard_arrow_down_rounded
-                        : Icons.keyboard_arrow_up_rounded,
-                    size: 22,
-                    color: const Color(0xFF64748B),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          if (_homeSectionsExpanded) ...[
-            const Divider(height: 1, thickness: 1, color: Color(0xFFE2E8F0)),
-
-            // List of Home Sections
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              padding: EdgeInsets.zero,
-              itemCount: _homeSectionsList.length,
-              separatorBuilder: (_, __) => const Divider(
-                height: 1,
-                thickness: 1,
-                color: Color(0xFFF1F5F9),
-              ),
-              itemBuilder: (ctx, i) {
-                final item = _homeSectionsList[i];
-                final isChecked =
-                    _selectedHomeSections.contains(item["name"] as String);
-                return _buildHomeSectionRowItem(item, isChecked);
-              },
-            ),
-
-            const Divider(height: 1, thickness: 1, color: Color(0xFFE2E8F0)),
-
-            // Footer Button: + Add Entry
-            InkWell(
-              onTap: () {
-                setState(() {
-                  _isAddingHomeSection = !_isAddingHomeSection;
-                });
-              },
-              borderRadius: _isAddingHomeSection
-                  ? BorderRadius.zero
-                  : const BorderRadius.vertical(bottom: Radius.circular(10)),
-              child: Container(
-                width: double.infinity,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
-                  borderRadius: _isAddingHomeSection
-                      ? BorderRadius.zero
-                      : const BorderRadius.vertical(bottom: Radius.circular(10)),
-                ),
-                child: Text(
-                  "+ Add Entry",
-                  style: GoogleFonts.poppins(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFF059669),
-                  ),
-                ),
-              ),
-            ),
-
-            // Inline Add Home Panel Form (Matching Image: media_1795250345980_1bcf08c7.png)
-            if (_isAddingHomeSection) ...[
-              const Divider(height: 1, thickness: 1, color: Color(0xFFE2E8F0)),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          "Add Home Panel ",
-                          style: GoogleFonts.poppins(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF1E293B),
-                          ),
-                        ),
-                        Text(
-                          "Panel Name",
-                          style: GoogleFonts.poppins(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: const Color(0xFF4338CA),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-
-                    // Name Input
-                    Container(
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 44,
-                            height: double.infinity,
-                            decoration: const BoxDecoration(
-                              border: Border(
-                                right: BorderSide(color: Color(0xFFE2E8F0)),
-                              ),
-                            ),
-                            alignment: Alignment.center,
-                            child: const Icon(
-                              Icons.drive_file_rename_outline_rounded,
-                              size: 18,
-                              color: Color(0xFF64748B),
-                            ),
-                          ),
-                          Expanded(
-                            child: TextField(
-                              controller: _newHomeSectionNameCtrl,
-                              autofocus: true,
-                              style: GoogleFonts.poppins(
-                                fontSize: 13,
-                                color: const Color(0xFF0F172A),
-                              ),
-                              decoration: InputDecoration(
-                                hintText:
-                                    "Name (e.g. Explore Hatchbacks by Price, Recently Added)",
-                                hintStyle: GoogleFonts.poppins(
-                                  fontSize: 12,
-                                  color: const Color(0xFF94A3B8),
-                                ),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 10,
-                                ),
-                                border: InputBorder.none,
-                                isDense: true,
-                              ),
-                              onSubmitted: (_) => _saveNewHomeSection(),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    // Price Filter Tabs Switch Box
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 10),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF8FAFC),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.sell_outlined,
-                            size: 18,
-                            color: Color(0xFF10B981),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "Price Filter Tabs",
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    color: const Color(0xFF1E293B),
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  "Show / Hide budget tabs on homepage",
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 11.5,
-                                    color: const Color(0xFF64748B),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Switch(
-                            value: _newHomeSectionPriceTabs,
-                            onChanged: (val) {
-                              setState(() {
-                                _newHomeSectionPriceTabs = val;
-                              });
-                            },
-                            activeThumbColor: const Color(0xFF14B8A6),
-                            activeTrackColor: const Color(0xFFCCFBF1),
-                            inactiveThumbColor: const Color(0xFF94A3B8),
-                            inactiveTrackColor: const Color(0xFFE2E8F0),
-                            materialTapTargetSize:
-                                MaterialTapTargetSize.shrinkWrap,
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 14),
-
-                    // Bottom Save / Cancel Buttons
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        ElevatedButton(
-                          onPressed: _saveNewHomeSection,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF14B8A6),
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 18, vertical: 8),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                          ),
-                          child: Text(
-                            "Save",
-                            style: GoogleFonts.poppins(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        ElevatedButton(
-                          onPressed: () {
-                            setState(() {
-                              _isAddingHomeSection = false;
-                              _newHomeSectionNameCtrl.clear();
-                              _newHomeSectionPriceTabs = false;
-                            });
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF818CF8),
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                          ),
-                          child: Text(
-                            "Cancel",
-                            style: GoogleFonts.poppins(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHomeSectionRowItem(
-    Map<String, dynamic> item,
-    bool isChecked, {
-    VoidCallback? onTapOverride,
-    VoidCallback? onStateChange,
-  }) {
-    final name = item["name"] as String;
-    final priceTabs = (item["priceTabs"] as bool?) ?? false;
-
-    return InkWell(
-      onTap: onTapOverride ??
-          () {
-            setState(() {
-              if (_selectedHomeSections.contains(name)) {
-                _selectedHomeSections.remove(name);
-              } else {
-                _selectedHomeSections.add(name);
-              }
-            });
-            onStateChange?.call();
-          },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            // Checkbox (Square with rounded corners)
-            Container(
-              width: 18,
-              height: 18,
-              decoration: BoxDecoration(
-                color: isChecked ? const Color(0xFF2563EB) : Colors.transparent,
-                borderRadius: BorderRadius.circular(4),
-                border: Border.all(
-                  color: isChecked
-                      ? const Color(0xFF2563EB)
-                      : const Color(0xFFCBD5E1),
-                  width: 1.3,
-                ),
-              ),
-              child: isChecked
-                  ? const Icon(
-                      Icons.check,
-                      size: 13,
-                      color: Colors.white,
-                    )
-                  : null,
-            ),
-            const SizedBox(width: 10),
-
-            // Section Name & Price Tabs Badge (Wrapped naturally so data is never cut off)
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(right: 6),
-                child: Wrap(
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  spacing: 6,
-                  runSpacing: 3,
-                  children: [
-                    Text(
-                      name,
-                      style: GoogleFonts.poppins(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: const Color(0xFF0F172A),
-                      ),
-                    ),
-                    if (priceTabs)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFECFDF5),
-                          borderRadius: BorderRadius.circular(4),
-                          border: Border.all(
-                            color: const Color(0xFFA7F3D0),
-                            width: 0.8,
-                          ),
-                        ),
-                        child: Text(
-                          "Price Tabs",
-                          style: GoogleFonts.poppins(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF059669),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-
-            // Action Icons (👁️ View/Toggle, ✏️ Edit, 🗑️ Delete)
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                InkWell(
-                  onTap: () {
-                    setState(() {
-                      item["priceTabs"] = !priceTabs;
-                    });
-                    onStateChange?.call();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          item["priceTabs"] == true
-                              ? "Price tabs enabled for '$name'"
-                              : "Price tabs disabled for '$name'",
-                        ),
-                        backgroundColor: const Color(0xFF059669),
-                        behavior: SnackBarBehavior.floating,
-                        duration: const Duration(seconds: 2),
-                      ),
-                    );
-                  },
-                  borderRadius: BorderRadius.circular(4),
-                  child: Padding(
-                    padding: const EdgeInsets.all(3.5),
-                    child: Icon(
-                      priceTabs
-                          ? Icons.remove_red_eye_outlined
-                          : Icons.visibility_off_outlined,
-                      size: 17,
-                      color: priceTabs
-                          ? const Color(0xFF14B8A6)
-                          : const Color(0xFF94A3B8),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 4),
-                InkWell(
-                  onTap: () => _editHomeSectionDialogCard(
-                    item,
-                    onUpdated: () {
-                      setState(() {});
-                      onStateChange?.call();
-                    },
-                  ),
-                  borderRadius: BorderRadius.circular(4),
-                  child: const Padding(
-                    padding: EdgeInsets.all(3.5),
-                    child: Icon(
-                      Icons.edit_outlined,
-                      size: 17,
-                      color: Color(0xFF94A3B8),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 4),
-                InkWell(
-                  onTap: () => _deleteHomeSectionDialogCard(
-                    item,
-                    onDeleted: () {
-                      setState(() {});
-                      onStateChange?.call();
-                    },
-                  ),
-                  borderRadius: BorderRadius.circular(4),
-                  child: const Padding(
-                    padding: EdgeInsets.all(3.5),
-                    child: Icon(
-                      Icons.delete_outline_rounded,
-                      size: 17,
-                      color: Color(0xFF94A3B8),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _saveNewHomeSection() {
-    final val = _newHomeSectionNameCtrl.text.trim();
-    if (val.isNotEmpty) {
-      setState(() {
-        final existingIndex =
-            _homeSectionsList.indexWhere((e) => e["name"] == val);
-        if (existingIndex == -1) {
-          _homeSectionsList.insert(0, {
-            "name": val,
-            "priceTabs": _newHomeSectionPriceTabs,
-          });
-        } else {
-          _homeSectionsList[existingIndex]["priceTabs"] =
-              _newHomeSectionPriceTabs;
-        }
-        if (!_selectedHomeSections.contains(val)) {
-          _selectedHomeSections.add(val);
-        }
-        _isAddingHomeSection = false;
-        _newHomeSectionNameCtrl.clear();
-        _newHomeSectionPriceTabs = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Home Section '$val' added successfully!"),
-          backgroundColor: const Color(0xFF059669),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
-  }
-
-  void _editHomeSectionDialogCard(Map<String, dynamic> item,
-      {VoidCallback? onUpdated}) {
-    final oldName = item["name"] as String;
-    final editCtrl = TextEditingController(text: oldName);
-    bool editPriceTabs = (item["priceTabs"] as bool?) ?? false;
-
-    showDialog(
-      context: context,
-      builder: (ctx) {
-        return StatefulBuilder(
-          builder: (dialogCtx, setDialogState) {
-            return AlertDialog(
-              backgroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14)),
-              title: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF1F5F9),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: const Icon(Icons.edit_outlined,
-                        color: Color(0xFF64748B), size: 20),
-                  ),
-                  const SizedBox(width: 10),
-                  Text(
-                    "Edit Home Section",
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFF0F172A),
-                    ),
-                  ),
-                ],
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "Section Name",
-                    style: GoogleFonts.poppins(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: const Color(0xFF475569),
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  TextField(
-                    controller: editCtrl,
-                    style: GoogleFonts.poppins(fontSize: 13.5),
-                    decoration: InputDecoration(
-                      filled: true,
-                      fillColor: const Color(0xFFF8FAFC),
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 10),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFF003366)),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Price Filter Tabs",
-                            style: GoogleFonts.poppins(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: const Color(0xFF1E293B),
-                            ),
-                          ),
-                          Text(
-                            "Show budget tabs",
-                            style: GoogleFonts.poppins(
-                              fontSize: 11,
-                              color: const Color(0xFF64748B),
-                            ),
-                          ),
-                        ],
-                      ),
-                      Switch(
-                        value: editPriceTabs,
-                        onChanged: (val) {
-                          setDialogState(() {
-                            editPriceTabs = val;
-                          });
-                        },
-                        activeThumbColor: const Color(0xFF14B8A6),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  child: Text(
-                    "Cancel",
-                    style: GoogleFonts.poppins(
-                      color: const Color(0xFF64748B),
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    final newName = editCtrl.text.trim();
-                    if (newName.isNotEmpty) {
-                      setState(() {
-                        item["name"] = newName;
-                        item["priceTabs"] = editPriceTabs;
-                        if (_selectedHomeSections.contains(oldName)) {
-                          _selectedHomeSections.remove(oldName);
-                          _selectedHomeSections.add(newName);
-                        }
-                      });
-                      onUpdated?.call();
-                      Navigator.pop(ctx);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text("Updated to '$newName'"),
-                          backgroundColor: const Color(0xFF059669),
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF003366),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: Text(
-                    "Update",
-                    style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-                  ),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
-  void _deleteHomeSectionDialogCard(Map<String, dynamic> item,
-      {VoidCallback? onDeleted}) {
-    final name = item["name"] as String;
-    showDialog(
-      context: context,
-      builder: (ctx) {
-        return AlertDialog(
-          backgroundColor: Colors.white,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          title: Text(
-            "Delete Home Section",
-            style: GoogleFonts.poppins(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFF0F172A),
-            ),
-          ),
-          content: Text(
-            "Are you sure you want to remove '$name' from Home Sections?",
-            style: GoogleFonts.poppins(
-              fontSize: 13,
-              color: const Color(0xFF475569),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(
-                "Cancel",
-                style: GoogleFonts.poppins(
-                  color: const Color(0xFF64748B),
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  _homeSectionsList.remove(item);
-                  _selectedHomeSections.remove(name);
-                });
-                onDeleted?.call();
-                Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text("Deleted '$name'"),
-                    backgroundColor: const Color(0xFFEF4444),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFEF4444),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: Text(
-                "Delete",
-                style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  // -------------------------------------------------------------
-  // RTO Rules Methods (Matching Image: media_1795250427655_43ea47ea.png)
-  // -------------------------------------------------------------
-  String _formatRtoRule(Map<String, dynamic> item) {
-    final state = (item["state"] as String? ?? "").trim();
-    final maxPrice = item["maxPrice"] as String? ?? "";
-    final percentage = item["percentage"] as String? ?? "";
-    final prefix = (state.isEmpty || state == "State") ? "" : state;
-    return "$prefix: Max ₹$maxPrice ($percentage%)";
-  }
-
-  Widget _buildRtoRulesCard() {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header (Collapsible)
-          InkWell(
-            onTap: () {
-              setState(() {
-                _rtoRulesExpanded = !_rtoRulesExpanded;
-              });
-            },
-            onLongPress: _showRtoRulesPicker,
-            borderRadius: BorderRadius.circular(10),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.account_balance_outlined,
-                    color: Color(0xFFEF4444),
-                    size: 20,
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    "RTO Rules",
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFF0F172A),
-                    ),
-                  ),
-                  if (!_rtoRulesExpanded && _selectedRtoRule.isNotEmpty) ...[
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFEFF6FF),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        _selectedRtoRule,
-                        style: GoogleFonts.poppins(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF2563EB),
-                        ),
-                      ),
-                    ),
-                  ],
-                  const Spacer(),
-                  Icon(
-                    _rtoRulesExpanded
-                        ? Icons.keyboard_arrow_down_rounded
-                        : Icons.keyboard_arrow_up_rounded,
-                    size: 22,
-                    color: const Color(0xFF64748B),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          if (_rtoRulesExpanded) ...[
-            const Divider(height: 1, thickness: 1, color: Color(0xFFE2E8F0)),
-
-            // List of RTO Rules (No search bar, exactly as in image)
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              padding: EdgeInsets.zero,
-              itemCount: _rtoRulesList.length,
-              separatorBuilder: (_, __) => const Divider(
-                height: 1,
-                thickness: 1,
-                color: Color(0xFFF1F5F9),
-              ),
-              itemBuilder: (ctx, i) {
-                final item = _rtoRulesList[i];
-                return _buildRtoRuleRowItem(item);
-              },
-            ),
-
-            const Divider(height: 1, thickness: 1, color: Color(0xFFE2E8F0)),
-
-            // Footer Button: + Add Entry
-            InkWell(
-              onTap: () {
-                setState(() {
-                  _isAddingRtoRule = !_isAddingRtoRule;
-                });
-              },
-              borderRadius: _isAddingRtoRule
-                  ? BorderRadius.zero
-                  : const BorderRadius.vertical(bottom: Radius.circular(10)),
-              child: Container(
-                width: double.infinity,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
-                  borderRadius: _isAddingRtoRule
-                      ? BorderRadius.zero
-                      : const BorderRadius.vertical(bottom: Radius.circular(10)),
-                ),
-                child: Text(
-                  "+ Add Entry",
-                  style: GoogleFonts.poppins(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFF059669),
-                  ),
-                ),
-              ),
-            ),
-
-            // Inline Add RTO Rule Form (Matching Image: media_1795250427655_43ea47ea.png)
-            if (_isAddingRtoRule) ...[
-              const Divider(height: 1, thickness: 1, color: Color(0xFFE2E8F0)),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Title
-                    Row(
-                      children: [
-                        Text(
-                          "Add RTO Rule ",
-                          style: GoogleFonts.poppins(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF1E293B),
-                          ),
-                        ),
-                        Text(
-                          "State",
-                          style: GoogleFonts.poppins(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: const Color(0xFF4338CA),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-
-                    // State Dropdown Selector
-                    InkWell(
-                      onTap: _showStatePickerModal,
-                      borderRadius: BorderRadius.circular(6),
-                      child: Container(
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 44,
-                              height: double.infinity,
-                              decoration: const BoxDecoration(
-                                border: Border(
-                                  right: BorderSide(color: Color(0xFFE2E8F0)),
-                                ),
-                              ),
-                              alignment: Alignment.center,
-                              child: const Icon(
-                                Icons.map_outlined,
-                                size: 18,
-                                color: Color(0xFF64748B),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                _newRtoState,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 13,
-                                  color: _newRtoState == "State"
-                                      ? const Color(0xFF0F172A)
-                                      : const Color(0xFF0F172A),
-                                  fontWeight: _newRtoState == "State"
-                                      ? FontWeight.w500
-                                      : FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                            const Icon(
-                              Icons.arrow_drop_down,
-                              color: Color(0xFF64748B),
-                            ),
-                            const SizedBox(width: 8),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    // Max Price Limit Label & Input
-                    Text(
-                      "Max Price Limit",
-                      style: GoogleFonts.poppins(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: const Color(0xFF475569),
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Container(
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 44,
-                            height: double.infinity,
-                            decoration: const BoxDecoration(
-                              border: Border(
-                                right: BorderSide(color: Color(0xFFE2E8F0)),
-                              ),
-                            ),
-                            alignment: Alignment.center,
-                            child: Text(
-                              "₹",
-                              style: GoogleFonts.poppins(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                color: const Color(0xFF64748B),
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            child: TextField(
-                              controller: _newRtoMaxPriceCtrl,
-                              keyboardType: TextInputType.number,
-                              style: GoogleFonts.poppins(
-                                fontSize: 13,
-                                color: const Color(0xFF0F172A),
-                              ),
-                              decoration: InputDecoration(
-                                hintText: "Max Price",
-                                hintStyle: GoogleFonts.poppins(
-                                  fontSize: 12,
-                                  color: const Color(0xFF94A3B8),
-                                ),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 10,
-                                ),
-                                border: InputBorder.none,
-                                isDense: true,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    // Percentage Label & Input
-                    Text(
-                      "Percentage",
-                      style: GoogleFonts.poppins(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: const Color(0xFF475569),
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Container(
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 44,
-                            height: double.infinity,
-                            decoration: const BoxDecoration(
-                              border: Border(
-                                right: BorderSide(color: Color(0xFFE2E8F0)),
-                              ),
-                            ),
-                            alignment: Alignment.center,
-                            child: Text(
-                              "%",
-                              style: GoogleFonts.poppins(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                color: const Color(0xFF64748B),
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            child: TextField(
-                              controller: _newRtoPercentageCtrl,
-                              keyboardType: const TextInputType.numberWithOptions(
-                                  decimal: true),
-                              style: GoogleFonts.poppins(
-                                fontSize: 13,
-                                color: const Color(0xFF0F172A),
-                              ),
-                              decoration: InputDecoration(
-                                hintText: "Percentage",
-                                hintStyle: GoogleFonts.poppins(
-                                  fontSize: 12,
-                                  color: const Color(0xFF94A3B8),
-                                ),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 10,
-                                ),
-                                border: InputBorder.none,
-                                isDense: true,
-                              ),
-                              onSubmitted: (_) => _saveNewRtoRule(),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 14),
-
-                    // Bottom Buttons: Save & Cancel
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        ElevatedButton(
-                          onPressed: _saveNewRtoRule,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF14B8A6),
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 18, vertical: 8),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                          ),
-                          child: Text(
-                            "Save",
-                            style: GoogleFonts.poppins(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        ElevatedButton(
-                          onPressed: () {
-                            setState(() {
-                              _isAddingRtoRule = false;
-                              _newRtoState = "State";
-                              _newRtoMaxPriceCtrl.clear();
-                              _newRtoPercentageCtrl.clear();
-                            });
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF818CF8),
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                          ),
-                          child: Text(
-                            "Cancel",
-                            style: GoogleFonts.poppins(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRtoRuleRowItem(Map<String, dynamic> item) {
-    final ruleText = _formatRtoRule(item);
-    final isSelected = _selectedRtoRule == ruleText;
-    final isHidden = (item["isHidden"] as bool?) ?? false;
-
-    return InkWell(
-      onTap: () {
-        setState(() {
-          _selectedRtoRule = ruleText;
-        });
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: isHidden ? const Color(0xFFF8FAFC) : Colors.transparent,
-          border: isHidden
-              ? const Border(
-                  left: BorderSide(color: Color(0xFF2563EB), width: 3.5),
-                )
-              : null,
-        ),
-        padding: EdgeInsets.fromLTRB(
-          isHidden ? 10.5 : 14,
-          12,
-          14,
-          12,
-        ),
-        child: Row(
-          children: [
-            // Rule Text (e.g. ": Max ₹500,000 (12.00%)")
-            Expanded(
-              child: Text(
-                ruleText,
-                style: GoogleFonts.poppins(
-                  fontSize: 13.5,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                  color: isHidden
-                      ? const Color(0xFF94A3B8)
-                      : const Color(0xFF0F172A),
-                  decoration:
-                      isHidden ? TextDecoration.lineThrough : TextDecoration.none,
-                  decorationColor: const Color(0xFF94A3B8),
-                ),
-              ),
-            ),
-
-            // Action Icons (👁️ Toggle Hide, ✏️ Edit, 🗑️ Delete)
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                InkWell(
-                  onTap: () {
-                    setState(() {
-                      item["isHidden"] = !isHidden;
-                    });
-                  },
-                  borderRadius: BorderRadius.circular(4),
-                  child: Padding(
-                    padding: const EdgeInsets.all(4),
-                    child: Icon(
-                      isHidden
-                          ? Icons.visibility_off_outlined
-                          : Icons.remove_red_eye_outlined,
-                      size: 18,
-                      color: isHidden
-                          ? const Color(0xFF94A3B8)
-                          : const Color(0xFF14B8A6),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 6),
-                InkWell(
-                  onTap: () => _editRtoRuleDialogCard(item),
-                  borderRadius: BorderRadius.circular(4),
-                  child: Padding(
-                    padding: const EdgeInsets.all(4),
-                    child: Icon(
-                      Icons.edit_outlined,
-                      size: 18,
-                      color: isHidden
-                          ? const Color(0xFFCBD5E1)
-                          : const Color(0xFF94A3B8),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 6),
-                InkWell(
-                  onTap: () => _deleteRtoRuleDialogCard(item),
-                  borderRadius: BorderRadius.circular(4),
-                  child: Padding(
-                    padding: const EdgeInsets.all(4),
-                    child: Icon(
-                      Icons.delete_outline_rounded,
-                      size: 18,
-                      color: isHidden
-                          ? const Color(0xFFCBD5E1)
-                          : const Color(0xFF94A3B8),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showStatePickerModal() {
-    final states = [
-      "State",
-      "Delhi",
-      "Maharashtra",
-      "Haryana",
-      "Uttar Pradesh",
-      "Karnataka",
-      "Gujarat",
-      "Rajasthan",
-      "Tamil Nadu",
-      "Telangana",
-      "West Bengal",
-      "Punjab",
-      "Kerala",
-      "Madhya Pradesh",
-      "Bihar",
-      "Odisha",
-      "Andhra Pradesh",
-      "Assam",
-    ];
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (ctx) {
-        return Container(
-          height: MediaQuery.of(context).size.height * 0.45,
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "Select State",
-                      style: GoogleFonts.poppins(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF0F172A),
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close, size: 20),
-                      onPressed: () => Navigator.pop(ctx),
-                    ),
-                  ],
-                ),
-              ),
-              const Divider(height: 1),
-              Expanded(
-                child: ListView.separated(
-                  itemCount: states.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1),
-                  itemBuilder: (ctx, i) {
-                    final s = states[i];
-                    final isSel = _newRtoState == s;
-                    return ListTile(
-                      title: Text(
-                        s,
-                        style: GoogleFonts.poppins(
-                          fontSize: 13.5,
-                          fontWeight:
-                              isSel ? FontWeight.w600 : FontWeight.normal,
-                          color: isSel
-                              ? const Color(0xFF2563EB)
-                              : const Color(0xFF0F172A),
-                        ),
-                      ),
-                      trailing: isSel
-                          ? const Icon(Icons.check,
-                              color: Color(0xFF2563EB), size: 18)
-                          : null,
-                      onTap: () {
-                        setState(() {
-                          _newRtoState = s;
-                        });
-                        Navigator.pop(ctx);
-                      },
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  void _saveNewRtoRule() {
-    final maxPrice = _newRtoMaxPriceCtrl.text.trim();
-    final percentage = _newRtoPercentageCtrl.text.trim();
-
-    if (maxPrice.isNotEmpty || percentage.isNotEmpty) {
-      final state = _newRtoState == "State" ? "" : _newRtoState;
-      final newRule = {
-        "state": state,
-        "maxPrice": maxPrice.isEmpty ? "0" : maxPrice,
-        "percentage": percentage.isEmpty ? "0.00" : percentage,
-      };
-      setState(() {
-        _rtoRulesList.insert(0, newRule);
-        _selectedRtoRule = _formatRtoRule(newRule);
-        _isAddingRtoRule = false;
-        _newRtoState = "State";
-        _newRtoMaxPriceCtrl.clear();
-        _newRtoPercentageCtrl.clear();
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("RTO Rule added successfully!"),
-          backgroundColor: Color(0xFF059669),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
-  }
-
-  void _editRtoRuleDialogCard(Map<String, dynamic> item) {
-    String editState = item["state"] as String? ?? "";
-    if (editState.isEmpty) editState = "State";
-    final priceCtrl =
-        TextEditingController(text: item["maxPrice"] as String? ?? "");
-    final percentCtrl =
-        TextEditingController(text: item["percentage"] as String? ?? "");
-
-    showDialog(
-      context: context,
-      builder: (ctx) {
-        return StatefulBuilder(
-          builder: (dialogCtx, setDialogState) {
-            return AlertDialog(
-              backgroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14)),
-              title: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF1F5F9),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: const Icon(Icons.edit_outlined,
-                        color: Color(0xFF64748B), size: 20),
-                  ),
-                  const SizedBox(width: 10),
-                  Text(
-                    "Edit RTO Rule",
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFF0F172A),
-                    ),
-                  ),
-                ],
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "State",
-                    style: GoogleFonts.poppins(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w500,
-                      color: const Color(0xFF475569),
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Container(
-                    height: 42,
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFC),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: [
-                          "State",
-                          "Delhi",
-                          "Maharashtra",
-                          "Haryana",
-                          "Uttar Pradesh",
-                          "Karnataka",
-                          "Gujarat",
-                          "Rajasthan",
-                          "Tamil Nadu",
-                        ].contains(editState)
-                            ? editState
-                            : "State",
-                        isExpanded: true,
-                        items: [
-                          "State",
-                          "Delhi",
-                          "Maharashtra",
-                          "Haryana",
-                          "Uttar Pradesh",
-                          "Karnataka",
-                          "Gujarat",
-                          "Rajasthan",
-                          "Tamil Nadu",
-                        ].map((s) {
-                          return DropdownMenuItem(
-                            value: s,
-                            child: Text(s,
-                                style: GoogleFonts.poppins(fontSize: 13)),
-                          );
-                        }).toList(),
-                        onChanged: (val) {
-                          if (val != null) {
-                            setDialogState(() {
-                              editState = val;
-                            });
-                          }
-                        },
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    "Max Price Limit",
-                    style: GoogleFonts.poppins(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w500,
-                      color: const Color(0xFF475569),
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  TextField(
-                    controller: priceCtrl,
-                    keyboardType: TextInputType.number,
-                    style: GoogleFonts.poppins(fontSize: 13),
-                    decoration: InputDecoration(
-                      filled: true,
-                      fillColor: const Color(0xFFF8FAFC),
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 10),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    "Percentage",
-                    style: GoogleFonts.poppins(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w500,
-                      color: const Color(0xFF475569),
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  TextField(
-                    controller: percentCtrl,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    style: GoogleFonts.poppins(fontSize: 13),
-                    decoration: InputDecoration(
-                      filled: true,
-                      fillColor: const Color(0xFFF8FAFC),
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 10),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  child: Text(
-                    "Cancel",
-                    style: GoogleFonts.poppins(
-                      color: const Color(0xFF64748B),
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    final newPrice = priceCtrl.text.trim();
-                    final newPercent = percentCtrl.text.trim();
-                    setState(() {
-                      item["state"] = editState == "State" ? "" : editState;
-                      if (newPrice.isNotEmpty) {
-                        item["maxPrice"] = newPrice;
-                      }
-                      if (newPercent.isNotEmpty) {
-                        item["percentage"] = newPercent;
-                      }
-                      _selectedRtoRule = _formatRtoRule(item);
-                    });
-                    Navigator.pop(ctx);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text("RTO Rule updated!"),
-                        backgroundColor: Color(0xFF059669),
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF003366),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: Text(
-                    "Update",
-                    style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-                  ),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
-  void _deleteRtoRuleDialogCard(Map<String, dynamic> item) {
-    final ruleText = _formatRtoRule(item);
-    showDialog(
-      context: context,
-      builder: (ctx) {
-        return AlertDialog(
-          backgroundColor: Colors.white,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          title: Text(
-            "Delete RTO Rule",
-            style: GoogleFonts.poppins(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFF0F172A),
-            ),
-          ),
-          content: Text(
-            "Are you sure you want to remove rule \"$ruleText\"?",
-            style: GoogleFonts.poppins(
-              fontSize: 13,
-              color: const Color(0xFF475569),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(
-                "Cancel",
-                style: GoogleFonts.poppins(
-                  color: const Color(0xFF64748B),
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  _rtoRulesList.remove(item);
-                  if (_selectedRtoRule == ruleText) {
-                    _selectedRtoRule = _rtoRulesList.isNotEmpty
-                        ? _formatRtoRule(_rtoRulesList.first)
-                        : "";
-                  }
-                });
-                Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text("RTO Rule deleted"),
-                    backgroundColor: Color(0xFFEF4444),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFEF4444),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: Text(
-                "Delete",
-                style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  // -------------------------------------------------------------
-  // TCS Rules Methods (Matching Image: media_1795251494893_a7a37d5e.png)
-  // -------------------------------------------------------------
-  String _formatTcsRule(Map<String, dynamic> item) {
-    final abovePrice = item["abovePrice"] as String? ?? "";
-    final percentage = item["percentage"] as String? ?? "";
-    return "Above ₹$abovePrice @ $percentage%";
-  }
-
-  Widget _buildTcsRulesCard() {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header (Collapsible)
-          InkWell(
-            onTap: () {
-              setState(() {
-                _tcsRulesExpanded = !_tcsRulesExpanded;
-              });
-            },
-            onLongPress: _showTcsRulesPicker,
-            borderRadius: BorderRadius.circular(10),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.percent_rounded,
-                    color: Color(0xFF06B6D4),
-                    size: 18,
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    "TCS Rules",
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFF0F172A),
-                    ),
-                  ),
-                  if (!_tcsRulesExpanded && _selectedTcsRule.isNotEmpty) ...[
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFEFF6FF),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        _selectedTcsRule,
-                        style: GoogleFonts.poppins(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF2563EB),
-                        ),
-                      ),
-                    ),
-                  ],
-                  const Spacer(),
-                  Icon(
-                    _tcsRulesExpanded
-                        ? Icons.keyboard_arrow_down_rounded
-                        : Icons.keyboard_arrow_up_rounded,
-                    size: 22,
-                    color: const Color(0xFF64748B),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          if (_tcsRulesExpanded) ...[
-            const Divider(height: 1, thickness: 1, color: Color(0xFFE2E8F0)),
-
-            // List of TCS Rules (No search bar, exactly as in image)
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              padding: EdgeInsets.zero,
-              itemCount: _tcsRulesList.length,
-              separatorBuilder: (_, __) => const Divider(
-                height: 1,
-                thickness: 1,
-                color: Color(0xFFF1F5F9),
-              ),
-              itemBuilder: (ctx, i) {
-                final item = _tcsRulesList[i];
-                return _buildTcsRuleRowItem(item);
-              },
-            ),
-
-            const Divider(height: 1, thickness: 1, color: Color(0xFFE2E8F0)),
-
-            // Footer Button: + Add Entry
-            InkWell(
-              onTap: () {
-                setState(() {
-                  _isAddingTcsRule = !_isAddingTcsRule;
-                });
-              },
-              borderRadius: _isAddingTcsRule
-                  ? BorderRadius.zero
-                  : const BorderRadius.vertical(bottom: Radius.circular(10)),
-              child: Container(
-                width: double.infinity,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
-                  borderRadius: _isAddingTcsRule
-                      ? BorderRadius.zero
-                      : const BorderRadius.vertical(bottom: Radius.circular(10)),
-                ),
-                child: Text(
-                  "+ Add Entry",
-                  style: GoogleFonts.poppins(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFF059669),
-                  ),
-                ),
-              ),
-            ),
-
-            // Inline Add TCS Rule Form (Matching Image: media_1795251494893_a7a37d5e.png)
-            if (_isAddingTcsRule) ...[
-              const Divider(height: 1, thickness: 1, color: Color(0xFFE2E8F0)),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Title: Add TCS Rule Above Price
-                    Row(
-                      children: [
-                        Text(
-                          "Add TCS Rule ",
-                          style: GoogleFonts.poppins(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF1E293B),
-                          ),
-                        ),
-                        Text(
-                          "Above Price",
-                          style: GoogleFonts.poppins(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: const Color(0xFF4338CA),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-
-                    // Above Price Input
-                    Container(
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 44,
-                            height: double.infinity,
-                            decoration: const BoxDecoration(
-                              border: Border(
-                                right: BorderSide(color: Color(0xFFE2E8F0)),
-                              ),
-                            ),
-                            alignment: Alignment.center,
-                            child: Text(
-                              "₹",
-                              style: GoogleFonts.poppins(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                color: const Color(0xFF64748B),
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            child: TextField(
-                              controller: _newTcsAbovePriceCtrl,
-                              keyboardType: TextInputType.number,
-                              autofocus: true,
-                              style: GoogleFonts.poppins(
-                                fontSize: 13,
-                                color: const Color(0xFF0F172A),
-                              ),
-                              decoration: InputDecoration(
-                                hintText: "Above Price",
-                                hintStyle: GoogleFonts.poppins(
-                                  fontSize: 12,
-                                  color: const Color(0xFF94A3B8),
-                                ),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 10,
-                                ),
-                                border: InputBorder.none,
-                                isDense: true,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    // Percentage Label & Input
-                    Text(
-                      "Percentage",
-                      style: GoogleFonts.poppins(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: const Color(0xFF475569),
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Container(
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 44,
-                            height: double.infinity,
-                            decoration: const BoxDecoration(
-                              border: Border(
-                                right: BorderSide(color: Color(0xFFE2E8F0)),
-                              ),
-                            ),
-                            alignment: Alignment.center,
-                            child: Text(
-                              "%",
-                              style: GoogleFonts.poppins(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                color: const Color(0xFF64748B),
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            child: TextField(
-                              controller: _newTcsPercentageCtrl,
-                              keyboardType:
-                                  const TextInputType.numberWithOptions(
-                                      decimal: true),
-                              style: GoogleFonts.poppins(
-                                fontSize: 13,
-                                color: const Color(0xFF0F172A),
-                              ),
-                              decoration: InputDecoration(
-                                hintText: "Percentage",
-                                hintStyle: GoogleFonts.poppins(
-                                  fontSize: 12,
-                                  color: const Color(0xFF94A3B8),
-                                ),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 10,
-                                ),
-                                border: InputBorder.none,
-                                isDense: true,
-                              ),
-                              onSubmitted: (_) => _saveNewTcsRule(),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 14),
-
-                    // Bottom Buttons: Save & Cancel
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        ElevatedButton(
-                          onPressed: _saveNewTcsRule,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF14B8A6),
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 18, vertical: 8),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                          ),
-                          child: Text(
-                            "Save",
-                            style: GoogleFonts.poppins(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        ElevatedButton(
-                          onPressed: () {
-                            setState(() {
-                              _isAddingTcsRule = false;
-                              _newTcsAbovePriceCtrl.clear();
-                              _newTcsPercentageCtrl.clear();
-                            });
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF818CF8),
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                          ),
-                          child: Text(
-                            "Cancel",
-                            style: GoogleFonts.poppins(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTcsRuleRowItem(Map<String, dynamic> item) {
-    final ruleText = _formatTcsRule(item);
-    final isSelected = _selectedTcsRule == ruleText;
-    final isHidden = (item["isHidden"] as bool?) ?? false;
-
-    return InkWell(
-      onTap: () {
-        setState(() {
-          _selectedTcsRule = ruleText;
-        });
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: isHidden ? const Color(0xFFF8FAFC) : Colors.transparent,
-          border: isHidden
-              ? const Border(
-                  left: BorderSide(color: Color(0xFF2563EB), width: 3.5),
-                )
-              : null,
-        ),
-        padding: EdgeInsets.fromLTRB(
-          isHidden ? 10.5 : 14,
-          12,
-          14,
-          12,
-        ),
-        child: Row(
-          children: [
-            // Rule Text (e.g. "Above ₹500,000 @ 12.00%")
-            Expanded(
-              child: Text(
-                ruleText,
-                style: GoogleFonts.poppins(
-                  fontSize: 13.5,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                  color: isHidden
-                      ? const Color(0xFF94A3B8)
-                      : const Color(0xFF0F172A),
-                  decoration:
-                      isHidden ? TextDecoration.lineThrough : TextDecoration.none,
-                  decorationColor: const Color(0xFF94A3B8),
-                ),
-              ),
-            ),
-
-            // Action Icons (👁️ Toggle Hide, ✏️ Edit, 🗑️ Delete)
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                InkWell(
-                  onTap: () {
-                    setState(() {
-                      item["isHidden"] = !isHidden;
-                    });
-                  },
-                  borderRadius: BorderRadius.circular(4),
-                  child: Padding(
-                    padding: const EdgeInsets.all(4),
-                    child: Icon(
-                      isHidden
-                          ? Icons.visibility_off_outlined
-                          : Icons.remove_red_eye_outlined,
-                      size: 18,
-                      color: isHidden
-                          ? const Color(0xFF94A3B8)
-                          : const Color(0xFF14B8A6),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 6),
-                InkWell(
-                  onTap: () => _editTcsRuleDialogCard(item),
-                  borderRadius: BorderRadius.circular(4),
-                  child: Padding(
-                    padding: const EdgeInsets.all(4),
-                    child: Icon(
-                      Icons.edit_outlined,
-                      size: 18,
-                      color: isHidden
-                          ? const Color(0xFFCBD5E1)
-                          : const Color(0xFF94A3B8),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 6),
-                InkWell(
-                  onTap: () => _deleteTcsRuleDialogCard(item),
-                  borderRadius: BorderRadius.circular(4),
-                  child: Padding(
-                    padding: const EdgeInsets.all(4),
-                    child: Icon(
-                      Icons.delete_outline_rounded,
-                      size: 18,
-                      color: isHidden
-                          ? const Color(0xFFCBD5E1)
-                          : const Color(0xFF94A3B8),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _saveNewTcsRule() {
-    final abovePrice = _newTcsAbovePriceCtrl.text.trim();
-    final percentage = _newTcsPercentageCtrl.text.trim();
-
-    if (abovePrice.isNotEmpty || percentage.isNotEmpty) {
-      final newRule = {
-        "abovePrice": abovePrice.isEmpty ? "0" : abovePrice,
-        "percentage": percentage.isEmpty ? "0.00" : percentage,
-      };
-      setState(() {
-        _tcsRulesList.insert(0, newRule);
-        _selectedTcsRule = _formatTcsRule(newRule);
-        _isAddingTcsRule = false;
-        _newTcsAbovePriceCtrl.clear();
-        _newTcsPercentageCtrl.clear();
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("TCS Rule added successfully!"),
-          backgroundColor: Color(0xFF059669),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
-  }
-
-  void _editTcsRuleDialogCard(Map<String, dynamic> item) {
-    final priceCtrl =
-        TextEditingController(text: item["abovePrice"] as String? ?? "");
-    final percentCtrl =
-        TextEditingController(text: item["percentage"] as String? ?? "");
-
-    showDialog(
-      context: context,
-      builder: (ctx) {
-        return AlertDialog(
-          backgroundColor: Colors.white,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          title: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF1F5F9),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: const Icon(Icons.edit_outlined,
-                    color: Color(0xFF64748B), size: 20),
-              ),
-              const SizedBox(width: 10),
-              Text(
-                "Edit TCS Rule",
-                style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF0F172A),
-                ),
-              ),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "Above Price",
-                style: GoogleFonts.poppins(
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w500,
-                  color: const Color(0xFF475569),
-                ),
-              ),
-              const SizedBox(height: 6),
-              TextField(
-                controller: priceCtrl,
-                keyboardType: TextInputType.number,
-                style: GoogleFonts.poppins(fontSize: 13),
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: const Color(0xFFF8FAFC),
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                "Percentage",
-                style: GoogleFonts.poppins(
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w500,
-                  color: const Color(0xFF475569),
-                ),
-              ),
-              const SizedBox(height: 6),
-              TextField(
-                controller: percentCtrl,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
-                style: GoogleFonts.poppins(fontSize: 13),
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: const Color(0xFFF8FAFC),
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(
-                "Cancel",
-                style: GoogleFonts.poppins(
-                  color: const Color(0xFF64748B),
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final newPrice = priceCtrl.text.trim();
-                final newPercent = percentCtrl.text.trim();
-                setState(() {
-                  if (newPrice.isNotEmpty) {
-                    item["abovePrice"] = newPrice;
-                  }
-                  if (newPercent.isNotEmpty) {
-                    item["percentage"] = newPercent;
-                  }
-                  _selectedTcsRule = _formatTcsRule(item);
-                });
-                Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text("TCS Rule updated!"),
-                    backgroundColor: Color(0xFF059669),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF003366),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: Text(
-                "Update",
-                style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _deleteTcsRuleDialogCard(Map<String, dynamic> item) {
-    final ruleText = _formatTcsRule(item);
-    showDialog(
-      context: context,
-      builder: (ctx) {
-        return AlertDialog(
-          backgroundColor: Colors.white,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          title: Text(
-            "Delete TCS Rule",
-            style: GoogleFonts.poppins(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFF0F172A),
-            ),
-          ),
-          content: Text(
-            "Are you sure you want to remove rule \"$ruleText\"?",
-            style: GoogleFonts.poppins(
-              fontSize: 13,
-              color: const Color(0xFF475569),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(
-                "Cancel",
-                style: GoogleFonts.poppins(
-                  color: const Color(0xFF64748B),
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  _tcsRulesList.remove(item);
-                  if (_selectedTcsRule == ruleText) {
-                    _selectedTcsRule = _tcsRulesList.isNotEmpty
-                        ? _formatTcsRule(_tcsRulesList.first)
-                        : "";
-                  }
-                });
-                Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text("TCS Rule deleted"),
-                    backgroundColor: Color(0xFFEF4444),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFEF4444),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: Text(
-                "Delete",
                 style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
               ),
             ),
@@ -8893,8 +5746,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
                       itemCount: _homeSectionsList.length,
                       separatorBuilder: (_, __) => const Divider(height: 1),
                       itemBuilder: (ctx, i) {
-                        final item = _homeSectionsList[i];
-                        final section = item["name"] as String;
+                        final section = _homeSectionsList[i];
                         final isChecked = tempSelected.contains(section);
                         return CheckboxListTile(
                           value: isChecked,
@@ -8972,11 +5824,10 @@ class _AddCarScreenState extends State<AddCarScreen> {
                   separatorBuilder: (_, __) => const Divider(height: 1),
                   itemBuilder: (ctx, i) {
                     final item = _rtoRulesList[i];
-                    final ruleText = _formatRtoRule(item);
-                    final isSelected = _selectedRtoRule == ruleText;
+                    final isSelected = _selectedRtoRule == item;
                     return ListTile(
                       title: Text(
-                        ruleText,
+                        item,
                         style: GoogleFonts.poppins(
                           fontSize: 13.5,
                           fontWeight: isSelected
@@ -8993,7 +5844,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
                           : null,
                       onTap: () {
                         setState(() {
-                          _selectedRtoRule = ruleText;
+                          _selectedRtoRule = item;
                         });
                         Navigator.pop(ctx);
                       },
@@ -9048,11 +5899,10 @@ class _AddCarScreenState extends State<AddCarScreen> {
                   separatorBuilder: (_, __) => const Divider(height: 1),
                   itemBuilder: (ctx, i) {
                     final item = _tcsRulesList[i];
-                    final ruleText = _formatTcsRule(item);
-                    final isSelected = _selectedTcsRule == ruleText;
+                    final isSelected = _selectedTcsRule == item;
                     return ListTile(
                       title: Text(
-                        ruleText,
+                        item,
                         style: GoogleFonts.poppins(
                           fontSize: 13.5,
                           fontWeight: isSelected
@@ -9069,7 +5919,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
                           : null,
                       onTap: () {
                         setState(() {
-                          _selectedTcsRule = ruleText;
+                          _selectedTcsRule = item;
                         });
                         Navigator.pop(ctx);
                       },
@@ -10297,7 +7147,6 @@ class _AddCarScreenState extends State<AddCarScreen> {
                       itemBuilder: (ctx, i) {
                         final feature = _featuresList[i];
                         final isChecked = tempSelected.contains(feature);
-                        final isHidden = _hiddenFeatures.contains(feature);
                         return InkWell(
                           onTap: () {
                             setModalState(() {
@@ -10322,10 +7171,8 @@ class _AddCarScreenState extends State<AddCarScreen> {
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(4),
                                     ),
-                                    side: BorderSide(
-                                      color: isHidden
-                                          ? const Color(0xFFCBD5E1)
-                                          : const Color(0xFF94A3B8),
+                                    side: const BorderSide(
+                                      color: Color(0xFF94A3B8),
                                       width: 1.5,
                                     ),
                                     onChanged: (val) {
@@ -10348,13 +7195,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
                                       fontWeight: isChecked
                                           ? FontWeight.w600
                                           : FontWeight.normal,
-                                      color: isHidden
-                                          ? const Color(0xFF94A3B8)
-                                          : const Color(0xFF0F172A),
-                                      decoration: isHidden
-                                          ? TextDecoration.lineThrough
-                                          : TextDecoration.none,
-                                      decorationColor: const Color(0xFF94A3B8),
+                                      color: const Color(0xFF0F172A),
                                     ),
                                   ),
                                 ),
@@ -10364,36 +7205,22 @@ class _AddCarScreenState extends State<AddCarScreen> {
                                 Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    // 1. Eye (Toggle Hide)
+                                    // 1. Eye (View)
                                     InkWell(
-                                      onTap: () {
-                                        setModalState(() {
-                                          if (_hiddenFeatures.contains(feature)) {
-                                            _hiddenFeatures.remove(feature);
-                                          } else {
-                                            _hiddenFeatures.add(feature);
-                                          }
-                                        });
-                                        setState(() {});
-                                      },
+                                      onTap: () => _viewFeatureDetails(
+                                          feature, isChecked),
                                       borderRadius: BorderRadius.circular(6),
                                       child: Container(
                                         padding: const EdgeInsets.all(6),
                                         decoration: BoxDecoration(
-                                          color: isHidden
-                                              ? const Color(0xFFF1F5F9)
-                                              : const Color(0xFFEFF6FF),
+                                          color: const Color(0xFFEFF6FF),
                                           borderRadius:
                                               BorderRadius.circular(6),
                                         ),
-                                        child: Icon(
-                                          isHidden
-                                              ? Icons.visibility_off_outlined
-                                              : Icons.visibility_outlined,
+                                        child: const Icon(
+                                          Icons.visibility_outlined,
                                           size: 16,
-                                          color: isHidden
-                                              ? const Color(0xFF94A3B8)
-                                              : const Color(0xFF2563EB),
+                                          color: Color(0xFF2563EB),
                                         ),
                                       ),
                                     ),
@@ -10465,6 +7292,124 @@ class _AddCarScreenState extends State<AddCarScreen> {
     );
   }
 
+  void _viewFeatureDetails(String feature, bool isSelected) {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEFF6FF),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.visibility_outlined,
+                    color: Color(0xFF2563EB), size: 20),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  "Feature Details",
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF0F172A),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Feature Name",
+                style: GoogleFonts.poppins(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF64748B),
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                feature,
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF0F172A),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                "Status in this vehicle",
+                style: GoogleFonts.poppins(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF64748B),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? const Color(0xFFDCFCE7)
+                      : const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  isSelected ? "✓ Included / Selected" : "Not Selected",
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: isSelected
+                        ? const Color(0xFF16A34A)
+                        : const Color(0xFF64748B),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                "Description",
+                style: GoogleFonts.poppins(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF64748B),
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                "Factory fitted original OEM specification feature verified during multi-point vehicle inspection.",
+                style: GoogleFonts.poppins(
+                  fontSize: 12,
+                  color: const Color(0xFF475569),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(
+                "Close",
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF003366),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   void _editFeatureDialog(
     String feature,

@@ -19,11 +19,6 @@ class AdministratorsScreen extends StatefulWidget {
 }
 
 class _AdministratorsScreenState extends State<AdministratorsScreen> {
-  final bool _isDarkMode = false;
-  String _searchQuery = "";
-  String _activeStatusTab = "Approved"; // "Approved" or "UnApproved"
-  int _entriesPerPage = 10;
-  int _currentPage = 1;
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -284,11 +279,19 @@ class _AdministratorsScreenState extends State<AdministratorsScreen> {
         elevation: 0.5,
         actions: [
           IconButton(
-            icon: Icon(
-              Icons.notifications_none_rounded,
-              color: _isDarkMode ? Colors.white : const Color(0xFF334155),
-            ),
-            onPressed: () {},
+            tooltip: "CRM Roles & Hierarchy",
+            icon: const Icon(Icons.account_tree_outlined, color: Color(0xFF003366)),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const CrmRoleHierarchyScreen()),
+              );
+            },
+          ),
+          IconButton(
+            tooltip: "Form Meta & Role Options",
+            icon: const Icon(Icons.tune_rounded, color: Color(0xFF003366)),
+            onPressed: () => _openMetaOptionsSheet(context, vm.metaOptions),
           ),
           IconButton(
             tooltip: "Refresh Directory",

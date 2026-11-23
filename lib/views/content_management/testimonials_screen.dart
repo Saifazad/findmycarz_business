@@ -28,7 +28,7 @@ class TestimonialsScreen extends StatefulWidget {
 }
 
 class _TestimonialsScreenState extends State<TestimonialsScreen> {
-  final bool _isDarkMode = false;
+  bool _isDarkMode = false;
   int _entriesPerPage = 10;
   String _searchQuery = "";
 
@@ -468,7 +468,7 @@ class _TestimonialsScreenState extends State<TestimonialsScreen> {
         elevation: 0.5,
         leading: CustomBackButton(isDarkMode: _isDarkMode),
         title: Text(
-          "Manage Testimonials",
+          "Testimonials",
           style: GoogleFonts.poppins(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -476,6 +476,20 @@ class _TestimonialsScreenState extends State<TestimonialsScreen> {
           ),
         ),
         actions: [
+          IconButton(
+            tooltip: _isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode",
+            icon: Icon(
+              _isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_outlined,
+              color: _isDarkMode
+                  ? const Color(0xFFFBBF24)
+                  : const Color(0xFF334155),
+            ),
+            onPressed: () {
+              setState(() {
+                _isDarkMode = !_isDarkMode;
+              });
+            },
+          ),
           IconButton(
             icon: Icon(
               Icons.notifications_none_rounded,
@@ -493,50 +507,52 @@ class _TestimonialsScreenState extends State<TestimonialsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. Heading Row: "All Testimonials" (Left) + "+ Add New Testimonial" Button (Right)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  "All Testimonials",
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: _isDarkMode
-                        ? Colors.grey.shade300
-                        : const Color(0xFF1E293B),
-                  ),
-                ),
-                ElevatedButton(
-                  onPressed: _showAddDialog,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1E6FD9),
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.add, size: 16, color: Colors.white),
-                      const SizedBox(width: 5),
-                      Text(
-                        "Add New Testimonial",
-                        style: GoogleFonts.poppins(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+            // 1. Heading: Manage Testimonials
+            Text(
+              "Manage Testimonials",
+              style: GoogleFonts.poppins(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: _isDarkMode ? Colors.white : const Color(0xFF0F172A),
+              ),
             ),
             const SizedBox(height: 12),
+
+            // 2. Full-Width "+ Add New Testimonial" Button
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _showAddDialog,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF1E6FD9),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  elevation: 0,
+                ),
+                child: Text(
+                  "+ Add New Testimonial",
+                  style: GoogleFonts.poppins(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // 3. Subheading: "All Testimonials"
+            Text(
+              "All Testimonials",
+              style: GoogleFonts.poppins(
+                fontSize: 13.5,
+                fontWeight: FontWeight.bold,
+                color: _isDarkMode ? Colors.grey.shade300 : const Color(0xFF1E293B),
+              ),
+            ),
+            const SizedBox(height: 10),
 
             // 4. Search and Entries Row: [ 🔍 Search... ] [ 10 ⌄ ]
             Row(
@@ -623,7 +639,7 @@ class _TestimonialsScreenState extends State<TestimonialsScreen> {
                             ? Colors.white
                             : const Color(0xFF1E293B),
                       ),
-                      items: [5, 10, 15, 20, 25].map((int val) {
+                      items: [10, 25, 50, 100].map((int val) {
                         return DropdownMenuItem<int>(
                           value: val,
                           child: Text("$val"),

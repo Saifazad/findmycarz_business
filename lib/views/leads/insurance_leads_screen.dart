@@ -40,7 +40,7 @@ class InsuranceLeadsScreen extends StatefulWidget {
 }
 
 class _InsuranceLeadsScreenState extends State<InsuranceLeadsScreen> {
-  final bool _isDarkMode = false;
+  bool _isDarkMode = false;
   int _entriesPerPage = 10;
   int _currentPage = 1;
   String _searchQuery = "";
@@ -353,6 +353,20 @@ class _InsuranceLeadsScreenState extends State<InsuranceLeadsScreen> {
         ),
         actions: [
           IconButton(
+            tooltip: _isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode",
+            icon: Icon(
+              _isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_outlined,
+              color: _isDarkMode
+                  ? const Color(0xFFFBBF24)
+                  : const Color(0xFF334155),
+            ),
+            onPressed: () {
+              setState(() {
+                _isDarkMode = !_isDarkMode;
+              });
+            },
+          ),
+          IconButton(
             icon: Icon(
               Icons.notifications_none_rounded,
               color: _isDarkMode ? Colors.white : const Color(0xFF334155),
@@ -369,6 +383,57 @@ class _InsuranceLeadsScreenState extends State<InsuranceLeadsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // 1. Heading Row: Circular (<) button + "Insurance Leads"
+            Row(
+              children: [
+                InkWell(
+                  onTap: () => Navigator.maybePop(context),
+                  borderRadius: BorderRadius.circular(20),
+                  child: Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: _isDarkMode
+                          ? const Color(0xFF1E293B)
+                          : Colors.white,
+                      border: Border.all(
+                        color: _isDarkMode
+                            ? const Color(0xFF334155)
+                            : const Color(0xFFE2E8F0),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(
+                              alpha: _isDarkMode ? 0.2 : 0.03),
+                          blurRadius: 4,
+                          offset: const Offset(0, 1),
+                        ),
+                      ],
+                    ),
+                    alignment: Alignment.center,
+                    child: Icon(
+                      Icons.chevron_left,
+                      size: 20,
+                      color: _isDarkMode
+                          ? Colors.white
+                          : const Color(0xFF334155),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  "Insurance Leads",
+                  style: GoogleFonts.poppins(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: _isDarkMode ? Colors.white : const Color(0xFF0F172A),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+
             // 2. Action Row: [ ] Select all  +  [ 🗑 Delete Selected (0) ]
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -554,7 +619,7 @@ class _InsuranceLeadsScreenState extends State<InsuranceLeadsScreen> {
                             ? Colors.white
                             : const Color(0xFF1E293B),
                       ),
-                      items: [5, 10, 15, 20, 25].map((int val) {
+                      items: [10, 25, 50, 100].map((int val) {
                         return DropdownMenuItem<int>(
                           value: val,
                           child: Text("$val"),
