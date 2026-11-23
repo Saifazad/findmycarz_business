@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 
 import 'viewmodels/auth_viewmodel.dart';
 import 'viewmodels/profile_viewmodel.dart';
-import 'viewmodels/administrators_viewmodel.dart';
 import 'viewmodels/admin_dashboard_viewmodel.dart';
 import 'viewmodels/payout_viewmodel.dart';
 import 'viewmodels/leads_viewmodel.dart';
@@ -35,7 +34,6 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthViewModel()..init()),
         ChangeNotifierProvider(create: (_) => ProfileViewModel()),
-        ChangeNotifierProvider(create: (_) => AdministratorsViewModel()),
         ChangeNotifierProvider(create: (_) => AdminDashboardViewModel()),
         ChangeNotifierProvider(create: (_) => PayoutViewModel()),
         ChangeNotifierProvider(create: (_) => LeadsViewModel()),
