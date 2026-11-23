@@ -1,28 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../../models/administrator_model.dart';
+import '../../models/administrator_meta_model.dart';
+import '../../viewmodels/administrators_viewmodel.dart';
 import '../widgets/crm_drawer.dart';
 import '../widgets/custom_back_button.dart';
-import '../widgets/admin_profile_avatar.dart';
-
-class AdminUser {
-  final String id;
-  final String name;
-  final String email;
-  final String phone;
-  final String role;
-  final String status;
-  final String createdAt;
-
-  AdminUser({
-    required this.id,
-    required this.name,
-    required this.email,
-    required this.phone,
-    required this.role,
-    this.status = "Active",
-    required this.createdAt,
-  });
-}
+import '../user_management/crm_role_hierarchy_screen.dart';
+import 'add_administrator_screen.dart';
 
 class AdministratorsScreen extends StatefulWidget {
   const AdministratorsScreen({super.key});
@@ -32,87 +19,17 @@ class AdministratorsScreen extends StatefulWidget {
 }
 
 class _AdministratorsScreenState extends State<AdministratorsScreen> {
-  bool _isDarkMode = false;
-  String _searchQuery = "";
-  String _activeStatusTab = "Approved"; // "Approved" or "UnApproved"
-  int _entriesPerPage = 10;
-  int _currentPage = 1;
   final TextEditingController _searchController = TextEditingController();
 
-  final List<AdminUser> _admins = [
-    AdminUser(
-      id: "AFMC0188",
-      name: "Test",
-      email: "test123@gmail.com",
-      phone: "+91 99999 88888",
-      role: "Tele Caller Finance",
-      status: "Active",
-      createdAt: "20 Mar 2024",
-    ),
-    AdminUser(
-      id: "AFMC0187",
-      name: "VAAHAN BAZA – NITIN KHATRI",
-      email: "nitink345@gmail.com",
-      phone: "+91 98123 45678",
-      role: "Dealer (Classified Business)",
-      status: "Active",
-      createdAt: "15 Mar 2024",
-    ),
-    AdminUser(
-      id: "AFMC0186",
-      name: "MANOJ NEGI",
-      email: "mnegi4972@gmail.com",
-      phone: "+91 98765 43210",
-      role: "Sales Manager (Finance)",
-      status: "Active",
-      createdAt: "12 Jan 2024",
-    ),
-    AdminUser(
-      id: "AFMC0185",
-      name: "KARAN",
-      email: "karanvivaan97@gmail.com",
-      phone: "+91 98112 34567",
-      role: "SM Finance Dehradun",
-      status: "Active",
-      createdAt: "18 Feb 2024",
-    ),
-    AdminUser(
-      id: "AFMC0184",
-      name: "GAURAV KUMAR CHAUHAN",
-      email: "gauravchauhan672@gmail.com",
-      phone: "+91 97234 56789",
-      role: "Area Sales Manager (Finance)",
-      status: "Active",
-      createdAt: "05 Mar 2024",
-    ),
-    AdminUser(
-      id: "AFMC0183",
-      name: "AYESHA",
-      email: "ayesha.finance@findmycarz.com",
-      phone: "+91 98345 67890",
-      role: "Finance Officer",
-      status: "Active",
-      createdAt: "22 Apr 2024",
-    ),
-    AdminUser(
-      id: "AFMC0182",
-      name: "VIKAS SINGH",
-      email: "vikas.ops@findmycarz.com",
-      phone: "+91 98111 22334",
-      role: "Branch Executive",
-      status: "UnApproved",
-      createdAt: "Yesterday",
-    ),
-    AdminUser(
-      id: "AFMC0181",
-      name: "NEHA PATEL",
-      email: "neha.finance@findmycarz.com",
-      phone: "+91 97222 33445",
-      role: "Loan Associate",
-      status: "UnApproved",
-      createdAt: "2 days ago",
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final vm = context.read<AdministratorsViewModel>();
+      vm.fetchAdministrators();
+      vm.fetchMetaOptions();
+    });
+  }
 
   @override
   void dispose() {
@@ -120,235 +37,186 @@ class _AdministratorsScreenState extends State<AdministratorsScreen> {
     super.dispose();
   }
 
-  List<AdminUser> get _filteredAdmins {
-    final list = _admins.where((admin) {
-      final matchesStatus = _activeStatusTab == "Approved"
-          ? (admin.status.toLowerCase() == "approved" ||
-              admin.status.toLowerCase() == "active")
-          : admin.status.toLowerCase() == "unapproved";
-
-      final matchesSearch = admin.name
-              .toLowerCase()
-              .contains(_searchQuery.toLowerCase()) ||
-          admin.email.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          admin.phone.contains(_searchQuery) ||
-          admin.role.toLowerCase().contains(_searchQuery.toLowerCase());
-
-      return matchesStatus && matchesSearch;
-    }).toList();
-
-    return list.take(_entriesPerPage).toList();
+  void _callPhone(String? phone) async {
+    if (phone == null || phone.trim().isEmpty) return;
+    final uri = Uri.parse("tel:${phone.replaceAll(' ', '')}");
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    }
   }
 
-  void _showAddAdminModal() {
-    final nameCtrl = TextEditingController();
-    final emailCtrl = TextEditingController();
-    final phoneCtrl = TextEditingController();
-    String selectedRole = "Sales Manager (Finance)";
-    final formKey = GlobalKey<FormState>();
+  String _formatDate(String? raw) {
+    if (raw == null || raw.isEmpty) return "N/A";
+    try {
+      final parsed = DateTime.tryParse(raw);
+      if (parsed != null) {
+        return DateFormat("dd MMM yyyy").format(parsed.toLocal());
+      }
+    } catch (_) {}
+    if (raw.contains('T')) return raw.split('T').first;
+    return raw;
+  }
+
+  void _openMetaOptionsSheet(BuildContext context, AdministratorMetaModel? meta) {
+    if (meta == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Loading form options...", style: GoogleFonts.poppins()),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      backgroundColor: Colors.transparent,
       builder: (ctx) {
-        return StatefulBuilder(
-          builder: (modalCtx, setModalState) {
-            return Padding(
-              padding: EdgeInsets.only(
-                left: 20,
-                right: 20,
-                top: 20,
-                bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
+        return DraggableScrollableSheet(
+          initialChildSize: 0.75,
+          maxChildSize: 0.95,
+          minChildSize: 0.5,
+          builder: (_, scrollController) {
+            return Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
               ),
-              child: Form(
-                key: formKey,
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            "Add New Administrator",
-                            style: GoogleFonts.poppins(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: _isDarkMode
-                                  ? Colors.white
-                                  : const Color(0xFF1E293B),
-                            ),
-                          ),
-                          IconButton(
-                            icon: Icon(Icons.close,
-                                color: _isDarkMode
-                                    ? Colors.white70
-                                    : Colors.black54),
-                            onPressed: () => Navigator.pop(ctx),
-                          ),
-                        ],
-                      ),
-                      const Divider(),
-                      const SizedBox(height: 10),
-                      Text(
-                        "Full Name",
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: _isDarkMode
-                              ? Colors.grey.shade300
-                              : const Color(0xFF334155),
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      TextFormField(
-                        controller: nameCtrl,
-                        decoration: _inputDecoration("Enter full name"),
-                        style: TextStyle(
-                            color: _isDarkMode ? Colors.white : Colors.black87),
-                        validator: (v) =>
-                            v == null || v.isEmpty ? "Name is required" : null,
-                      ),
-                      const SizedBox(height: 14),
-                      Text(
-                        "Email Address",
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: _isDarkMode
-                              ? Colors.grey.shade300
-                              : const Color(0xFF334155),
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      TextFormField(
-                        controller: emailCtrl,
-                        keyboardType: TextInputType.emailAddress,
-                        decoration: _inputDecoration("admin@example.com"),
-                        style: TextStyle(
-                            color: _isDarkMode ? Colors.white : Colors.black87),
-                        validator: (v) =>
-                            v == null || v.isEmpty ? "Email is required" : null,
-                      ),
-                      const SizedBox(height: 14),
-                      Text(
-                        "Phone Number",
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: _isDarkMode
-                              ? Colors.grey.shade300
-                              : const Color(0xFF334155),
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      TextFormField(
-                        controller: phoneCtrl,
-                        keyboardType: TextInputType.phone,
-                        decoration: _inputDecoration("+91 98765 43210"),
-                        style: TextStyle(
-                            color: _isDarkMode ? Colors.white : Colors.black87),
-                        validator: (v) =>
-                            v == null || v.isEmpty ? "Phone is required" : null,
-                      ),
-                      const SizedBox(height: 14),
-                      Text(
-                        "Role",
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: _isDarkMode
-                              ? Colors.grey.shade300
-                              : const Color(0xFF334155),
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      DropdownButtonFormField<String>(
-                        initialValue: selectedRole,
-                        dropdownColor: _isDarkMode
-                            ? const Color(0xFF1E293B)
-                            : Colors.white,
-                        decoration: _inputDecoration("Select role"),
-                        style: GoogleFonts.poppins(
-                          fontSize: 13,
-                          color: _isDarkMode ? Colors.white : Colors.black87,
-                        ),
-                        items: [
-                          "Sales Manager (Finance)",
-                          "SM Finance Dehradun",
-                          "Area Sales Manager (Finance)",
-                          "Finance Officer",
-                          "Branch Admin",
-                          "Super Admin"
-                        ]
-                            .map((r) => DropdownMenuItem(
-                                  value: r,
-                                  child: Text(r),
-                                ))
-                            .toList(),
-                        onChanged: (val) {
-                          if (val != null) {
-                            setModalState(() => selectedRole = val);
-                          }
-                        },
-                      ),
-                      const SizedBox(height: 24),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 46,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            if (formKey.currentState?.validate() == true) {
-                              setState(() {
-                                _admins.insert(
-                                  0,
-                                  AdminUser(
-                                    id: "AFMC01${87 + _admins.length}",
-                                    name: nameCtrl.text.trim().toUpperCase(),
-                                    email: emailCtrl.text.trim(),
-                                    phone: phoneCtrl.text.trim(),
-                                    role: selectedRole,
-                                    status: "Active",
-                                    createdAt: "Today",
-                                  ),
-                                );
-                              });
-                              Navigator.pop(ctx);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    "${nameCtrl.text.trim()} added successfully!",
-                                    style: GoogleFonts.poppins(),
-                                  ),
-                                  backgroundColor: const Color(0xFF10B981),
-                                ),
-                              );
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF1E70CD),
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          child: Text(
-                            "Add Administrator",
-                            style: GoogleFonts.poppins(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+              child: Column(
+                children: [
+                  Container(
+                    margin: const EdgeInsets.only(top: 12, bottom: 8),
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
-                ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "Administrator Meta Suite",
+                          style: GoogleFonts.poppins(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFF0F172A),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () => Navigator.pop(ctx),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Divider(height: 1),
+                  Expanded(
+                    child: ListView(
+                      controller: scrollController,
+                      padding: const EdgeInsets.all(16),
+                      children: [
+                        _buildMetaSectionHeader("System Roles (${meta.roles.length})", Icons.badge_outlined),
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 6,
+                          children: meta.roles.map((r) {
+                            return Chip(
+                              label: Text("${r.name} (${r.administratorsCount})",
+                                  style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.w500)),
+                              backgroundColor: const Color(0xFF003366).withOpacity(0.06),
+                              side: BorderSide(color: const Color(0xFF003366).withOpacity(0.15)),
+                            );
+                          }).toList(),
+                        ),
+                        const SizedBox(height: 18),
+
+                        _buildMetaSectionHeader("System Modules (${meta.modules.length})", Icons.apps_outlined),
+                        ...meta.modules.map((m) {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.check_circle_outline, size: 16, color: Color(0xFF10B981)),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(m.name,
+                                      style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600)),
+                                ),
+                                Wrap(
+                                  spacing: 4,
+                                  children: [
+                                    if (m.hasView) _tag("View", Colors.blue),
+                                    if (m.hasAdd) _tag("Add", Colors.green),
+                                    if (m.hasEdit) _tag("Edit", Colors.orange),
+                                    if (m.hasDelete) _tag("Delete", Colors.red),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          );
+                        }),
+                        const SizedBox(height: 18),
+
+                        _buildMetaSectionHeader("States Available (${meta.states.length})", Icons.map_outlined),
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 6,
+                          children: meta.states.map((s) {
+                            return Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF1F5F9),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(s.stateName, style: GoogleFonts.poppins(fontSize: 11)),
+                            );
+                          }).toList(),
+                        ),
+                        const SizedBox(height: 18),
+
+                        _buildMetaSectionHeader("Partner Payout Banks (${meta.payoutBanks.length})", Icons.account_balance_outlined),
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 6,
+                          children: meta.payoutBanks.map((b) {
+                            return Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFECFDF5),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(color: const Color(0xFFA7F3D0)),
+                              ),
+                              child: Text(b.name, style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF065F46))),
+                            );
+                          }).toList(),
+                        ),
+                        const SizedBox(height: 18),
+
+                        _buildMetaSectionHeader("Loan Categories (${meta.payoutCategories.length})", Icons.category_outlined),
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 6,
+                          children: meta.payoutCategories.map((c) {
+                            return Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFEFF6FF),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(color: const Color(0xFFBFDBFE)),
+                              ),
+                              child: Text(c.name, style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF1E40AF))),
+                            );
+                          }).toList(),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             );
           },
@@ -357,806 +225,537 @@ class _AdministratorsScreenState extends State<AdministratorsScreen> {
     );
   }
 
-  InputDecoration _inputDecoration(String hint) {
-    return InputDecoration(
-      hintText: hint,
-      hintStyle: GoogleFonts.poppins(
-        fontSize: 13,
-        color: _isDarkMode ? Colors.white38 : Colors.grey.shade400,
-      ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      filled: true,
-      fillColor: _isDarkMode ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
-        borderSide: BorderSide(
-          color: _isDarkMode ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
-        ),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
-        borderSide: BorderSide(
-          color: _isDarkMode ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
-        ),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: Color(0xFF1E70CD)),
+  Widget _buildMetaSectionHeader(String title, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: const Color(0xFF003366)),
+          const SizedBox(width: 8),
+          Text(
+            title,
+            style: GoogleFonts.poppins(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF0F172A),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildPageButton({
-    required String text,
-    bool isActive = false,
-    bool isDots = false,
-    VoidCallback? onTap,
-  }) {
-    return InkWell(
-      onTap: isDots ? null : onTap,
-      borderRadius: BorderRadius.circular(4),
-      child: Container(
-        constraints: const BoxConstraints(minWidth: 32),
-        height: 32,
-        margin: const EdgeInsets.only(right: 4),
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: isActive
-              ? const Color(0xFF00A3FF)
-              : (_isDarkMode ? const Color(0xFF1E293B) : Colors.white),
-          borderRadius: BorderRadius.circular(4),
-          border: Border.all(
-            color: isActive
-                ? const Color(0xFF00A3FF)
-                : (_isDarkMode
-                    ? const Color(0xFF334155)
-                    : const Color(0xFFE2E8F0)),
-          ),
-        ),
-        child: Text(
-          text,
-          style: GoogleFonts.poppins(
-            fontSize: 12,
-            fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
-            color: isActive
-                ? Colors.white
-                : (_isDarkMode
-                    ? Colors.grey.shade300
-                    : const Color(0xFF475569)),
-          ),
-        ),
+  Widget _tag(String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(4),
       ),
+      child: Text(text, style: GoogleFonts.poppins(fontSize: 9, fontWeight: FontWeight.bold, color: color)),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final filtered = _filteredAdmins;
+    final vm = context.watch<AdministratorsViewModel>();
+    final admins = vm.filteredAdministrators;
+    final counts = vm.counts;
+    final pagination = vm.pagination;
 
     return Scaffold(
-      backgroundColor:
-          _isDarkMode ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-      drawer: const CrmDrawer(),
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        backgroundColor: _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-        elevation: 0.5,
-        leading: CustomBackButton(isDarkMode: _isDarkMode),
         title: Text(
-          "All Administrators",
+          "Administrators & Roles",
           style: GoogleFonts.poppins(
+            fontWeight: FontWeight.w700,
             fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: _isDarkMode ? Colors.white : const Color(0xFF0F172A),
+            color: const Color(0xFF0F172A),
           ),
         ),
+        leading: const CustomBackButton(),
+        backgroundColor: Colors.white,
+        elevation: 0.5,
         actions: [
           IconButton(
-<<<<<<< HEAD
-=======
-            tooltip: _isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode",
-            icon: Icon(
-              _isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_outlined,
-              color: _isDarkMode
-                  ? const Color(0xFFFBBF24)
-                  : const Color(0xFF334155),
-            ),
+            tooltip: "CRM Roles & Hierarchy",
+            icon: const Icon(Icons.account_tree_outlined, color: Color(0xFF003366)),
             onPressed: () {
-              setState(() {
-                _isDarkMode = !_isDarkMode;
-              });
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const CrmRoleHierarchyScreen()),
+              );
             },
           ),
           IconButton(
->>>>>>> parent of 2e72acd (Merge pull request #5 from Saifazad/feat/api-suite-integration)
-            icon: Icon(
-              Icons.notifications_none_rounded,
-              color: _isDarkMode ? Colors.white : const Color(0xFF334155),
-            ),
-            onPressed: () {},
+            tooltip: "Form Meta & Role Options",
+            icon: const Icon(Icons.tune_rounded, color: Color(0xFF003366)),
+            onPressed: () => _openMetaOptionsSheet(context, vm.metaOptions),
           ),
-          const SizedBox(width: 4),
-          const AdminProfileAvatar(),
-          const SizedBox(width: 14),
+          IconButton(
+            tooltip: "Refresh Directory",
+            icon: const Icon(Icons.refresh, color: Color(0xFF003366)),
+            onPressed: () => vm.fetchAdministrators(page: vm.currentPage),
+          ),
+          const SizedBox(width: 6),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      drawer: const CrmDrawer(),
+      body: RefreshIndicator(
+        color: const Color(0xFF003366),
+        onRefresh: () async {
+          await vm.fetchAdministrators(page: vm.currentPage);
+          await vm.fetchMetaOptions();
+        },
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. Full-Width "+ Add New" button (Image 1 reference)
-            SizedBox(
-              width: double.infinity,
-              height: 44,
-              child: ElevatedButton.icon(
-                onPressed: _showAddAdminModal,
-                icon: const Icon(Icons.add, size: 18, color: Colors.white),
-                label: Text(
-                  "Add New",
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF1E70CD),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  elevation: 0,
-                ),
-              ),
-            ),
-            const SizedBox(height: 14),
-
-            // 2. Status Tabs: Approved (152) & UnApproved (2)
-            Row(
-              children: [
-                InkWell(
-                  onTap: () {
-                    setState(() {
-                      _activeStatusTab = "Approved";
-                    });
-                  },
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-                    decoration: BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(
-                          color: _activeStatusTab == "Approved"
-                              ? const Color(0xFF00A3FF)
-                              : Colors.transparent,
-                          width: 2.2,
-                        ),
-                      ),
-                    ),
-                    child: Text(
-                      "Approved (152)",
-                      style: GoogleFonts.poppins(
-                        fontSize: 13,
-                        fontWeight: _activeStatusTab == "Approved"
-                            ? FontWeight.w600
-                            : FontWeight.w500,
-                        color: _activeStatusTab == "Approved"
-                            ? (_isDarkMode
-                                ? Colors.white
-                                : const Color(0xFF1E293B))
-                            : (_isDarkMode
-                                ? Colors.grey.shade400
-                                : const Color(0xFF64748B)),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 24),
-                InkWell(
-                  onTap: () {
-                    setState(() {
-                      _activeStatusTab = "UnApproved";
-                    });
-                  },
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-                    decoration: BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(
-                          color: _activeStatusTab == "UnApproved"
-                              ? const Color(0xFF00A3FF)
-                              : Colors.transparent,
-                          width: 2.2,
-                        ),
-                      ),
-                    ),
-                    child: Text(
-                      "UnApproved (2)",
-                      style: GoogleFonts.poppins(
-                        fontSize: 13,
-                        fontWeight: _activeStatusTab == "UnApproved"
-                            ? FontWeight.w600
-                            : FontWeight.w500,
-                        color: _activeStatusTab == "UnApproved"
-                            ? (_isDarkMode
-                                ? Colors.white
-                                : const Color(0xFF1E293B))
-                            : (_isDarkMode
-                                ? Colors.grey.shade400
-                                : const Color(0xFF64748B)),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-
-            // 3. Full-width Search Bar (Image 1 reference)
+            // 1. KPI Counts Ribbon
             Container(
-              height: 44,
-              decoration: BoxDecoration(
-                color: _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: _isDarkMode
-                      ? const Color(0xFF334155)
-                      : const Color(0xFFE2E8F0),
+              color: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    _buildKpiChip("All Staff", counts.total, "All", vm.statusFilter, Colors.blueGrey, () {
+                      vm.setStatusFilter("All");
+                    }),
+                    const SizedBox(width: 8),
+                    _buildKpiChip("Active", counts.active, "Active", vm.statusFilter, const Color(0xFF10B981), () {
+                      vm.setStatusFilter("Active");
+                    }),
+                    const SizedBox(width: 8),
+                    _buildKpiChip("Inactive", counts.inactive, "Inactive", vm.statusFilter, Colors.orange, () {
+                      vm.setStatusFilter("Inactive");
+                    }),
+                    const SizedBox(width: 8),
+                    _buildKpiChip("Unapproved", counts.unapproved, "Unapproved", vm.statusFilter, Colors.redAccent, () {
+                      vm.setStatusFilter("Unapproved");
+                    }),
+                  ],
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: _isDarkMode ? 0.2 : 0.02),
-                    blurRadius: 4,
-                    offset: const Offset(0, 1),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  const SizedBox(width: 14),
-                  Icon(
-                    Icons.search,
-                    size: 18,
-                    color: _isDarkMode
-                        ? Colors.grey.shade400
-                        : const Color(0xFF64748B),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: TextField(
-                      controller: _searchController,
-                      onChanged: (val) => setState(() => _searchQuery = val),
-                      style: GoogleFonts.poppins(
-                        fontSize: 13,
-                        color: _isDarkMode ? Colors.white : Colors.black87,
-                      ),
-                      decoration: InputDecoration(
-                        isDense: true,
-                        hintText: "Search administrators...",
-                        hintStyle: GoogleFonts.poppins(
-                          fontSize: 13,
-                          color: _isDarkMode
-                              ? Colors.grey.shade500
-                              : const Color(0xFF94A3B8),
-                        ),
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.zero,
-                      ),
-                    ),
-                  ),
-                  if (_searchQuery.isNotEmpty)
-                    GestureDetector(
-                      onTap: () {
-                        _searchController.clear();
-                        setState(() => _searchQuery = "");
-                      },
-                      child: const Padding(
-                        padding: EdgeInsets.only(right: 10),
-                        child: Icon(Icons.clear, size: 16, color: Colors.grey),
-                      ),
-                    ),
-                ],
               ),
             ),
-            const SizedBox(height: 14),
 
-            // 4. Entries per page Row (Image 1 reference)
-            Row(
-              children: [
-                Container(
-                  height: 34,
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  decoration: BoxDecoration(
-                    color: _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: _isDarkMode
-                          ? const Color(0xFF334155)
-                          : const Color(0xFFCBD5E1),
-                    ),
+            // 2. Search Field
+            Container(
+              color: Colors.white,
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: TextField(
+                controller: _searchController,
+                onChanged: (val) => vm.setSearchQuery(val),
+                decoration: InputDecoration(
+                  hintText: "Search staff by name, phone, role or ID...",
+                  hintStyle: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF94A3B8)),
+                  prefixIcon: const Icon(Icons.search, size: 20, color: Color(0xFF003366)),
+                  suffixIcon: _searchController.text.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear, size: 18),
+                          onPressed: () {
+                            _searchController.clear();
+                            vm.setSearchQuery("");
+                          },
+                        )
+                      : null,
+                  filled: true,
+                  fillColor: const Color(0xFFF8FAFC),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
                   ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<int>(
-                      value: _entriesPerPage,
-                      dropdownColor:
-                          _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-                      icon: Padding(
-                        padding: const EdgeInsets.only(left: 4),
-                        child: Icon(
-                          Icons.keyboard_arrow_down,
-                          size: 16,
-                          color: _isDarkMode
-                              ? Colors.white
-                              : const Color(0xFF1E293B),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: Color(0xFF003366), width: 1.5),
+                  ),
+                ),
+              ),
+            ),
+            const Divider(height: 1),
+
+            // 3. Body List
+            Expanded(
+              child: vm.isLoading
+                  ? const Center(
+                      child: CircularProgressIndicator(color: Color(0xFF003366)),
+                    )
+                  : admins.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.person_off_outlined, size: 48, color: Colors.grey.shade400),
+                              const SizedBox(height: 12),
+                              Text(
+                                "No administrators found",
+                                style: GoogleFonts.poppins(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF64748B),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                "Try adjusting your search or filters.",
+                                style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF94A3B8)),
+                              ),
+                            ],
+                          ),
+                        )
+                      : ListView.separated(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: admins.length,
+                          separatorBuilder: (_, __) => const SizedBox(height: 12),
+                          itemBuilder: (context, index) {
+                            final admin = admins[index];
+                            return _buildAdminCard(admin);
+                          },
                         ),
-                      ),
+            ),
+
+            // 4. Pagination Ribbon
+            if (pagination.lastPage > 1)
+              Container(
+                color: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    TextButton.icon(
+                      onPressed: pagination.currentPage > 1
+                          ? () => vm.fetchAdministrators(page: pagination.currentPage - 1)
+                          : null,
+                      icon: const Icon(Icons.chevron_left, size: 18),
+                      label: Text("Previous", style: GoogleFonts.poppins(fontSize: 12)),
+                    ),
+                    Text(
+                      "Page ${pagination.currentPage} of ${pagination.lastPage} (${counts.total})",
                       style: GoogleFonts.poppins(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: _isDarkMode
-                            ? Colors.white
-                            : const Color(0xFF1E293B),
+                        color: const Color(0xFF334155),
                       ),
-                      items: [10, 25, 50, 100].map((int val) {
-                        return DropdownMenuItem<int>(
-                          value: val,
-                          child: Text("$val"),
-                        );
-                      }).toList(),
-                      onChanged: (int? newVal) {
-                        if (newVal != null) {
-                          setState(() {
-                            _entriesPerPage = newVal;
-                          });
-                        }
-                      },
+                    ),
+                    TextButton.icon(
+                      onPressed: pagination.currentPage < pagination.lastPage
+                          ? () => vm.fetchAdministrators(page: pagination.currentPage + 1)
+                          : null,
+                      label: Text("Next", style: GoogleFonts.poppins(fontSize: 12)),
+                      icon: const Icon(Icons.chevron_right, size: 18),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: const Color(0xFF003366),
+        icon: const Icon(Icons.person_add_alt_1_rounded, color: Colors.white),
+        label: Text(
+          "Add Administrator",
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.w600,
+            fontSize: 13,
+            color: Colors.white,
+          ),
+        ),
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const AddAdministratorScreen(),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildKpiChip(
+    String label,
+    int count,
+    String tabValue,
+    String currentFilter,
+    Color color,
+    VoidCallback onTap,
+  ) {
+    final isSelected = currentFilter == tabValue;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? color : color.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isSelected ? color : color.withOpacity(0.2),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: GoogleFonts.poppins(
+                fontSize: 11,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                color: isSelected ? Colors.white : color,
+              ),
+            ),
+            const SizedBox(width: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+              decoration: BoxDecoration(
+                color: isSelected ? Colors.white.withOpacity(0.25) : color.withOpacity(0.18),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                "$count",
+                style: GoogleFonts.poppins(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: isSelected ? Colors.white : color,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAdminCard(AdministratorItem admin) {
+    final initial = admin.fullName.isNotEmpty ? admin.fullName[0].toUpperCase() : "A";
+    final isOnline = admin.status == 1;
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header Row
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 22,
+                backgroundColor: const Color(0xFF003366),
+                backgroundImage: admin.imageUrl != null &&
+                        admin.imageUrl!.startsWith('http') &&
+                        !admin.imageUrl!.contains('dummy-profile')
+                    ? NetworkImage(admin.imageUrl!)
+                    : null,
+                child: admin.imageUrl == null ||
+                        !admin.imageUrl!.startsWith('http') ||
+                        admin.imageUrl!.contains('dummy-profile')
+                    ? Text(
+                        initial,
+                        style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          fontSize: 16,
+                        ),
+                      )
+                    : null,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            admin.fullName,
+                            style: GoogleFonts.poppins(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF0F172A),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: isOnline
+                                ? const Color(0xFF10B981).withOpacity(0.12)
+                                : Colors.redAccent.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            admin.statusText,
+                            style: GoogleFonts.poppins(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: isOnline ? const Color(0xFF059669) : Colors.redAccent,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      "${admin.administratorId} • @${admin.username}",
+                      style: GoogleFonts.poppins(
+                        fontSize: 11,
+                        color: const Color(0xFF64748B),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          const Divider(height: 1),
+          const SizedBox(height: 10),
+
+          // Role & Hierarchy
+          Row(
+            children: [
+              const Icon(Icons.badge_outlined, size: 16, color: Color(0xFF003366)),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  admin.role?.name ?? "Staff Associate",
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF1E293B),
+                  ),
+                ),
+              ),
+              if (admin.role?.code != null && admin.role!.code.isNotEmpty)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF003366).withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    admin.role!.code,
+                    style: GoogleFonts.poppins(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF003366),
                     ),
                   ),
                 ),
+            ],
+          ),
+
+          if (admin.parent != null) ...[
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                const Icon(Icons.account_tree_outlined, size: 16, color: Color(0xFF64748B)),
                 const SizedBox(width: 8),
-                Text(
-                  "entries per page",
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w400,
-                    color: _isDarkMode
-                        ? Colors.grey.shade400
-                        : const Color(0xFF64748B),
+                Expanded(
+                  child: Text(
+                    "Reports to: ${admin.parent!.fullName}",
+                    style: GoogleFonts.poppins(
+                      fontSize: 11,
+                      color: const Color(0xFF64748B),
+                    ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 14),
+          ],
 
-            // 5. Administrators Cards List (Matching Image 1 Format)
-            if (filtered.isEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 40),
-                child: Center(
-                  child: Column(
+          const SizedBox(height: 6),
+
+          // Contact Details
+          Row(
+            children: [
+              if (admin.phone != null && admin.phone!.isNotEmpty) ...[
+                InkWell(
+                  onTap: () => _callPhone(admin.phone),
+                  borderRadius: BorderRadius.circular(4),
+                  child: Row(
                     children: [
-                      Icon(Icons.person_off_outlined,
-                          size: 40,
-                          color: _isDarkMode
-                              ? Colors.grey.shade600
-                              : Colors.grey.shade400),
-                      const SizedBox(height: 10),
+                      const Icon(Icons.phone_outlined, size: 15, color: Color(0xFF10B981)),
+                      const SizedBox(width: 4),
                       Text(
-                        "No Administrators Found",
+                        admin.phone!,
                         style: GoogleFonts.poppins(
-                          fontSize: 14,
+                          fontSize: 11,
                           fontWeight: FontWeight.w600,
-                          color: _isDarkMode
-                              ? Colors.grey.shade400
-                              : Colors.grey.shade600,
+                          color: const Color(0xFF059669),
                         ),
                       ),
                     ],
                   ),
                 ),
-              )
-            else
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: filtered.length,
-                itemBuilder: (ctx, index) {
-                  final admin = filtered[index];
-                  final words = admin.name.trim().split(RegExp(r'\s+'));
-                  final String initials;
-                  if (words.isEmpty || admin.name.trim().isEmpty) {
-                    initials = "A";
-                  } else if (words.length == 1) {
-                    initials = words[0].length >= 2
-                        ? words[0].substring(0, 2).toUpperCase()
-                        : words[0].toUpperCase();
-                  } else {
-                    initials = words
-                        .take(2)
-                        .map((w) => w.isNotEmpty ? w[0] : '')
-                        .join()
-                        .toUpperCase();
-                  }
-
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color:
-                          _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: _isDarkMode
-                            ? const Color(0xFF334155)
-                            : const Color(0xFFE2E8F0),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black
-                              .withValues(alpha: _isDarkMode ? 0.2 : 0.03),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Row 1: Avatar + Name / Role + Status Pill
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Circular Initials Badge with S.N. Badge
-                            Stack(
-                              clipBehavior: Clip.none,
-                              children: [
-                                Container(
-                                  width: 40,
-                                  height: 40,
-                                  decoration: const BoxDecoration(
-                                    color: Color(0xFFDBEAFE),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  alignment: Alignment.center,
-                                  child: Text(
-                                    initials,
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.bold,
-                                      color: const Color(0xFF1E40AF),
-                                    ),
-                                  ),
-                                ),
-                                Positioned(
-                                  top: -4,
-                                  left: -4,
-                                  child: Container(
-                                    width: 18,
-                                    height: 18,
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF0F172A),
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                        color: _isDarkMode
-                                            ? const Color(0xFF1E293B)
-                                            : Colors.white,
-                                        width: 1.5,
-                                      ),
-                                    ),
-                                    alignment: Alignment.center,
-                                    child: Text(
-                                      "${index + 1}",
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 9.5,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                        height: 1.1,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(width: 12),
-
-                            // Name & Role Subtitle
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    admin.name,
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.bold,
-                                      color: _isDarkMode
-                                          ? Colors.white
-                                          : const Color(0xFF0F172A),
-                                      letterSpacing: 0.3,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    admin.role,
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 11.5,
-                                      fontWeight: FontWeight.w500,
-                                      color: const Color(0xFF0D9488),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-
-                            // Status Filled Pill
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: admin.status == "UnApproved"
-                                    ? const Color(0xFFD97706)
-                                    : const Color(0xFF059669),
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                              child: Text(
-                                admin.status,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-
-                        // Row 2: ID Badge & Email
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: _isDarkMode
-                                    ? const Color(0xFF0F172A)
-                                    : const Color(0xFFF1F5F9),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                admin.id,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: _isDarkMode
-                                      ? Colors.grey.shade300
-                                      : const Color(0xFF475569),
-                                ),
-                              ),
-                            ),
-                            Text(
-                              admin.email,
-                              style: GoogleFonts.poppins(
-                                fontSize: 11.5,
-                                color: _isDarkMode
-                                    ? Colors.grey.shade400
-                                    : const Color(0xFF475569),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-
-                        // Row 3: Action Buttons & Auto Login Button
-                        Row(
-                          children: [
-                            // Edit Box
-                            InkWell(
-                              onTap: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text("Edit ${admin.name}",
-                                        style: GoogleFonts.poppins()),
-                                    duration: const Duration(seconds: 1),
-                                  ),
-                                );
-                              },
-                              borderRadius: BorderRadius.circular(6),
-                              child: Container(
-                                width: 36,
-                                height: 36,
-                                decoration: BoxDecoration(
-                                  color: _isDarkMode
-                                      ? const Color(0xFF0F172A)
-                                      : Colors.white,
-                                  borderRadius: BorderRadius.circular(6),
-                                  border: Border.all(
-                                    color: _isDarkMode
-                                        ? const Color(0xFF334155)
-                                        : const Color(0xFFCBD5E1),
-                                  ),
-                                ),
-                                child: Icon(Icons.edit_outlined,
-                                    size: 16,
-                                    color: _isDarkMode
-                                        ? Colors.white70
-                                        : const Color(0xFF475569)),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-
-                            // Delete Box
-                            InkWell(
-                              onTap: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text("Delete ${admin.name}",
-                                        style: GoogleFonts.poppins()),
-                                    duration: const Duration(seconds: 1),
-                                  ),
-                                );
-                              },
-                              borderRadius: BorderRadius.circular(6),
-                              child: Container(
-                                width: 36,
-                                height: 36,
-                                decoration: BoxDecoration(
-                                  color: _isDarkMode
-                                      ? const Color(0xFF0F172A)
-                                      : Colors.white,
-                                  borderRadius: BorderRadius.circular(6),
-                                  border: Border.all(
-                                    color: _isDarkMode
-                                        ? const Color(0xFF334155)
-                                        : const Color(0xFFCBD5E1),
-                                  ),
-                                ),
-                                child: Icon(Icons.delete_outline,
-                                    size: 16,
-                                    color: _isDarkMode
-                                        ? Colors.white70
-                                        : const Color(0xFF475569)),
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-
-                            // Full Auto Login Blue Button
-                            Expanded(
-                              child: SizedBox(
-                                height: 36,
-                                child: ElevatedButton(
-                                  onPressed: () {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                            "Auto login as ${admin.name}",
-                                            style: GoogleFonts.poppins()),
-                                        backgroundColor:
-                                            const Color(0xFF1E70CD),
-                                        duration: const Duration(seconds: 1),
-                                      ),
-                                    );
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF1E70CD),
-                                    foregroundColor: Colors.white,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    elevation: 0,
-                                    padding: EdgeInsets.zero,
-                                  ),
-                                  child: Text(
-                                    "Auto Login",
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-
-            // 6. Bottom Pagination Controls (Screenshot 1 Reference)
-            Padding(
-              padding: const EdgeInsets.only(top: 8, bottom: 20),
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final textWidget = Text(
-                    "Showing 1 to ${_entriesPerPage < 152 ? _entriesPerPage : 152} of 152 entries",
+                const SizedBox(width: 14),
+              ],
+              if (admin.city != null && admin.city!.isNotEmpty) ...[
+                const Icon(Icons.location_on_outlined, size: 15, color: Color(0xFF64748B)),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    "${admin.city}${admin.state != null ? ', ${admin.state}' : ''}",
                     style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: _isDarkMode
-                          ? Colors.grey.shade400
-                          : const Color(0xFF64748B),
+                      fontSize: 11,
+                      color: const Color(0xFF64748B),
                     ),
-                  );
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ],
+          ),
 
-                  final paginationWidget = SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _buildPageButton(
-                            text: "1",
-                            isActive: _currentPage == 1,
-                            onTap: () => setState(() => _currentPage = 1)),
-                        _buildPageButton(
-                            text: "2",
-                            isActive: _currentPage == 2,
-                            onTap: () => setState(() => _currentPage = 2)),
-                        _buildPageButton(
-                            text: "3",
-                            isActive: _currentPage == 3,
-                            onTap: () => setState(() => _currentPage = 3)),
-                        _buildPageButton(
-                            text: "4",
-                            isActive: _currentPage == 4,
-                            onTap: () => setState(() => _currentPage = 4)),
-                        _buildPageButton(
-                            text: "5",
-                            isActive: _currentPage == 5,
-                            onTap: () => setState(() => _currentPage = 5)),
-                        _buildPageButton(
-                            text: "6",
-                            isActive: _currentPage == 6,
-                            onTap: () => setState(() => _currentPage = 6)),
-                        _buildPageButton(
-                            text: "7",
-                            isActive: _currentPage == 7,
-                            onTap: () => setState(() => _currentPage = 7)),
-                        _buildPageButton(text: "...", isDots: true),
-                        _buildPageButton(
-                            text: "16",
-                            isActive: _currentPage == 16,
-                            onTap: () => setState(() => _currentPage = 16)),
-                        _buildPageButton(
-                          text: "›",
-                          onTap: () {
-                            if (_currentPage < 16) {
-                              setState(() => _currentPage++);
-                            }
-                          },
-                        ),
-                      ],
+          if (admin.email != null && admin.email!.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                const Icon(Icons.email_outlined, size: 15, color: Color(0xFF64748B)),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    admin.email!,
+                    style: GoogleFonts.poppins(
+                      fontSize: 11,
+                      color: const Color(0xFF475569),
                     ),
-                  );
-
-                  if (constraints.maxWidth > 580) {
-                    return Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        textWidget,
-                        paginationWidget,
-                      ],
-                    );
-                  } else {
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        textWidget,
-                        const SizedBox(height: 10),
-                        paginationWidget,
-                      ],
-                    );
-                  }
-                },
-              ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                Text(
+                  _formatDate(admin.createdAt),
+                  style: GoogleFonts.poppins(
+                    fontSize: 10,
+                    color: const Color(0xFF94A3B8),
+                  ),
+                ),
+              ],
             ),
           ],
-        ),
+        ],
       ),
     );
   }

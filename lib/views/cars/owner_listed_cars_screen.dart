@@ -3,7 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 import '../widgets/crm_drawer.dart';
 import '../widgets/custom_back_button.dart';
 import '../widgets/admin_profile_avatar.dart';
-import 'add_car_screen.dart';
 
 class OwnerListedCar {
   final String id;
@@ -41,7 +40,7 @@ class OwnerListedCarsScreen extends StatefulWidget {
 }
 
 class _OwnerListedCarsScreenState extends State<OwnerListedCarsScreen> {
-  final bool _isDarkMode = false;
+  bool _isDarkMode = false;
   String _searchQuery = "";
   final TextEditingController _searchController = TextEditingController();
 
@@ -141,6 +140,20 @@ class _OwnerListedCarsScreenState extends State<OwnerListedCarsScreen> {
         ),
         actions: [
           IconButton(
+            tooltip: _isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode",
+            icon: Icon(
+              _isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_outlined,
+              color: _isDarkMode
+                  ? const Color(0xFFFBBF24)
+                  : const Color(0xFF334155),
+            ),
+            onPressed: () {
+              setState(() {
+                _isDarkMode = !_isDarkMode;
+              });
+            },
+          ),
+          IconButton(
             icon: Icon(
               Icons.notifications_none_rounded,
               color: _isDarkMode ? Colors.white : const Color(0xFF334155),
@@ -157,7 +170,16 @@ class _OwnerListedCarsScreenState extends State<OwnerListedCarsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. Subtitle
+            // 1. Heading & Subtitle
+            Text(
+              "Owner Listed Cars",
+              style: GoogleFonts.poppins(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: _isDarkMode ? Colors.white : const Color(0xFF0F172A),
+              ),
+            ),
+            const SizedBox(height: 2),
             Text(
               "Manage cars listed directly by owners.",
               style: GoogleFonts.poppins(
@@ -528,14 +550,10 @@ class _OwnerListedCarsScreenState extends State<OwnerListedCarsScreen> {
   }
 
   void _editCar(OwnerListedCar car) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => AddCarScreen(
-          carUid: car.id,
-          existingVehicle: car,
-          isEditMode: true,
-        ),
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Editing ${car.title}"),
+        backgroundColor: const Color(0xFF00A3FF),
       ),
     );
   }

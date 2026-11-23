@@ -30,7 +30,7 @@ class CarLoansScreen extends StatefulWidget {
 }
 
 class _CarLoansScreenState extends State<CarLoansScreen> {
-  final bool _isDarkMode = false;
+  bool _isDarkMode = false;
   int _entriesPerPage = 10;
   String _searchQuery = "";
 
@@ -43,8 +43,7 @@ class _CarLoansScreenState extends State<CarLoansScreen> {
       category: "Used Car Loan",
       publishedDate: "08 Dec, 2025",
       isActive: true,
-      description:
-          "Quick finance for pre-owned car purchase with low interest rates.",
+      description: "Quick finance for pre-owned car purchase with low interest rates.",
     ),
     CarLoanContentItem(
       id: "LOAN-002",
@@ -52,8 +51,7 @@ class _CarLoansScreenState extends State<CarLoansScreen> {
       category: "New Car Loan",
       publishedDate: "08 Dec, 2025",
       isActive: true,
-      description:
-          "Up to 100% on-road funding for brand new cars from top banks.",
+      description: "Up to 100% on-road funding for brand new cars from top banks.",
     ),
     CarLoanContentItem(
       id: "LOAN-003",
@@ -61,8 +59,7 @@ class _CarLoansScreenState extends State<CarLoansScreen> {
       category: "Used Car Loan",
       publishedDate: "08 Dec, 2025",
       isActive: true,
-      description:
-          "Balance transfer your existing car loan and get extra top-up cash.",
+      description: "Balance transfer your existing car loan and get extra top-up cash.",
     ),
     CarLoanContentItem(
       id: "LOAN-004",
@@ -70,8 +67,7 @@ class _CarLoansScreenState extends State<CarLoansScreen> {
       category: "Used Car Loan",
       publishedDate: "08 Dec, 2025",
       isActive: true,
-      description:
-          "Unlock cash against your fully paid car with quick refinance approval.",
+      description: "Unlock cash against your fully paid car with quick refinance approval.",
     ),
   ];
 
@@ -98,18 +94,14 @@ class _CarLoansScreenState extends State<CarLoansScreen> {
     String category = "Used Car Loan";
     bool isActive = true;
 
-    final categories = [
-      "Used Car Loan",
-      "New Car Loan",
-      "BT + Topup",
-      "Refinance"
-    ];
+    final categories = ["Used Car Loan", "New Car Loan", "BT + Topup", "Refinance"];
 
     showDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
-          backgroundColor: _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
+          backgroundColor:
+              _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: Text(
@@ -165,8 +157,7 @@ class _CarLoansScreenState extends State<CarLoansScreen> {
                   items: categories.map((cat) {
                     return DropdownMenuItem(
                       value: cat,
-                      child:
-                          Text(cat, style: GoogleFonts.poppins(fontSize: 12)),
+                      child: Text(cat, style: GoogleFonts.poppins(fontSize: 12)),
                     );
                   }).toList(),
                   onChanged: (val) {
@@ -271,7 +262,8 @@ class _CarLoansScreenState extends State<CarLoansScreen> {
                   ),
                 );
               },
-              child: const Text("Add", style: TextStyle(color: Colors.white)),
+              child: const Text("Add",
+                  style: TextStyle(color: Colors.white)),
             ),
           ],
         ),
@@ -285,12 +277,7 @@ class _CarLoansScreenState extends State<CarLoansScreen> {
     String category = item.category;
     bool isActive = item.isActive;
 
-    final categories = [
-      "Used Car Loan",
-      "New Car Loan",
-      "BT + Topup",
-      "Refinance"
-    ];
+    final categories = ["Used Car Loan", "New Car Loan", "BT + Topup", "Refinance"];
     if (!categories.contains(category)) {
       categories.add(category);
     }
@@ -299,7 +286,8 @@ class _CarLoansScreenState extends State<CarLoansScreen> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
-          backgroundColor: _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
+          backgroundColor:
+              _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: Text(
@@ -353,8 +341,7 @@ class _CarLoansScreenState extends State<CarLoansScreen> {
                   items: categories.map((cat) {
                     return DropdownMenuItem(
                       value: cat,
-                      child:
-                          Text(cat, style: GoogleFonts.poppins(fontSize: 12)),
+                      child: Text(cat, style: GoogleFonts.poppins(fontSize: 12)),
                     );
                   }).toList(),
                   onChanged: (val) {
@@ -449,7 +436,8 @@ class _CarLoansScreenState extends State<CarLoansScreen> {
                   ),
                 );
               },
-              child: const Text("Save", style: TextStyle(color: Colors.white)),
+              child: const Text("Save",
+                  style: TextStyle(color: Colors.white)),
             ),
           ],
         ),
@@ -481,8 +469,8 @@ class _CarLoansScreenState extends State<CarLoansScreen> {
             child: const Text("Cancel"),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFDC2626)),
+            style:
+                ElevatedButton.styleFrom(backgroundColor: const Color(0xFFDC2626)),
             onPressed: () {
               setState(() {
                 _loanContents.removeWhere((l) => l.id == item.id);
@@ -516,7 +504,7 @@ class _CarLoansScreenState extends State<CarLoansScreen> {
         elevation: 0.5,
         leading: CustomBackButton(isDarkMode: _isDarkMode),
         title: Text(
-          "Manage Car Loans",
+          "Car Loans",
           style: GoogleFonts.poppins(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -524,6 +512,20 @@ class _CarLoansScreenState extends State<CarLoansScreen> {
           ),
         ),
         actions: [
+          IconButton(
+            tooltip: _isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode",
+            icon: Icon(
+              _isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_outlined,
+              color: _isDarkMode
+                  ? const Color(0xFFFBBF24)
+                  : const Color(0xFF334155),
+            ),
+            onPressed: () {
+              setState(() {
+                _isDarkMode = !_isDarkMode;
+              });
+            },
+          ),
           IconButton(
             icon: Icon(
               Icons.notifications_none_rounded,
@@ -541,7 +543,18 @@ class _CarLoansScreenState extends State<CarLoansScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. Full-Width "+ Add New Loan Content" Button
+            // 1. Heading: Manage Car Loans
+            Text(
+              "Manage Car Loans",
+              style: GoogleFonts.poppins(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: _isDarkMode ? Colors.white : const Color(0xFF0F172A),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // 2. Full-Width "+ Add New Loan Content" Button
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -572,9 +585,7 @@ class _CarLoansScreenState extends State<CarLoansScreen> {
               style: GoogleFonts.poppins(
                 fontSize: 13.5,
                 fontWeight: FontWeight.bold,
-                color: _isDarkMode
-                    ? Colors.grey.shade300
-                    : const Color(0xFF1E293B),
+                color: _isDarkMode ? Colors.grey.shade300 : const Color(0xFF1E293B),
               ),
             ),
             const SizedBox(height: 10),
@@ -636,7 +647,8 @@ class _CarLoansScreenState extends State<CarLoansScreen> {
                   height: 42,
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                   decoration: BoxDecoration(
-                    color: _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
+                    color:
+                        _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
                       color: _isDarkMode
@@ -663,7 +675,7 @@ class _CarLoansScreenState extends State<CarLoansScreen> {
                             ? Colors.white
                             : const Color(0xFF1E293B),
                       ),
-                      items: [5, 10, 15, 20, 25].map((int val) {
+                      items: [10, 25, 50, 100].map((int val) {
                         return DropdownMenuItem<int>(
                           value: val,
                           child: Text("$val"),
