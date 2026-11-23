@@ -9,6 +9,7 @@ import 'viewmodels/administrators_viewmodel.dart';
 import 'viewmodels/admin_dashboard_viewmodel.dart';
 import 'viewmodels/payout_viewmodel.dart';
 import 'viewmodels/leads_viewmodel.dart';
+import 'viewmodels/inventory_viewmodel.dart';
 import 'views/splash/splash_screen.dart';
 
 void main() async {
@@ -39,6 +40,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => AdminDashboardViewModel()),
         ChangeNotifierProvider(create: (_) => PayoutViewModel()),
         ChangeNotifierProvider(create: (_) => LeadsViewModel()),
+        ChangeNotifierProvider(create: (_) => InventoryViewModel()),
       ],
       child: const FindMyCarzBusinessApp(),
     ),

@@ -42,6 +42,28 @@ class LeadsListScreen extends StatefulWidget {
 class _LeadsListScreenState extends State<LeadsListScreen> {
   bool _isDarkMode = false;
   String _activeCategory = "All";
+  bool _isSyncing = false;
+  bool _isFiltersExpanded = false;
+
+  void _handleLiveSync() async {
+    if (_isSyncing) return;
+    setState(() {
+      _isSyncing = true;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Leads live sync completed"),
+        backgroundColor: Color(0xFF22C55E),
+        duration: Duration(milliseconds: 900),
+      ),
+    );
+    await Future.delayed(const Duration(milliseconds: 600));
+    if (mounted) {
+      setState(() {
+        _isSyncing = false;
+      });
+    }
+  }
 
   @override
   void initState() {
@@ -498,6 +520,74 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
     );
   }
 
+  Widget _buildCategoryChip(LoanCategoryFilter cat) {
+    final isActive = _activeCategory == cat.label;
+    return InkWell(
+      onTap: () => setState(() => _activeCategory = cat.label),
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isActive
+              ? const Color(0xFF1E293B)
+              : (_isDarkMode
+                  ? const Color(0xFF1E293B)
+                  : const Color(0xFFF1F5F9)),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isActive
+                ? const Color(0xFF1E293B)
+                : (_isDarkMode
+                    ? const Color(0xFF334155)
+                    : const Color(0xFFE2E8F0)),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              cat.label,
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+                color: isActive
+                    ? Colors.white
+                    : (_isDarkMode
+                        ? Colors.grey.shade300
+                        : const Color(0xFF334155)),
+              ),
+            ),
+            const SizedBox(width: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 6, vertical: 1.5),
+              decoration: BoxDecoration(
+                color: isActive
+                    ? Colors.white.withValues(alpha: 0.2)
+                    : (_isDarkMode
+                        ? const Color(0xFF334155)
+                        : const Color(0xFFE2E8F0)),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                "${cat.count}",
+                style: GoogleFonts.poppins(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: isActive
+                      ? Colors.white
+                      : (_isDarkMode
+                          ? Colors.white70
+                          : const Color(0xFF475569)),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -549,146 +639,150 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. Header: "Loan Pipeline" & "+ Create Lead"
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  "Loan Pipeline",
-                  style: GoogleFonts.poppins(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: _isDarkMode ? Colors.white : const Color(0xFF0F172A),
-                  ),
-                ),
-                ElevatedButton.icon(
-                  onPressed: _showCreateLeadModal,
-                  icon: const Icon(Icons.add, size: 16, color: Colors.white),
-                  label: Text(
-                    "Create Lead",
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
+            // 1. Header: "Live Sync" (Left) & "+ Create Lead" (Right)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: _handleLiveSync,
+                    icon: _isSyncing
+                        ? const SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Color(0xFF22C55E),
+                            ),
+                          )
+                        : const Icon(Icons.sync, size: 16, color: Color(0xFF22C55E)),
+                    label: Text(
+                      "Live Sync",
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF22C55E),
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: _isDarkMode
+                          ? const Color(0xFF1E293B)
+                          : Colors.white,
+                      side: const BorderSide(color: Color(0xFF22C55E), width: 1.2),
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
                   ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF00A3FF),
-                    elevation: 0,
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                  ElevatedButton.icon(
+                    onPressed: _showCreateLeadModal,
+                    icon: const Icon(Icons.add, size: 16, color: Colors.white),
+                    label: Text(
+                      "Create Lead",
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF00A3FF),
+                      elevation: 0,
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             const SizedBox(height: 12),
 
-            // 2. Filters Row (Exact match to Image 1)
-            Row(
+            // 2. Filters Section (Expandable on tap)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
-                  Icons.filter_alt_outlined,
-                  size: 16,
-                  color: _isDarkMode
-                      ? Colors.grey.shade400
-                      : const Color(0xFF64748B),
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  "Filters:",
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: _isDarkMode
-                        ? Colors.grey.shade400
-                        : const Color(0xFF64748B),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: _categories.map((cat) {
-                        final isActive = _activeCategory == cat.label;
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: InkWell(
-                            onTap: () =>
-                                setState(() => _activeCategory = cat.label),
-                            borderRadius: BorderRadius.circular(20),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: isActive
-                                    ? const Color(0xFF1E293B)
-                                    : (_isDarkMode
-                                        ? const Color(0xFF1E293B)
-                                        : const Color(0xFFF1F5F9)),
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: isActive
-                                      ? const Color(0xFF1E293B)
-                                      : (_isDarkMode
-                                          ? const Color(0xFF334155)
-                                          : const Color(0xFFE2E8F0)),
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    cat.label,
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 12,
-                                      fontWeight: isActive
-                                          ? FontWeight.bold
-                                          : FontWeight.w500,
-                                      color: isActive
-                                          ? Colors.white
-                                          : (_isDarkMode
-                                              ? Colors.grey.shade300
-                                              : const Color(0xFF334155)),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 6, vertical: 1.5),
-                                    decoration: BoxDecoration(
-                                      color: isActive
-                                          ? Colors.white.withValues(alpha: 0.2)
-                                          : (_isDarkMode
-                                              ? const Color(0xFF334155)
-                                              : const Color(0xFFE2E8F0)),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: Text(
-                                      "${cat.count}",
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.bold,
-                                        color: isActive
-                                            ? Colors.white
-                                            : (_isDarkMode
-                                                ? Colors.white70
-                                                : const Color(0xFF475569)),
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                Row(
+                  children: [
+                    InkWell(
+                      onTap: () {
+                        setState(() {
+                          _isFiltersExpanded = !_isFiltersExpanded;
+                        });
+                      },
+                      borderRadius: BorderRadius.circular(6),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 4, horizontal: 2),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.filter_alt_outlined,
+                              size: 16,
+                              color: _isDarkMode
+                                  ? Colors.grey.shade400
+                                  : const Color(0xFF64748B),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              "Filters:",
+                              style: GoogleFonts.poppins(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: _isDarkMode
+                                    ? Colors.grey.shade400
+                                    : const Color(0xFF64748B),
                               ),
                             ),
-                          ),
-                        );
-                      }).toList(),
+                            const SizedBox(width: 2),
+                            Icon(
+                              _isFiltersExpanded
+                                  ? Icons.keyboard_arrow_up_rounded
+                                  : Icons.keyboard_arrow_down_rounded,
+                              size: 18,
+                              color: _isDarkMode
+                                  ? Colors.grey.shade400
+                                  : const Color(0xFF64748B),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
+                    if (!_isFiltersExpanded) ...[
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: _categories.map((cat) {
+                              return Padding(
+                                padding: const EdgeInsets.only(right: 8),
+                                child: _buildCategoryChip(cat),
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
+                if (_isFiltersExpanded) ...[
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: _categories.map((cat) {
+                      return _buildCategoryChip(cat);
+                    }).toList(),
+                  ),
+                ],
               ],
             ),
             const SizedBox(height: 16),

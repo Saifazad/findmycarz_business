@@ -1,45 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
+import 'package:provider/provider.dart';
+import '../../models/inventory_vehicle_model.dart';
+import '../../viewmodels/inventory_viewmodel.dart';
 import '../widgets/crm_drawer.dart';
 import '../widgets/custom_back_button.dart';
 import '../widgets/admin_profile_avatar.dart';
 import 'add_car_screen.dart';
-
-class InventoryVehicle {
-  final String id;
-  final String makeModel;
-  final String subtitle;
-  final String image;
-  final String condition; // "Used" or "New"
-  final String year;
-  final String availability; // "Available", "Sold", "Booked"
-  final String company;
-  final String agent;
-  final String phone;
-  final String location;
-  final String date;
-  final String status; // "Inactive", "Published"
-  final String visibility; // "Public", "Private"
-  bool isSelected;
-
-  InventoryVehicle({
-    required this.id,
-    required this.makeModel,
-    required this.subtitle,
-    required this.image,
-    required this.condition,
-    required this.year,
-    required this.availability,
-    required this.company,
-    required this.agent,
-    required this.phone,
-    required this.location,
-    required this.date,
-    required this.status,
-    required this.visibility,
-    this.isSelected = false,
-  });
-}
 
 class CarsScreen extends StatefulWidget {
   final String title;
@@ -53,112 +21,40 @@ class _CarsScreenState extends State<CarsScreen> {
   bool _isDarkMode = false;
   String _activeTab = "All Cars"; // "All Cars", "New Cars", "Used Cars"
   int _entriesPerPage = 10;
-  int _currentPage = 1;
   String _searchQuery = "";
 
   final TextEditingController _searchController = TextEditingController();
 
-  final List<InventoryVehicle> _vehicles = [
-    InventoryVehicle(
-      id: "#CARUID0978",
-      makeModel: "TOYOTA KIRLOSKAR MOTOR PVT LTD | FORTUNER",
-      subtitle: "TOYOTA KIRLOSKAR MOTOR PVT LTD FORTUNER",
-      image: "assets/images/car1.webp",
-      condition: "Used",
-      year: "2013",
-      availability: "Available",
-      company: "Find My Car",
-      agent: "Auto Care Mohammad Sajid",
-      phone: "9897323603",
-      location: "Dehradun, Uttaranchal",
-      date: "17 Nov 2026",
-      status: "Inactive",
-      visibility: "Public",
-    ),
-    InventoryVehicle(
-      id: "#CARUID0977",
-      makeModel: "HYUNDAI | XCENT",
-      subtitle: "2015 HYUNDAI MOTOR XCENT CRDI S",
-      image: "assets/images/car.webp",
-      condition: "Used",
-      year: "2015",
-      availability: "Available",
-      company: "Owner",
-      agent: "VAAHAN BAZA – NITIN KHATRI",
-      phone: "9314651357",
-      location: "Bikaner, Rajasthan",
-      date: "16 Nov 2026",
-      status: "Published",
-      visibility: "Public",
-    ),
-    InventoryVehicle(
-      id: "#CARUID0976",
-      makeModel: "MARUTI SUZUKI | BREZZA",
-      subtitle: "2020 MARUTI SUZUKI VITARA BREZZA ZXI",
-      image: "assets/images/car1.webp",
-      condition: "Used",
-      year: "2020",
-      availability: "Available",
-      company: "Find My Car",
-      agent: "MANOJ NEGI",
-      phone: "9876543210",
-      location: "Dehradun, Uttarakhand",
-      date: "14 Nov 2026",
-      status: "Published",
-      visibility: "Public",
-    ),
-    InventoryVehicle(
-      id: "#CARUID0975",
-      makeModel: "MAHINDRA | THAR ROXX",
-      subtitle: "2024 MAHINDRA THAR ROXX AX7L 4WD",
-      image: "assets/images/car.webp",
-      condition: "New",
-      year: "2024",
-      availability: "Available",
-      company: "Dealership",
-      agent: "KARAN",
-      phone: "9811234567",
-      location: "Haridwar, Uttarakhand",
-      date: "12 Nov 2026",
-      status: "Published",
-      visibility: "Public",
-    ),
-  ];
+  late final PagingController<int, InventoryVehicle> _pagingController =
+      PagingController(
+    getNextPageKey: (state) {
+      if (state.keys == null || state.keys!.isEmpty) return 1;
+      final lastPage = state.pages?.last;
+      if (lastPage == null || lastPage.length < _entriesPerPage) return null;
+      return (state.keys!.last) + 1;
+    },
+    fetchPage: (pageKey) async {
+      final vm = Provider.of<InventoryViewModel>(context, listen: false);
+      return await vm.fetchVehiclesPage(
+        pageKey: pageKey,
+        pageSize: _entriesPerPage,
+        activeTab: _activeTab,
+        searchQuery: _searchQuery,
+      );
+    },
+  );
 
   @override
   void dispose() {
+    _pagingController.dispose();
     _searchController.dispose();
     super.dispose();
   }
 
-  List<InventoryVehicle> get _filteredVehicles {
-    return _vehicles.where((v) {
-      if (_activeTab == "New Cars" && v.condition.toLowerCase() != "new") {
-        return false;
-      }
-      if (_activeTab == "Used Cars" && v.condition.toLowerCase() != "used") {
-        return false;
-      }
-
-      if (_searchQuery.isNotEmpty) {
-        final q = _searchQuery.toLowerCase();
-        final match = v.id.toLowerCase().contains(q) ||
-            v.makeModel.toLowerCase().contains(q) ||
-            v.subtitle.toLowerCase().contains(q) ||
-            v.phone.contains(q) ||
-            v.location.toLowerCase().contains(q) ||
-            v.agent.toLowerCase().contains(q) ||
-            v.company.toLowerCase().contains(q);
-        if (!match) return false;
-      }
-
-      return true;
-    }).toList();
-  }
-
   void showAddVehicleModal() {
+    final inventoryVm = context.read<InventoryViewModel>();
     final uidCtrl =
-        TextEditingController(text: "#CARUID0${970 + _vehicles.length}");
+        TextEditingController(text: "#CARUID0${970 + inventoryVm.vehicles.length}");
     final makeModelCtrl = TextEditingController();
     final subtitleCtrl = TextEditingController();
     final yearCtrl = TextEditingController(text: "2023");
@@ -346,29 +242,26 @@ class _CarsScreenState extends State<CarsScreen> {
                           ),
                           onPressed: () {
                             if (formKey.currentState?.validate() ?? false) {
-                              setState(() {
-                                _vehicles.insert(
-                                  0,
-                                  InventoryVehicle(
-                                    id: uidCtrl.text.trim(),
-                                    makeModel: makeModelCtrl.text.trim().toUpperCase(),
-                                    subtitle: subtitleCtrl.text.trim(),
-                                    image: "assets/images/car1.webp",
-                                    condition: condition,
-                                    year: yearCtrl.text.trim(),
-                                    availability: "Available",
-                                    company: companyCtrl.text.trim(),
-                                    agent: agentCtrl.text.trim(),
-                                    phone: phoneCtrl.text.trim().isNotEmpty
-                                        ? phoneCtrl.text.trim()
-                                        : "9897323603",
-                                    location: locationCtrl.text.trim(),
-                                    date: "Today",
-                                    status: status,
-                                    visibility: "Public",
-                                  ),
-                                );
-                              });
+                              final newCar = InventoryVehicle(
+                                id: uidCtrl.text.trim(),
+                                makeModel: makeModelCtrl.text.trim().toUpperCase(),
+                                subtitle: subtitleCtrl.text.trim(),
+                                image: "assets/images/car1.webp",
+                                condition: condition,
+                                year: yearCtrl.text.trim(),
+                                availability: "Available",
+                                company: companyCtrl.text.trim(),
+                                agent: agentCtrl.text.trim(),
+                                phone: phoneCtrl.text.trim().isNotEmpty
+                                    ? phoneCtrl.text.trim()
+                                    : "9897323603",
+                                location: locationCtrl.text.trim(),
+                                date: "Today",
+                                status: status,
+                                visibility: "Public",
+                              );
+                              context.read<InventoryViewModel>().addVehicle(newCar);
+                              _pagingController.refresh();
                               Navigator.pop(ctx);
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
@@ -455,10 +348,12 @@ class _CarsScreenState extends State<CarsScreen> {
   }
 
   void _exportToExcel() {
-    final selectedCount = _vehicles.where((v) => v.isSelected).length;
+    final inventoryVm = context.read<InventoryViewModel>();
+    final selectedCount = inventoryVm.selectedCount;
+    final totalCount = inventoryVm.vehicles.length;
     final message = selectedCount > 0
         ? "Exporting $selectedCount selected vehicles to Excel..."
-        : "Exporting all ${_vehicles.length} vehicles to Excel...";
+        : "Exporting all $totalCount vehicles to Excel...";
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -476,9 +371,8 @@ class _CarsScreenState extends State<CarsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final filtered = _filteredVehicles;
-    final displayedVehicles = filtered.take(_entriesPerPage).toList();
-    final selectedCount = _vehicles.where((v) => v.isSelected).length;
+    final inventoryVm = context.watch<InventoryViewModel>();
+    final selectedCount = inventoryVm.selectedCount;
 
     return Scaffold(
       backgroundColor:
@@ -511,13 +405,12 @@ class _CarsScreenState extends State<CarsScreen> {
                     // Checkbox + "2 selected"
                     InkWell(
                       onTap: () {
-                        setState(() {
-                          final allSelected =
-                              _vehicles.every((v) => v.isSelected);
-                          for (var v in _vehicles) {
-                            v.isSelected = !allSelected;
-                          }
-                        });
+                        final allSelected =
+                            inventoryVm.vehicles.every((v) => v.isSelected);
+                        for (var v in inventoryVm.vehicles) {
+                          v.isSelected = !allSelected;
+                        }
+                        setState(() {});
                       },
                       child: Row(
                         children: [
@@ -525,19 +418,17 @@ class _CarsScreenState extends State<CarsScreen> {
                             width: 22,
                             height: 22,
                             child: Checkbox(
-                              value: true,
+                              value: inventoryVm.vehicles.isNotEmpty &&
+                                  inventoryVm.vehicles.every((v) => v.isSelected),
                               activeColor: const Color(0xFF00A3FF),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               onChanged: (val) {
-                                setState(() {
-                                  final allSelected =
-                                      _vehicles.every((v) => v.isSelected);
-                                  for (var v in _vehicles) {
-                                    v.isSelected = !allSelected;
-                                  }
-                                });
+                                for (var v in inventoryVm.vehicles) {
+                                  v.isSelected = val ?? false;
+                                }
+                                setState(() {});
                               },
                             ),
                           ),
@@ -621,28 +512,39 @@ class _CarsScreenState extends State<CarsScreen> {
           const SizedBox(width: 14),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 1. Top Buttons Row: "+ Add Vehicle" (Blue) & "Export to Excel" (Green)
+      body: PagingListener<int, InventoryVehicle>(
+        controller: _pagingController,
+        builder: (context, state, fetchNextPage) => RefreshIndicator(
+          color: const Color(0xFF00A3FF),
+          onRefresh: () => Future.sync(() => _pagingController.refresh()),
+          child: CustomScrollView(
+            slivers: [
+              SliverPadding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                sliver: SliverToBoxAdapter(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // 1. Top Buttons Row: "+ Add Vehicle" (Blue) & "Export to Excel" (Green)
             Row(
               children: [
-                Expanded(
-                  flex: 3,
-                  child: SizedBox(
-                    height: 42,
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => const AddCarScreen()),
-                        );
-                      },
-                      icon: const Icon(Icons.add, size: 16, color: Colors.white),
-                      label: Text(
+                const SizedBox(width: 16),
+                SizedBox(
+                  width: 135,
+                  height: 42,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const AddCarScreen()),
+                      );
+                    },
+                    icon: const Icon(Icons.add, size: 16, color: Colors.white),
+                    label: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
                         "Add Vehicle",
                         style: GoogleFonts.poppins(
                           fontSize: 13,
@@ -650,30 +552,33 @@ class _CarsScreenState extends State<CarsScreen> {
                           color: Colors.white,
                         ),
                       ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF00A3FF),
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF00A3FF),
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  flex: 2,
-                  child: SizedBox(
-                    height: 42,
-                    child: ElevatedButton(
-                      onPressed: _exportToExcel,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF00A389),
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
+                const SizedBox(width: 24),
+                SizedBox(
+                  width: 135,
+                  height: 42,
+                  child: ElevatedButton(
+                    onPressed: _exportToExcel,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF00A389),
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
                       ),
+                    ),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
                       child: Text(
                         "Export to Excel",
                         style: GoogleFonts.poppins(
@@ -681,8 +586,6 @@ class _CarsScreenState extends State<CarsScreen> {
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ),
@@ -723,6 +626,7 @@ class _CarsScreenState extends State<CarsScreen> {
                         setState(() {
                           _searchQuery = val;
                         });
+                        _pagingController.refresh();
                       },
                       style: GoogleFonts.poppins(
                         fontSize: 13,
@@ -810,6 +714,7 @@ class _CarsScreenState extends State<CarsScreen> {
                           setState(() {
                             _entriesPerPage = newVal;
                           });
+                          _pagingController.refresh();
                         }
                       },
                     ),
@@ -817,46 +722,40 @@ class _CarsScreenState extends State<CarsScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 14),
-
-            // 4. Vehicle Cards List (Matching Image 1 Format)
-            if (displayedVehicles.isEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 40),
-                child: Center(
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.directions_car_outlined,
-                        size: 44,
-                        color: _isDarkMode
-                            ? Colors.grey.shade600
-                            : Colors.grey.shade400,
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        "No Vehicles Found",
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: _isDarkMode
-                              ? Colors.grey.shade400
-                              : Colors.grey.shade600,
-                        ),
-                      ),
-                    ],
-                  ),
+                    const SizedBox(height: 14),
+                  ],
                 ),
-              )
-            else
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: displayedVehicles.length,
-                itemBuilder: (ctx, index) {
-                  final vehicle = displayedVehicles[index];
+              ),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              sliver: PagedSliverList<int, InventoryVehicle>(
+                state: state,
+                fetchNextPage: fetchNextPage,
+                builderDelegate: PagedChildBuilderDelegate<InventoryVehicle>(
+                  itemBuilder: (context, vehicle, index) =>
+                      _buildVehicleCard(vehicle, index),
+                  noItemsFoundIndicatorBuilder: (context) =>
+                      _buildNoItemsFound(),
+                  firstPageProgressIndicatorBuilder: (context) =>
+                      _buildLoadingIndicator(),
+                  newPageProgressIndicatorBuilder: (context) =>
+                      _buildLoadingIndicator(),
+                ),
+              ),
+            ),
+            const SliverToBoxAdapter(
+              child: SizedBox(height: 20),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
 
-                  return Container(
+  Widget _buildVehicleCard(InventoryVehicle vehicle, int index) {
+    return Container(
                     margin: const EdgeInsets.only(bottom: 12),
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
@@ -1244,102 +1143,30 @@ class _CarsScreenState extends State<CarsScreen> {
                       ],
                     ),
                   );
-                },
-              ),
+  }
 
-            // 5. Bottom Pagination Bar (Exact match to Image 1)
-            Padding(
-              padding: const EdgeInsets.only(top: 10, bottom: 20),
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final textWidget = Text(
-                    "Showing 1 to ${_entriesPerPage < 901 ? _entriesPerPage : 901} of 901 entries",
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: _isDarkMode
-                          ? Colors.grey.shade400
-                          : const Color(0xFF64748B),
-                    ),
-                  );
-
-                  final paginationWidget = SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _buildPageButton(
-                          text: "1",
-                          isActive: _currentPage == 1,
-                          onTap: () => setState(() => _currentPage = 1),
-                        ),
-                        _buildPageButton(
-                          text: "2",
-                          isActive: _currentPage == 2,
-                          onTap: () => setState(() => _currentPage = 2),
-                        ),
-                        _buildPageButton(
-                          text: "3",
-                          isActive: _currentPage == 3,
-                          onTap: () => setState(() => _currentPage = 3),
-                        ),
-                        _buildPageButton(
-                          text: "4",
-                          isActive: _currentPage == 4,
-                          onTap: () => setState(() => _currentPage = 4),
-                        ),
-                        _buildPageButton(
-                          text: "5",
-                          isActive: _currentPage == 5,
-                          onTap: () => setState(() => _currentPage = 5),
-                        ),
-                        _buildPageButton(
-                          text: "6",
-                          isActive: _currentPage == 6,
-                          onTap: () => setState(() => _currentPage = 6),
-                        ),
-                        _buildPageButton(
-                          text: "7",
-                          isActive: _currentPage == 7,
-                          onTap: () => setState(() => _currentPage = 7),
-                        ),
-                        _buildPageButton(text: "...", isDots: true),
-                        _buildPageButton(
-                          text: "91",
-                          isActive: _currentPage == 91,
-                          onTap: () => setState(() => _currentPage = 91),
-                        ),
-                        _buildPageButton(
-                          text: "›",
-                          onTap: () {
-                            if (_currentPage < 91) {
-                              setState(() => _currentPage++);
-                            }
-                          },
-                        ),
-                      ],
-                    ),
-                  );
-
-                  if (constraints.maxWidth > 580) {
-                    return Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        textWidget,
-                        paginationWidget,
-                      ],
-                    );
-                  } else {
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        textWidget,
-                        const SizedBox(height: 10),
-                        paginationWidget,
-                      ],
-                    );
-                  }
-                },
+  Widget _buildNoItemsFound() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 40),
+      child: Center(
+        child: Column(
+          children: [
+            Icon(
+              Icons.directions_car_outlined,
+              size: 44,
+              color: _isDarkMode
+                  ? Colors.grey.shade600
+                  : Colors.grey.shade400,
+            ),
+            const SizedBox(height: 10),
+            Text(
+              "No Vehicles Found",
+              style: GoogleFonts.poppins(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: _isDarkMode
+                    ? Colors.grey.shade400
+                    : Colors.grey.shade600,
               ),
             ),
           ],
@@ -1348,47 +1175,16 @@ class _CarsScreenState extends State<CarsScreen> {
     );
   }
 
-  Widget _buildPageButton({
-    required String text,
-    bool isActive = false,
-    bool isDots = false,
-    VoidCallback? onTap,
-  }) {
-    return InkWell(
-      onTap: isDots ? null : onTap,
-      borderRadius: BorderRadius.circular(4),
-      child: Container(
-        constraints: const BoxConstraints(minWidth: 32),
-        height: 32,
-        margin: const EdgeInsets.only(right: 4),
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: isActive
-              ? (_isDarkMode
-                  ? const Color(0xFF334155)
-                  : const Color(0xFFCBD5E1))
-              : (_isDarkMode ? const Color(0xFF1E293B) : Colors.white),
-          borderRadius: BorderRadius.circular(4),
-          border: Border.all(
-            color: isActive
-                ? const Color(0xFF00A3FF)
-                : (_isDarkMode
-                    ? const Color(0xFF475569)
-                    : const Color(0xFFCBD5E1)),
-            width: isActive ? 1.5 : 1.0,
-          ),
-        ),
-        child: Text(
-          text,
-          style: GoogleFonts.poppins(
-            fontSize: 12,
-            fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
-            color: isActive
-                ? (_isDarkMode ? Colors.white : const Color(0xFF0F172A))
-                : (_isDarkMode
-                    ? Colors.grey.shade300
-                    : const Color(0xFF475569)),
+  Widget _buildLoadingIndicator() {
+    return const Padding(
+      padding: EdgeInsets.symmetric(vertical: 24),
+      child: Center(
+        child: SizedBox(
+          width: 24,
+          height: 24,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: Color(0xFF00A3FF),
           ),
         ),
       ),
@@ -1400,9 +1196,12 @@ class _CarsScreenState extends State<CarsScreen> {
     final isActive = _activeTab == title;
     return InkWell(
       onTap: () {
-        setState(() {
-          _activeTab = title;
-        });
+        if (_activeTab != title) {
+          setState(() {
+            _activeTab = title;
+          });
+          _pagingController.refresh();
+        }
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
@@ -1431,10 +1230,13 @@ class _CarsScreenState extends State<CarsScreen> {
   }
 
   void _editVehicle(InventoryVehicle v) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text("Editing ${v.id} - ${v.makeModel}"),
-        backgroundColor: const Color(0xFF00A3FF),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AddCarScreen(
+          carUid: v.id,
+          isEdit: true,
+        ),
       ),
     );
   }
@@ -1531,9 +1333,8 @@ class _CarsScreenState extends State<CarsScreen> {
                       ),
                     ),
                     onPressed: () {
-                      setState(() {
-                        _vehicles.remove(v);
-                      });
+                      context.read<InventoryViewModel>().deleteVehicle(v.id);
+                      _pagingController.refresh();
                       Navigator.pop(ctx);
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(

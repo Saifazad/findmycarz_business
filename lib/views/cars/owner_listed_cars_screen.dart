@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../widgets/crm_drawer.dart';
 import '../widgets/custom_back_button.dart';
 import '../widgets/admin_profile_avatar.dart';
+import 'add_car_screen.dart';
 
 class OwnerListedCar {
   final String id;
@@ -550,10 +551,13 @@ class _OwnerListedCarsScreenState extends State<OwnerListedCarsScreen> {
   }
 
   void _editCar(OwnerListedCar car) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text("Editing ${car.title}"),
-        backgroundColor: const Color(0xFF00A3FF),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AddCarScreen(
+          carUid: car.id.startsWith("#") ? car.id : "#${car.id}",
+          isEdit: true,
+        ),
       ),
     );
   }
