@@ -101,44 +101,118 @@ class _FlashNewsScreenState extends State<FlashNewsScreen> {
   void _deleteItem(FlashNewsItem item) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        clipBehavior: Clip.antiAlias,
         backgroundColor: _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-        title: Text(
-          "Delete Flash Item",
-          style: GoogleFonts.poppins(
-            fontWeight: FontWeight.bold,
-            color: _isDarkMode ? Colors.white : Colors.black87,
-          ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Red Header
+            Container(
+              color: const Color(0xFFF43F5E),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "Confirm Delete?",
+                    style: GoogleFonts.poppins(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  InkWell(
+                    onTap: () => Navigator.pop(ctx),
+                    child: const Icon(
+                      Icons.close,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Body Content
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 20, 16, 28),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "This action cannot be undone. Checks for dependencies will be performed.",
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      color: _isDarkMode
+                          ? Colors.grey.shade300
+                          : const Color(0xFF475569),
+                      height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      ElevatedButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF94A3B8),
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 10),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ),
+                        child: Text(
+                          "Cancel",
+                          style: GoogleFonts.poppins(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            _flashItems.removeWhere((i) => i.id == item.id);
+                          });
+                          Navigator.pop(ctx);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("Flash item deleted successfully!"),
+                              backgroundColor: Color(0xFFDC2626),
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFEF4444),
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 10),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ),
+                        child: Text(
+                          "Delete",
+                          style: GoogleFonts.poppins(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
-        content: Text(
-          "Are you sure you want to delete this flash announcement?",
-          style: GoogleFonts.poppins(
-            color: _isDarkMode ? Colors.white70 : Colors.black54,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text("Cancel"),
-          ),
-          ElevatedButton(
-            style:
-                ElevatedButton.styleFrom(backgroundColor: const Color(0xFFDC2626)),
-            onPressed: () {
-              setState(() {
-                _flashItems.removeWhere((i) => i.id == item.id);
-              });
-              Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text("Flash item deleted successfully!"),
-                  backgroundColor: Color(0xFFDC2626),
-                ),
-              );
-            },
-            child: const Text("Delete", style: TextStyle(color: Colors.white)),
-          ),
-        ],
       ),
     );
   }
@@ -229,7 +303,7 @@ class _FlashNewsScreenState extends State<FlashNewsScreen> {
 
             // Description text
             Text(
-              "Manage ticker announcements, direct web links, downloadable PDFs, and image attachments displayed on the website top marquee bar.",
+              "Manage ticker announcements, direct web links, downloadable PDFs and image attachments shown on the website's top marquee bar.",
               style: GoogleFonts.poppins(
                 fontSize: 12,
                 color: _isDarkMode
@@ -265,7 +339,7 @@ class _FlashNewsScreenState extends State<FlashNewsScreen> {
             ),
             const SizedBox(height: 16),
 
-            // 3. Subheading: "All Flash Announcements" + "Total Items: N"
+            // 3. Subheading: "All Flash Announcements" + "Total: N"
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -279,12 +353,24 @@ class _FlashNewsScreenState extends State<FlashNewsScreen> {
                         : const Color(0xFF1E293B),
                   ),
                 ),
-                Text(
-                  "Total Items: ${_flashItems.length}",
-                  style: GoogleFonts.poppins(
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFF0F766E),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 10, vertical: 3.5),
+                  decoration: BoxDecoration(
+                    color: _isDarkMode
+                        ? const Color(0xFF064E3B).withValues(alpha: 0.5)
+                        : const Color(0xFFDCFCE7),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    "Total: ${_flashItems.length}",
+                    style: GoogleFonts.poppins(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w600,
+                      color: _isDarkMode
+                          ? const Color(0xFF34D399)
+                          : const Color(0xFF047857),
+                    ),
                   ),
                 ),
               ],
@@ -352,7 +438,7 @@ class _FlashNewsScreenState extends State<FlashNewsScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Row 1: Badges Row (Order 0 + A Text Only on Left, Active on Right)
+                        // Row 1: Badges Row (Order 0 + T Text Only on Left, ● Active on Right)
                         Row(
                           children: [
                             // Order N Badge
@@ -363,7 +449,7 @@ class _FlashNewsScreenState extends State<FlashNewsScreen> {
                                 color: _isDarkMode
                                     ? const Color(0xFF334155)
                                     : const Color(0xFFF1F5F9),
-                                borderRadius: BorderRadius.circular(4),
+                                borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
                                 "Order ${item.order}",
@@ -378,15 +464,16 @@ class _FlashNewsScreenState extends State<FlashNewsScreen> {
                             ),
                             const SizedBox(width: 8),
 
-                            // A Text Only
+                            // T Text Only
                             Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
-                                  "A",
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 11.5,
-                                    fontWeight: FontWeight.bold,
+                                  "T",
+                                  style: TextStyle(
+                                    fontFamily: 'serif',
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w600,
                                     color: _isDarkMode
                                         ? Colors.grey.shade400
                                         : const Color(0xFF64748B),
@@ -407,23 +494,51 @@ class _FlashNewsScreenState extends State<FlashNewsScreen> {
                             ),
                             const Spacer(),
 
-                            // Active / Inactive Badge
+                            // Active / Inactive Badge with Bullet Dot
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 2.5),
+                                  horizontal: 9, vertical: 3),
                               decoration: BoxDecoration(
                                 color: item.isActive
-                                    ? const Color(0xFF0F766E)
-                                    : const Color(0xFFDC2626),
-                                borderRadius: BorderRadius.circular(4),
+                                    ? (_isDarkMode
+                                        ? const Color(0xFF064E3B)
+                                            .withValues(alpha: 0.5)
+                                        : const Color(0xFFDCFCE7))
+                                    : (_isDarkMode
+                                        ? const Color(0xFF7F1D1D)
+                                            .withValues(alpha: 0.5)
+                                        : const Color(0xFFFEE2E2)),
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                              child: Text(
-                                item.isActive ? "Active" : "Inactive",
-                                style: GoogleFonts.poppins(
-                                  fontSize: 10.5,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    width: 6,
+                                    height: 6,
+                                    decoration: BoxDecoration(
+                                      color: item.isActive
+                                          ? const Color(0xFF10B981)
+                                          : const Color(0xFFEF4444),
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 5),
+                                  Text(
+                                    item.isActive ? "Active" : "Inactive",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                      color: item.isActive
+                                          ? (_isDarkMode
+                                              ? const Color(0xFF34D399)
+                                              : const Color(0xFF047857))
+                                          : (_isDarkMode
+                                              ? const Color(0xFFF87171)
+                                              : const Color(0xFFB91C1C)),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],

@@ -20,7 +20,7 @@ class CarsScreen extends StatefulWidget {
 class _CarsScreenState extends State<CarsScreen> {
   bool _isDarkMode = false;
   String _activeTab = "All Cars"; // "All Cars", "New Cars", "Used Cars"
-  int _entriesPerPage = 10;
+  final int _entriesPerPage = 10;
   String _searchQuery = "";
 
   final TextEditingController _searchController = TextEditingController();
@@ -613,116 +613,58 @@ class _CarsScreenState extends State<CarsScreen> {
             ),
             const SizedBox(height: 12),
 
-            // 3. Search and Entries Filter Row: [ 🔍 Search.. ] [ 10 ⌄ ]
-            Row(
-              children: [
-                // Search TextField
-                Expanded(
-                  child: SizedBox(
-                    height: 40,
-                    child: TextField(
-                      controller: _searchController,
-                      onChanged: (val) {
-                        setState(() {
-                          _searchQuery = val;
-                        });
-                        _pagingController.refresh();
-                      },
-                      style: GoogleFonts.poppins(
-                        fontSize: 13,
-                        color: _isDarkMode ? Colors.white : Colors.black87,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: "Search..",
-                        hintStyle: GoogleFonts.poppins(
-                          fontSize: 13,
-                          color: _isDarkMode
-                              ? Colors.white38
-                              : Colors.grey.shade400,
-                        ),
-                        prefixIcon: Icon(
-                          Icons.search,
-                          size: 18,
-                          color: _isDarkMode
-                              ? Colors.white54
-                              : Colors.grey.shade500,
-                        ),
-                        contentPadding:
-                            const EdgeInsets.symmetric(vertical: 8),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(
-                            color: _isDarkMode
-                                ? const Color(0xFF475569)
-                                : const Color(0xFFCBD5E1),
-                          ),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(
-                            color: _isDarkMode
-                                ? const Color(0xFF475569)
-                                : const Color(0xFFCBD5E1),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+            // 3. Search Field (Full Width)
+            SizedBox(
+              height: 40,
+              child: TextField(
+                controller: _searchController,
+                onChanged: (val) {
+                  setState(() {
+                    _searchQuery = val;
+                  });
+                  _pagingController.refresh();
+                },
+                style: GoogleFonts.poppins(
+                  fontSize: 13,
+                  color: _isDarkMode ? Colors.white : Colors.black87,
                 ),
-                const SizedBox(width: 10),
-
-                // Dropdown [ 10 ⌄ ]
-                Container(
-                  height: 40,
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  decoration: BoxDecoration(
-                    color: _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
+                decoration: InputDecoration(
+                  hintText: "Search..",
+                  hintStyle: GoogleFonts.poppins(
+                    fontSize: 13,
+                    color: _isDarkMode
+                        ? Colors.white38
+                        : Colors.grey.shade400,
+                  ),
+                  prefixIcon: Icon(
+                    Icons.search,
+                    size: 18,
+                    color: _isDarkMode
+                        ? Colors.white54
+                        : Colors.grey.shade500,
+                  ),
+                  contentPadding:
+                      const EdgeInsets.symmetric(vertical: 8),
+                  border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
+                    borderSide: BorderSide(
                       color: _isDarkMode
                           ? const Color(0xFF475569)
                           : const Color(0xFFCBD5E1),
                     ),
                   ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<int>(
-                      value: _entriesPerPage,
-                      dropdownColor:
-                          _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-                      icon: Icon(
-                        Icons.keyboard_arrow_down,
-                        size: 18,
-                        color: _isDarkMode
-                            ? Colors.white
-                            : const Color(0xFF1E293B),
-                      ),
-                      style: GoogleFonts.poppins(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: _isDarkMode
-                            ? Colors.white
-                            : const Color(0xFF1E293B),
-                      ),
-                      items: [10, 25, 50, 100].map((int val) {
-                        return DropdownMenuItem<int>(
-                          value: val,
-                          child: Text("$val"),
-                        );
-                      }).toList(),
-                      onChanged: (int? newVal) {
-                        if (newVal != null) {
-                          setState(() {
-                            _entriesPerPage = newVal;
-                          });
-                          _pagingController.refresh();
-                        }
-                      },
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(
+                      color: _isDarkMode
+                          ? const Color(0xFF475569)
+                          : const Color(0xFFCBD5E1),
                     ),
                   ),
                 ),
-              ],
+              ),
             ),
-                    const SizedBox(height: 14),
+            const SizedBox(height: 14),
                   ],
                 ),
               ),

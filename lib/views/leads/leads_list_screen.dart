@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../widgets/crm_drawer.dart';
 import '../widgets/custom_back_button.dart';
 import '../widgets/admin_profile_avatar.dart';
+import 'create_loan_lead_screen.dart';
 
 class LoanCategoryFilter {
   final String label;
@@ -269,244 +270,11 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
   ];
 
   void _showCreateLeadModal() {
-    final nameCtrl = TextEditingController();
-    final phoneCtrl = TextEditingController();
-    final amountCtrl = TextEditingController();
-    final vehicleCtrl = TextEditingController();
-    String loanType = "Used Car Loan";
-    final formKey = GlobalKey<FormState>();
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const CreateLoanLeadScreen(),
       ),
-      builder: (ctx) {
-        return StatefulBuilder(
-          builder: (modalCtx, setModalState) {
-            return Padding(
-              padding: EdgeInsets.only(
-                left: 20,
-                right: 20,
-                top: 20,
-                bottom: MediaQuery.of(modalCtx).viewInsets.bottom + 20,
-              ),
-              child: Form(
-                key: formKey,
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            "Create Loan Lead",
-                            style: GoogleFonts.poppins(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: _isDarkMode
-                                  ? Colors.white
-                                  : const Color(0xFF0F172A),
-                            ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.close),
-                            color:
-                                _isDarkMode ? Colors.white70 : Colors.black54,
-                            onPressed: () => Navigator.pop(ctx),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 14),
-                      _buildFormField(
-                        label: "Customer Name",
-                        controller: nameCtrl,
-                        hint: "e.g. Rahul Sharma",
-                        validator: (val) => val == null || val.trim().isEmpty
-                            ? "Required"
-                            : null,
-                      ),
-                      const SizedBox(height: 12),
-                      _buildFormField(
-                        label: "Phone Number",
-                        controller: phoneCtrl,
-                        hint: "e.g. 9876543210",
-                        validator: (val) => val == null || val.trim().isEmpty
-                            ? "Required"
-                            : null,
-                      ),
-                      const SizedBox(height: 12),
-                      _buildFormField(
-                        label: "Loan Amount (₹)",
-                        controller: amountCtrl,
-                        hint: "e.g. 500000",
-                        validator: (val) => val == null || val.trim().isEmpty
-                            ? "Required"
-                            : null,
-                      ),
-                      const SizedBox(height: 12),
-                      _buildFormField(
-                        label: "Vehicle Interested",
-                        controller: vehicleCtrl,
-                        hint: "e.g. Hyundai Creta 2022",
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        "Loan Category",
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: _isDarkMode
-                              ? Colors.white70
-                              : const Color(0xFF334155),
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: _isDarkMode
-                                ? const Color(0xFF475569)
-                                : const Color(0xFFCBD5E1),
-                          ),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<String>(
-                            value: loanType,
-                            isExpanded: true,
-                            dropdownColor: _isDarkMode
-                                ? const Color(0xFF1E293B)
-                                : Colors.white,
-                            items: [
-                              "Used Car Loan",
-                              "New Car Loan",
-                              "Loan Against Car",
-                              "Refinance",
-                              "Personal Loan"
-                            ].map((c) {
-                              return DropdownMenuItem(
-                                value: c,
-                                child: Text(
-                                  c,
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 13,
-                                    color: _isDarkMode
-                                        ? Colors.white
-                                        : Colors.black87,
-                                  ),
-                                ),
-                              );
-                            }).toList(),
-                            onChanged: (val) {
-                              if (val != null) {
-                                setModalState(() => loanType = val);
-                              }
-                            },
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 18),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 46,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF00A3FF),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          onPressed: () {
-                            if (formKey.currentState?.validate() ?? false) {
-                              Navigator.pop(ctx);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content:
-                                      Text("Loan lead created successfully!"),
-                                  backgroundColor: Color(0xFF10B981),
-                                ),
-                              );
-                            }
-                          },
-                          child: Text(
-                            "Submit Lead",
-                            style: GoogleFonts.poppins(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildFormField({
-    required String label,
-    required TextEditingController controller,
-    String? hint,
-    String? Function(String?)? validator,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: GoogleFonts.poppins(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: _isDarkMode ? Colors.white70 : const Color(0xFF334155),
-          ),
-        ),
-        const SizedBox(height: 6),
-        TextFormField(
-          controller: controller,
-          validator: validator,
-          style: GoogleFonts.poppins(
-            fontSize: 13,
-            color: _isDarkMode ? Colors.white : Colors.black87,
-          ),
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: GoogleFonts.poppins(
-              fontSize: 13,
-              color: _isDarkMode ? Colors.white38 : Colors.grey.shade400,
-            ),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(
-                color: _isDarkMode
-                    ? const Color(0xFF475569)
-                    : const Color(0xFFCBD5E1),
-              ),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(
-                color: _isDarkMode
-                    ? const Color(0xFF475569)
-                    : const Color(0xFFCBD5E1),
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 
@@ -634,12 +402,20 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
           const SizedBox(width: 14),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 1. Header: "Live Sync" (Left) & "+ Create Lead" (Right)
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Fixed Top Section (Live Sync, Create Lead, and Filters)
+          Container(
+            color: _isDarkMode
+                ? const Color(0xFF0F172A)
+                : const Color(0xFFF8FAFC),
+            padding: const EdgeInsets.only(
+                left: 14, right: 14, top: 14, bottom: 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 1. Header: "Live Sync" (Left) & "+ Create Lead" (Right)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
               child: Row(
@@ -785,9 +561,9 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
                 ],
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
 
-            // 3. INCOMING LEADS Section
+            // 3. INCOMING LEADS Section Title
             Text(
               "INCOMING LEADS (7)",
               style: GoogleFonts.poppins(
@@ -797,7 +573,7 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
                 letterSpacing: 0.5,
               ),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
 
             // Total New Leads Big Purple Banner
             Container(
@@ -890,9 +666,19 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 10),
+              ],
+            ),
+          ),
 
-            // 3 Incoming Sub-Cards Row: WEB ENQUIRY, CALLBACK, MANUAL
+          // Scrollable Content Below
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.only(
+                  left: 14, right: 14, top: 4, bottom: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 3 Incoming Sub-Cards Row: WEB ENQUIRY, CALLBACK, MANUAL
             Row(
               children: [
                 Expanded(
@@ -978,7 +764,10 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
           ],
         ),
       ),
-    );
+    ),
+  ],
+),
+);
   }
 
   // Incoming Leads 3 Small Cards Widget

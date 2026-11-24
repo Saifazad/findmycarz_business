@@ -22,15 +22,15 @@ class _AddFlashAnnouncementScreenState
   late TextEditingController _urlController;
   late TextEditingController _orderController;
 
-  String _contentType = "Link (Shows Link Icon)";
+  String _contentType = "Plain Text (No link)";
   String _status = "Active (Show on Website)";
   bool _openInNewTab = true;
 
   final List<String> _contentTypes = [
+    "Plain Text (No link)",
     "Link (Shows Link Icon)",
     "PDF (Shows PDF Icon)",
     "Image (Shows Image Icon)",
-    "Text Only (Shows Text Icon)",
   ];
 
   final List<String> _statuses = [
@@ -47,14 +47,15 @@ class _AddFlashAnnouncementScreenState
     _orderController = TextEditingController(text: "${item?.order ?? 0}");
 
     if (item != null) {
-      if (item.type.toLowerCase().contains("link")) {
-        _contentType = "Link (Shows Link Icon)";
-      } else if (item.type.toLowerCase().contains("pdf")) {
+      if (item.type.toLowerCase().contains("pdf")) {
         _contentType = "PDF (Shows PDF Icon)";
       } else if (item.type.toLowerCase().contains("image")) {
         _contentType = "Image (Shows Image Icon)";
+      } else if (item.type.toLowerCase().contains("plain") ||
+          item.type.toLowerCase().contains("text")) {
+        _contentType = "Plain Text (No link)";
       } else {
-        _contentType = "Text Only (Shows Text Icon)";
+        _contentType = "Link (Shows Link Icon)";
       }
 
       _status = item.isActive ? "Active (Show on Website)" : "Inactive (Draft)";
@@ -91,7 +92,8 @@ class _AddFlashAnnouncementScreenState
       itemType = "PDF";
     } else if (_contentType.contains("Image")) {
       itemType = "Image";
-    } else if (_contentType.contains("Text Only")) {
+    } else if (_contentType.contains("Text Only") ||
+        _contentType.contains("Plain")) {
       itemType = "Text Only";
     }
 
@@ -123,7 +125,7 @@ class _AddFlashAnnouncementScreenState
         elevation: 0.5,
         leading: CustomBackButton(isDarkMode: _isDarkMode),
         title: Text(
-          "Add Flash Announcement",
+          isEdit ? "Edit Flash Announcement" : "Add Flash Announcement",
           style: GoogleFonts.poppins(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -163,103 +165,74 @@ class _AddFlashAnnouncementScreenState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Top Section: Header with [+] Add New Flash Announcement + [ ← Back to List ]
+            // Top Section: Header with Edit Flash Announcement + [ ← Back ]
             Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Expanded(
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Container(
-                        width: 26,
-                        height: 26,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF10B981), // Emerald Green
-                          shape: BoxShape.circle,
-                        ),
-                        alignment: Alignment.center,
-                        child: const Icon(
-                          Icons.add,
-                          color: Colors.white,
-                          size: 18,
-                        ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      isEdit ? Icons.edit_square : Icons.add_circle,
+                      color: const Color(0xFF10B981),
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      isEdit
+                          ? "Edit Flash Announcement"
+                          : "Add New Flash",
+                      style: GoogleFonts.poppins(
+                        fontSize: 16.5,
+                        fontWeight: FontWeight.bold,
+                        color: _isDarkMode
+                            ? Colors.white
+                            : const Color(0xFF0F172A),
                       ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          isEdit
-                              ? "Edit Flash Announcement"
-                              : "Add New Flash Announcement",
-                          style: GoogleFonts.poppins(
-                            fontSize: 17,
-                            fontWeight: FontWeight.bold,
-                            color: _isDarkMode
-                                ? Colors.white
-                                : const Color(0xFF0F172A),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 10),
-                // [ ← Back to List ] Button
-                ElevatedButton.icon(
+                ElevatedButton(
                   onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.arrow_back,
-                      size: 14, color: Colors.white),
-                  label: Text(
-                    "Back to List",
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF8692A6),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 7),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: Text(
+                    "← Back",
                     style: GoogleFonts.poppins(
-                      fontSize: 11.5,
+                      fontSize: 12,
                       fontWeight: FontWeight.w600,
                       color: Colors.white,
                     ),
                   ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF8B9BB4), // Slate/Grey-blue
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    elevation: 0,
-                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 6),
-
-            // Subtitle Description
-            Text(
-              "Select type (Link, PDF, or Image) and enter details. The corresponding icon will automatically show on the marquee.",
-              style: GoogleFonts.poppins(
-                fontSize: 12,
-                color: _isDarkMode
-                    ? Colors.grey.shade400
-                    : const Color(0xFF64748B),
-                height: 1.4,
-              ),
-            ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
 
             // Form Card
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(10),
                 border: Border.all(
                   color: _isDarkMode
                       ? const Color(0xFF334155)
                       : const Color(0xFFE2E8F0),
+                  width: 1.2,
                 ),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black
                         .withValues(alpha: _isDarkMode ? 0.2 : 0.03),
-                    blurRadius: 8,
+                    blurRadius: 6,
                     offset: const Offset(0, 2),
                   ),
                 ],
@@ -277,32 +250,14 @@ class _AddFlashAnnouncementScreenState
                     items: _contentTypes.map((type) {
                       return DropdownMenuItem(
                         value: type,
-                        child: Row(
-                          children: [
-                            Icon(
-                              type.contains("PDF")
-                                  ? Icons.picture_as_pdf_outlined
-                                  : type.contains("Image")
-                                      ? Icons.image_outlined
-                                      : type.contains("Text")
-                                          ? Icons.text_snippet_outlined
-                                          : Icons.link,
-                              size: 16,
-                              color: _isDarkMode
-                                  ? Colors.grey.shade300
-                                  : const Color(0xFF64748B),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              type,
-                              style: GoogleFonts.poppins(
-                                fontSize: 12.5,
-                                color: _isDarkMode
-                                    ? Colors.white
-                                    : const Color(0xFF0F172A),
-                              ),
-                            ),
-                          ],
+                        child: Text(
+                          type,
+                          style: GoogleFonts.poppins(
+                            fontSize: 12.5,
+                            color: _isDarkMode
+                                ? Colors.white
+                                : const Color(0xFF0F172A),
+                          ),
                         ),
                       );
                     }).toList(),
@@ -322,32 +277,151 @@ class _AddFlashAnnouncementScreenState
                   const SizedBox(height: 6),
                   TextField(
                     controller: _titleController,
-                    maxLines: 2,
+                    maxLines: 3,
                     style: GoogleFonts.poppins(
-                      fontSize: 13,
+                      fontSize: 12.5,
                       color: _isDarkMode ? Colors.white : Colors.black87,
                     ),
                     decoration: _inputDecoration(
                       hint:
-                          "e.g. Lowest Interest Rates on Car Loans starting at 8.99% per annum! Apply online now.",
+                          "Welcome to Find My Car, your trusted destination for buying and selling new and pre-owned cars.",
                     ),
+                  ),
+                  if (!_contentType.contains("Plain")) ...[
+                    const SizedBox(height: 16),
+                    // Field 3: Target Web Link (URL)
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.link,
+                          size: 18,
+                          color: Color(0xFFF59E0B),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          "Target Web Link (URL)",
+                          style: GoogleFonts.poppins(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w600,
+                            color: _isDarkMode
+                                ? Colors.white
+                                : const Color(0xFF0F172A),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: _urlController,
+                      style: GoogleFonts.poppins(
+                        fontSize: 13,
+                        color: _isDarkMode ? Colors.white : Colors.black87,
+                      ),
+                      decoration: _inputDecoration(
+                        hint:
+                            "e.g. /landing-page or https://findmycarz.com/loan/new",
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    RichText(
+                      text: TextSpan(
+                        style: GoogleFonts.poppins(
+                          fontSize: 11,
+                          color: _isDarkMode
+                              ? Colors.grey.shade400
+                              : const Color(0xFF64748B),
+                        ),
+                        children: const [
+                          TextSpan(text: "Enter internal path like "),
+                          TextSpan(
+                            text: "/cars",
+                            style: TextStyle(
+                              color: Color(0xFFEF4444),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          TextSpan(text: " or external URL like "),
+                          TextSpan(
+                            text: "https://...",
+                            style: TextStyle(
+                              color: Color(0xFFEF4444),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 16),
+
+                  // Display Order (Sort Order)
+                  _buildFieldLabel("Display Order (Sort Order)"),
+                  const SizedBox(height: 6),
+                  TextField(
+                    controller: _orderController,
+                    keyboardType: TextInputType.number,
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      color: _isDarkMode ? Colors.white : Colors.black87,
+                    ),
+                    decoration: _inputDecoration(hint: "0"),
                   ),
                   const SizedBox(height: 16),
 
-                  // Field 3: Target Web Link (URL)
+                  // Status
+                  _buildFieldLabel("Status"),
+                  const SizedBox(height: 6),
+                  DropdownButtonFormField<String>(
+                    initialValue: _status,
+                    dropdownColor:
+                        _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
+                    items: _statuses.map((s) {
+                      return DropdownMenuItem(
+                        value: s,
+                        child: Text(
+                          s,
+                          style: GoogleFonts.poppins(
+                            fontSize: 12.5,
+                            color: _isDarkMode
+                                ? Colors.white
+                                : const Color(0xFF0F172A),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: (val) {
+                      if (val != null) {
+                        setState(() {
+                          _status = val;
+                        });
+                      }
+                    },
+                    decoration: _inputDecoration(hint: ""),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Open Target in
+                  _buildFieldLabel("Open Target in"),
+                  const SizedBox(height: 6),
                   Row(
                     children: [
-                      const Icon(
-                        Icons.link,
-                        size: 18,
-                        color: Color(0xFFF59E0B), // Amber/Orange Link icon
+                      Switch(
+                        value: _openInNewTab,
+                        activeThumbColor: const Color(0xFF10B981),
+                        activeTrackColor:
+                            const Color(0xFF10B981).withValues(alpha: 0.5),
+                        onChanged: (val) {
+                          setState(() {
+                            _openInNewTab = val;
+                          });
+                        },
                       ),
-                      const SizedBox(width: 6),
+                      const SizedBox(width: 4),
                       Text(
-                        "Target Web Link (URL)",
+                        "Open in New Tab",
                         style: GoogleFonts.poppins(
                           fontSize: 12.5,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w500,
                           color: _isDarkMode
                               ? Colors.white
                               : const Color(0xFF0F172A),
@@ -355,197 +429,29 @@ class _AddFlashAnnouncementScreenState
                       ),
                     ],
                   ),
-                  const SizedBox(height: 6),
-                  TextField(
-                    controller: _urlController,
-                    style: GoogleFonts.poppins(
-                      fontSize: 13,
-                      color: _isDarkMode ? Colors.white : Colors.black87,
-                    ),
-                    decoration: _inputDecoration(
-                      hint:
-                          "e.g. /landing-page or https://findmycarz.com/loan/new",
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  // Rich Text Helper: Enter internal path like /cars or external URL like https://...
-                  RichText(
-                    text: TextSpan(
-                      style: GoogleFonts.poppins(
-                        fontSize: 11,
-                        color: _isDarkMode
-                            ? Colors.grey.shade400
-                            : const Color(0xFF64748B),
-                      ),
-                      children: const [
-                        TextSpan(text: "Enter internal path like "),
-                        TextSpan(
-                          text: "/cars",
-                          style: TextStyle(
-                            color: Color(0xFFEF4444), // Red
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        TextSpan(text: " or external URL like "),
-                        TextSpan(
-                          text: "https://...",
-                          style: TextStyle(
-                            color: Color(0xFFEF4444), // Red
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 20),
 
-                  // Responsive Row/Wrap: Display Order + Status + Open Target in
-                  LayoutBuilder(
-                    builder: (context, constraints) {
-                      final orderWidget = Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildFieldLabel("Display Order (Sort Order)"),
-                          const SizedBox(height: 6),
-                          TextField(
-                            controller: _orderController,
-                            keyboardType: TextInputType.number,
-                            style: GoogleFonts.poppins(
-                              fontSize: 13,
-                              color:
-                                  _isDarkMode ? Colors.white : Colors.black87,
-                            ),
-                            decoration: _inputDecoration(hint: "0"),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            "Lower number appears first (0, 1, 2...)",
-                            style: GoogleFonts.poppins(
-                              fontSize: 10.5,
-                              color: _isDarkMode
-                                  ? Colors.grey.shade400
-                                  : const Color(0xFF64748B),
-                            ),
-                          ),
-                        ],
-                      );
-
-                      final statusWidget = Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildFieldLabel("Status"),
-                          const SizedBox(height: 6),
-                          DropdownButtonFormField<String>(
-                            initialValue: _status,
-                            dropdownColor: _isDarkMode
-                                ? const Color(0xFF1E293B)
-                                : Colors.white,
-                            items: _statuses.map((s) {
-                              return DropdownMenuItem(
-                                value: s,
-                                child: Text(
-                                  s,
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 12.5,
-                                    color: _isDarkMode
-                                        ? Colors.white
-                                        : const Color(0xFF0F172A),
-                                  ),
-                                ),
-                              );
-                            }).toList(),
-                            onChanged: (val) {
-                              if (val != null) {
-                                setState(() {
-                                  _status = val;
-                                });
-                              }
-                            },
-                            decoration: _inputDecoration(hint: ""),
-                          ),
-                        ],
-                      );
-
-                      final targetWidget = Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildFieldLabel("Open Target in"),
-                          const SizedBox(height: 6),
-                          Row(
-                            children: [
-                              Switch(
-                                value: _openInNewTab,
-                                activeThumbColor:
-                                    const Color(0xFF10B981), // Emerald Green
-                                onChanged: (val) {
-                                  setState(() {
-                                    _openInNewTab = val;
-                                  });
-                                },
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                "Open in New Tab",
-                                style: GoogleFonts.poppins(
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.w600,
-                                  color: _isDarkMode
-                                      ? Colors.white
-                                      : const Color(0xFF0F172A),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      );
-
-                      if (constraints.maxWidth > 650) {
-                        return Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(child: orderWidget),
-                            const SizedBox(width: 14),
-                            Expanded(child: statusWidget),
-                            const SizedBox(width: 14),
-                            Expanded(child: targetWidget),
-                          ],
-                        );
-                      } else {
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            orderWidget,
-                            const SizedBox(height: 14),
-                            statusWidget,
-                            const SizedBox(height: 14),
-                            targetWidget,
-                          ],
-                        );
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Actions: [ Cancel ] [ 💾 Save Flash Announcement ]
+                  // Actions: [ Cancel ] [ Save / Update Flash Announcement ]
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      TextButton(
+                      ElevatedButton(
                         onPressed: () => Navigator.pop(context),
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 10),
+                        style: ElevatedButton.styleFrom(
                           backgroundColor: _isDarkMode
                               ? const Color(0xFF334155)
                               : const Color(0xFFF1F5F9),
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
+                          minimumSize: const Size(64, 36),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(6),
                           ),
                         ),
                         child: Text(
                           "Cancel",
                           style: GoogleFonts.poppins(
-                            fontSize: 12.5,
+                            fontSize: 12,
                             fontWeight: FontWeight.w600,
                             color: _isDarkMode
                                 ? Colors.white70
@@ -553,30 +459,47 @@ class _AddFlashAnnouncementScreenState
                           ),
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      ElevatedButton.icon(
-                        onPressed: _save,
-                        icon: const Icon(
-                          Icons.save_outlined,
-                          size: 16,
-                          color: Colors.white,
-                        ),
-                        label: Text(
-                          "Save Flash Announcement",
-                          style: GoogleFonts.poppins(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: _save,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF0284C7),
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 8),
+                            minimumSize: const Size(0, 36),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(6),
+                            ),
                           ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF0284C7), // Sky/Blue
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (!isEdit) ...[
+                                  const Icon(
+                                    Icons.save_outlined,
+                                    size: 14,
+                                    color: Colors.white,
+                                  ),
+                                  const SizedBox(width: 5),
+                                ],
+                                Text(
+                                  isEdit
+                                      ? "Update Flash Announcement"
+                                      : "Save Flash Announcement",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                          elevation: 0,
                         ),
                       ),
                     ],

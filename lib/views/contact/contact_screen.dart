@@ -35,7 +35,7 @@ class ContactScreen extends StatefulWidget {
 
 class _ContactScreenState extends State<ContactScreen> {
   bool _isDarkMode = false;
-  int _entriesPerPage = 10;
+  final int _entriesPerPage = 10;
   String _searchQuery = "";
   bool _selectAll = false;
 
@@ -367,55 +367,6 @@ class _ContactScreenState extends State<ContactScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. Heading Row: Circular (<) button + "Contact Enquiries"
-            Row(
-              children: [
-                InkWell(
-                  onTap: () => Navigator.maybePop(context),
-                  borderRadius: BorderRadius.circular(20),
-                  child: Container(
-                    width: 34,
-                    height: 34,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color:
-                          _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-                      border: Border.all(
-                        color: _isDarkMode
-                            ? const Color(0xFF334155)
-                            : const Color(0xFFE2E8F0),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black
-                              .withValues(alpha: _isDarkMode ? 0.2 : 0.03),
-                          blurRadius: 4,
-                          offset: const Offset(0, 1),
-                        ),
-                      ],
-                    ),
-                    alignment: Alignment.center,
-                    child: Icon(
-                      Icons.chevron_left,
-                      size: 20,
-                      color:
-                          _isDarkMode ? Colors.white : const Color(0xFF334155),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  "Contact Enquiries",
-                  style: GoogleFonts.poppins(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: _isDarkMode ? Colors.white : const Color(0xFF0F172A),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-
             // 2. Action Row: [ ] Select all  +  [ 🗑 Delete Selected (0) ]
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -515,104 +466,63 @@ class _ContactScreenState extends State<ContactScreen> {
             ),
             const SizedBox(height: 12),
 
-            // 3. Search and Entries Row: [ 🔍 Search enquiries... ] [ 10 ⌄ ]
-            Row(
-              children: [
-                // Search TextField
-                Expanded(
-                  child: Container(
-                    height: 42,
-                    decoration: BoxDecoration(
-                      color:
-                          _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: const Color(0xFF00A3FF),
-                        width: 1.2,
-                      ),
-                    ),
-                    child: TextField(
-                      controller: _searchController,
-                      onChanged: (val) {
-                        setState(() {
-                          _searchQuery = val;
-                        });
-                      },
-                      style: GoogleFonts.poppins(
-                        fontSize: 13,
-                        color: _isDarkMode ? Colors.white : Colors.black87,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: "Search enquiries...",
-                        hintStyle: GoogleFonts.poppins(
-                          fontSize: 12.5,
-                          color: _isDarkMode
-                              ? Colors.white38
-                              : Colors.grey.shade400,
-                        ),
-                        prefixIcon: const Icon(
-                          Icons.search,
-                          size: 18,
-                          color: Color(0xFF00A3FF),
-                        ),
-                        contentPadding:
-                            const EdgeInsets.symmetric(vertical: 10),
-                        border: InputBorder.none,
-                      ),
-                    ),
+            // 3. Search Field
+            TextField(
+              controller: _searchController,
+              onChanged: (val) {
+                setState(() {
+                  _searchQuery = val;
+                });
+              },
+              style: GoogleFonts.poppins(
+                fontSize: 13,
+                color: _isDarkMode ? Colors.white : Colors.black87,
+              ),
+              decoration: InputDecoration(
+                hintText: "Search enquiries...",
+                hintStyle: GoogleFonts.poppins(
+                  fontSize: 13,
+                  color: const Color(0xFF94A3B8),
+                ),
+                prefixIcon: Icon(
+                  Icons.search,
+                  size: 20,
+                  color: _isDarkMode
+                      ? Colors.grey.shade400
+                      : const Color(0xFF003366),
+                ),
+                filled: true,
+                fillColor: _isDarkMode
+                    ? const Color(0xFF1E293B)
+                    : const Color(0xFFF8FAFC),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(
+                    color: _isDarkMode
+                        ? const Color(0xFF334155)
+                        : const Color(0xFFE2E8F0),
                   ),
                 ),
-                const SizedBox(width: 10),
-
-                // Dropdown [ 10 ⌄ ]
-                Container(
-                  height: 42,
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  decoration: BoxDecoration(
-                    color: _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: _isDarkMode
-                          ? const Color(0xFF334155)
-                          : const Color(0xFFCBD5E1),
-                    ),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<int>(
-                      value: _entriesPerPage,
-                      dropdownColor:
-                          _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-                      icon: Icon(
-                        Icons.keyboard_arrow_down,
-                        size: 18,
-                        color: _isDarkMode
-                            ? Colors.white
-                            : const Color(0xFF1E293B),
-                      ),
-                      style: GoogleFonts.poppins(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: _isDarkMode
-                            ? Colors.white
-                            : const Color(0xFF1E293B),
-                      ),
-                      items: [10, 25, 50, 100].map((int val) {
-                        return DropdownMenuItem<int>(
-                          value: val,
-                          child: Text("$val"),
-                        );
-                      }).toList(),
-                      onChanged: (int? newVal) {
-                        if (newVal != null) {
-                          setState(() {
-                            _entriesPerPage = newVal;
-                          });
-                        }
-                      },
-                    ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(
+                    color: _isDarkMode
+                        ? const Color(0xFF334155)
+                        : const Color(0xFFE2E8F0),
                   ),
                 ),
-              ],
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(
+                    color: _isDarkMode
+                        ? const Color(0xFF00A3FF)
+                        : const Color(0xFF003366),
+                    width: 1.5,
+                  ),
+                ),
+              ),
             ),
             const SizedBox(height: 14),
 

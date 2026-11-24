@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../widgets/crm_drawer.dart';
 import '../widgets/custom_back_button.dart';
 import '../widgets/admin_profile_avatar.dart';
+import 'edit_blog_screen.dart';
 
 class BlogItem {
   final String id;
@@ -11,6 +12,7 @@ class BlogItem {
   String date;
   bool isActive;
   String? imagePath;
+  String? description;
 
   BlogItem({
     required this.id,
@@ -19,6 +21,7 @@ class BlogItem {
     required this.date,
     required this.isActive,
     this.imagePath,
+    this.description,
   });
 }
 
@@ -31,7 +34,6 @@ class BlogsScreen extends StatefulWidget {
 
 class _BlogsScreenState extends State<BlogsScreen> {
   bool _isDarkMode = false;
-  int _entriesPerPage = 10;
   String _searchQuery = "";
 
   final TextEditingController _searchController = TextEditingController();
@@ -44,6 +46,7 @@ class _BlogsScreenState extends State<BlogsScreen> {
       date: "01 Sep, 2026",
       isActive: true,
       imagePath: null,
+      description: "Festivals are coming... Godowns must be filled",
     ),
     BlogItem(
       id: "BLOG-002",
@@ -97,318 +100,160 @@ class _BlogsScreenState extends State<BlogsScreen> {
     }).toList();
   }
 
-  void _showAddBlogDialog() {
-    final titleCtrl = TextEditingController();
-    final authorCtrl = TextEditingController(text: "Admin");
-    bool isActive = true;
-
-    showDialog(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          backgroundColor: _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: Text(
-            "Add New Blog",
-            style: GoogleFonts.poppins(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-              color: _isDarkMode ? Colors.white : const Color(0xFF0F172A),
-            ),
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Blog Title",
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color:
-                        _isDarkMode ? Colors.white70 : const Color(0xFF334155),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                TextField(
-                  controller: titleCtrl,
-                  decoration: InputDecoration(
-                    hintText: "Enter blog title...",
-                    hintStyle: GoogleFonts.poppins(fontSize: 12),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 10),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  "Author",
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color:
-                        _isDarkMode ? Colors.white70 : const Color(0xFF334155),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                TextField(
-                  controller: authorCtrl,
-                  decoration: InputDecoration(
-                    hintText: "Author name...",
-                    hintStyle: GoogleFonts.poppins(fontSize: 12),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 10),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "Status: ${isActive ? 'Active' : 'Inactive'}",
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: isActive
-                            ? const Color(0xFF0F766E)
-                            : const Color(0xFFDC2626),
-                      ),
-                    ),
-                    Switch(
-                      value: isActive,
-                      activeThumbColor: const Color(0xFF00A3FF),
-                      onChanged: (val) {
-                        setDialogState(() {
-                          isActive = val;
-                        });
-                      },
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text("Cancel"),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF00A3FF),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              onPressed: () {
-                if (titleCtrl.text.trim().isEmpty) return;
-                setState(() {
-                  _blogs.insert(
-                    0,
-                    BlogItem(
-                      id: "BLOG-${DateTime.now().millisecondsSinceEpoch}",
-                      title: titleCtrl.text.trim(),
-                      author: authorCtrl.text.trim().isEmpty
-                          ? "Admin"
-                          : authorCtrl.text.trim(),
-                      date: "Today",
-                      isActive: isActive,
-                    ),
-                  );
-                });
-                Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text("Blog added successfully!"),
-                    backgroundColor: Color(0xFF0F766E),
-                  ),
-                );
-              },
-              child:
-                  const Text("Add Blog", style: TextStyle(color: Colors.white)),
-            ),
-          ],
+  void _openAddBlogScreen() async {
+    final newBlog = BlogItem(
+      id: "BLOG-${DateTime.now().millisecondsSinceEpoch}",
+      title: "",
+      author: "Admin",
+      date: "01 Sep, 2026",
+      isActive: true,
+      description: "",
+    );
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => EditBlogScreen(
+          blog: newBlog,
+          isAdd: true,
         ),
       ),
     );
+    if (result == true && mounted) {
+      setState(() {
+        _blogs.insert(0, newBlog);
+      });
+    }
   }
 
-  void _showEditBlogDialog(BlogItem blog) {
-    final titleCtrl = TextEditingController(text: blog.title);
-    final authorCtrl = TextEditingController(text: blog.author);
-    bool isActive = blog.isActive;
-
-    showDialog(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          backgroundColor: _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: Text(
-            "Edit Blog",
-            style: GoogleFonts.poppins(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-              color: _isDarkMode ? Colors.white : const Color(0xFF0F172A),
-            ),
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Blog Title",
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color:
-                        _isDarkMode ? Colors.white70 : const Color(0xFF334155),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                TextField(
-                  controller: titleCtrl,
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 10),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  "Author",
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color:
-                        _isDarkMode ? Colors.white70 : const Color(0xFF334155),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                TextField(
-                  controller: authorCtrl,
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 10),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "Status: ${isActive ? 'Active' : 'Inactive'}",
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: isActive
-                            ? const Color(0xFF0F766E)
-                            : const Color(0xFFDC2626),
-                      ),
-                    ),
-                    Switch(
-                      value: isActive,
-                      activeThumbColor: const Color(0xFF00A3FF),
-                      onChanged: (val) {
-                        setDialogState(() {
-                          isActive = val;
-                        });
-                      },
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text("Cancel"),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF00A3FF),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              onPressed: () {
-                setState(() {
-                  blog.title = titleCtrl.text.trim();
-                  blog.author = authorCtrl.text.trim();
-                  blog.isActive = isActive;
-                });
-                Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text("Blog updated successfully!"),
-                    backgroundColor: Color(0xFF00A3FF),
-                  ),
-                );
-              },
-              child: const Text("Save", style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        ),
+  void _showEditBlogDialog(BlogItem blog) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => EditBlogScreen(blog: blog),
       ),
     );
+    if (result == true && mounted) {
+      setState(() {});
+    }
   }
 
   void _deleteBlog(BlogItem blog) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => Dialog(
         backgroundColor: _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-        title: Text(
-          "Delete Blog",
-          style: GoogleFonts.poppins(
-            fontWeight: FontWeight.bold,
-            color: _isDarkMode ? Colors.white : Colors.black87,
-          ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
         ),
-        content: Text(
-          "Are you sure you want to delete '${blog.title}'?",
-          style: GoogleFonts.poppins(
-            color: _isDarkMode ? Colors.white70 : Colors.black54,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text("Cancel"),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFDC2626)),
-            onPressed: () {
-              setState(() {
-                _blogs.removeWhere((b) => b.id == blog.id);
-              });
-              Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text("Blog deleted successfully!"),
-                  backgroundColor: Color(0xFFDC2626),
+        clipBehavior: Clip.antiAlias,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Header
+            Container(
+              color: const Color(0xFFEF4D56),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "Confirm Delete?",
+                    style: GoogleFonts.poppins(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  InkWell(
+                    onTap: () => Navigator.pop(ctx),
+                    child: const Icon(
+                      Icons.close,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Body Content
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 20, 16, 28),
+              child: Text(
+                "This action cannot be undone. Checks for dependencies will be performed.",
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  color: _isDarkMode ? Colors.white70 : const Color(0xFF4A5568),
+                  height: 1.4,
                 ),
-              );
-            },
-            child: const Text("Delete", style: TextStyle(color: Colors.white)),
-          ),
-        ],
+              ),
+            ),
+            // Actions
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF95A0C5),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      minimumSize: const Size(74, 36),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                    onPressed: () => Navigator.pop(ctx),
+                    child: Text(
+                      "Cancel",
+                      style: GoogleFonts.poppins(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFEF4D56),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      minimumSize: const Size(70, 36),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _blogs.removeWhere((b) => b.id == blog.id);
+                      });
+                      Navigator.pop(ctx);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("Blog deleted successfully!"),
+                          backgroundColor: Color(0xFFEF4D56),
+                        ),
+                      );
+                    },
+                    child: Text(
+                      "Delete",
+                      style: GoogleFonts.poppins(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -416,7 +261,7 @@ class _BlogsScreenState extends State<BlogsScreen> {
   @override
   Widget build(BuildContext context) {
     final filtered = _filteredBlogs;
-    final displayedBlogs = filtered.take(_entriesPerPage).toList();
+    final displayedBlogs = filtered;
 
     return Scaffold(
       backgroundColor:
@@ -480,7 +325,7 @@ class _BlogsScreenState extends State<BlogsScreen> {
                   ),
                 ),
                 ElevatedButton(
-                  onPressed: _showAddBlogDialog,
+                  onPressed: _openAddBlogScreen,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF007BFF),
                     padding:
@@ -523,107 +368,49 @@ class _BlogsScreenState extends State<BlogsScreen> {
             ),
             const SizedBox(height: 10),
 
-            // 3. Search and Entries Row: [ 🔍 Search... ] [ 10 ⌄ ]
-            Row(
-              children: [
-                // Search TextField
-                Expanded(
-                  child: Container(
-                    height: 42,
-                    decoration: BoxDecoration(
-                      color:
-                          _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: _isDarkMode
-                            ? const Color(0xFF334155)
-                            : const Color(0xFFCBD5E1),
-                      ),
-                    ),
-                    child: TextField(
-                      controller: _searchController,
-                      onChanged: (val) {
-                        setState(() {
-                          _searchQuery = val;
-                        });
-                      },
-                      style: GoogleFonts.poppins(
-                        fontSize: 13,
-                        color: _isDarkMode ? Colors.white : Colors.black87,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: "Search...",
-                        hintStyle: GoogleFonts.poppins(
-                          fontSize: 12.5,
-                          color: _isDarkMode
-                              ? Colors.white38
-                              : Colors.grey.shade400,
-                        ),
-                        prefixIcon: Icon(
-                          Icons.search,
-                          size: 18,
-                          color: _isDarkMode
-                              ? Colors.white54
-                              : Colors.grey.shade500,
-                        ),
-                        contentPadding:
-                            const EdgeInsets.symmetric(vertical: 10),
-                        border: InputBorder.none,
-                      ),
-                    ),
-                  ),
+            // 3. Search TextField (Full Width)
+            Container(
+              height: 42,
+              decoration: BoxDecoration(
+                color: _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: _isDarkMode
+                      ? const Color(0xFF334155)
+                      : const Color(0xFFCBD5E1),
                 ),
-                const SizedBox(width: 10),
-
-                // Dropdown [ 10 ⌄ ]
-                Container(
-                  height: 42,
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  decoration: BoxDecoration(
-                    color: _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: _isDarkMode
-                          ? const Color(0xFF334155)
-                          : const Color(0xFFCBD5E1),
-                    ),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<int>(
-                      value: _entriesPerPage,
-                      dropdownColor:
-                          _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-                      icon: Icon(
-                        Icons.keyboard_arrow_down,
-                        size: 18,
-                        color: _isDarkMode
-                            ? Colors.white
-                            : const Color(0xFF1E293B),
-                      ),
-                      style: GoogleFonts.poppins(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: _isDarkMode
-                            ? Colors.white
-                            : const Color(0xFF1E293B),
-                      ),
-                      items: [10, 25, 50, 100].map((int val) {
-                        return DropdownMenuItem<int>(
-                          value: val,
-                          child: Text("$val"),
-                        );
-                      }).toList(),
-                      onChanged: (int? newVal) {
-                        if (newVal != null) {
-                          setState(() {
-                            _entriesPerPage = newVal;
-                          });
-                        }
-                      },
-                    ),
-                  ),
+              ),
+              child: TextField(
+                controller: _searchController,
+                onChanged: (val) {
+                  setState(() {
+                    _searchQuery = val;
+                  });
+                },
+                style: GoogleFonts.poppins(
+                  fontSize: 13,
+                  color: _isDarkMode ? Colors.white : Colors.black87,
                 ),
-              ],
+                decoration: InputDecoration(
+                  hintText: "Search...",
+                  hintStyle: GoogleFonts.poppins(
+                    fontSize: 12.5,
+                    color: _isDarkMode
+                        ? Colors.white38
+                        : Colors.grey.shade400,
+                  ),
+                  prefixIcon: Icon(
+                    Icons.search,
+                    size: 18,
+                    color: _isDarkMode
+                        ? Colors.white54
+                        : Colors.grey.shade500,
+                  ),
+                  contentPadding:
+                      const EdgeInsets.symmetric(vertical: 10),
+                  border: InputBorder.none,
+                ),
+              ),
             ),
             const SizedBox(height: 14),
 
@@ -865,22 +652,7 @@ class _BlogsScreenState extends State<BlogsScreen> {
                 },
               ),
 
-            // 5. Bottom Showing Entries
-            Padding(
-              padding: const EdgeInsets.only(top: 8, bottom: 20),
-              child: Center(
-                child: Text(
-                  "Showing 1 to ${displayedBlogs.length} of ${filtered.length} entries",
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: _isDarkMode
-                        ? Colors.grey.shade400
-                        : const Color(0xFF64748B),
-                  ),
-                ),
-              ),
-            ),
+            const SizedBox(height: 16),
           ],
         ),
       ),

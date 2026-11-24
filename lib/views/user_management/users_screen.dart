@@ -33,8 +33,6 @@ class UsersScreen extends StatefulWidget {
 
 class _UsersScreenState extends State<UsersScreen> {
   bool _isDarkMode = false;
-  int _entriesPerPage = 10;
-  int _currentPage = 1;
   String _searchQuery = "";
 
   final TextEditingController _searchController = TextEditingController();
@@ -109,45 +107,118 @@ class _UsersScreenState extends State<UsersScreen> {
   void _deleteUser(RegisteredUser user) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        clipBehavior: Clip.antiAlias,
         backgroundColor: _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-        title: Text(
-          "Delete User",
-          style: GoogleFonts.poppins(
-            fontWeight: FontWeight.bold,
-            color: _isDarkMode ? Colors.white : Colors.black87,
-          ),
-        ),
-        content: Text(
-          "Are you sure you want to delete user '${user.name}'?",
-          style: GoogleFonts.poppins(
-            color: _isDarkMode ? Colors.white70 : Colors.black54,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text("Cancel"),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFDC2626),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Header
+            Container(
+              color: const Color(0xFFEF4D56),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "Confirm Delete?",
+                    style: GoogleFonts.poppins(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  InkWell(
+                    onTap: () => Navigator.pop(ctx),
+                    child: const Icon(
+                      Icons.close,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                ],
+              ),
             ),
-            onPressed: () {
-              setState(() {
-                _users.removeWhere((u) => u.id == user.id);
-              });
-              Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text("User '${user.name}' deleted successfully!"),
-                  backgroundColor: const Color(0xFFDC2626),
+            // Body Content
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 20, 16, 28),
+              child: Text(
+                "This action cannot be undone. Checks for dependencies will be performed.",
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  color: _isDarkMode ? Colors.white70 : const Color(0xFF4A5568),
+                  height: 1.4,
                 ),
-              );
-            },
-            child: const Text("Delete", style: TextStyle(color: Colors.white)),
-          ),
-        ],
+              ),
+            ),
+            // Actions
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF95A0C5),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      minimumSize: const Size(74, 36),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                    onPressed: () => Navigator.pop(ctx),
+                    child: Text(
+                      "Cancel",
+                      style: GoogleFonts.poppins(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFEF4D56),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      minimumSize: const Size(70, 36),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _users.removeWhere((u) => u.id == user.id);
+                      });
+                      Navigator.pop(ctx);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content:
+                              Text("User '${user.name}' deleted successfully!"),
+                          backgroundColor: const Color(0xFFDC2626),
+                        ),
+                      );
+                    },
+                    child: Text(
+                      "Delete",
+                      style: GoogleFonts.poppins(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -254,11 +325,7 @@ class _UsersScreenState extends State<UsersScreen> {
   @override
   Widget build(BuildContext context) {
     final filtered = _filteredUsers;
-    final totalPages = (filtered.length / _entriesPerPage).ceil().clamp(1, 999);
-    final displayedUsers = filtered
-        .skip((_currentPage - 1) * _entriesPerPage)
-        .take(_entriesPerPage)
-        .toList();
+    final displayedUsers = filtered;
 
     return Scaffold(
       backgroundColor:
@@ -359,110 +426,48 @@ class _UsersScreenState extends State<UsersScreen> {
             ),
             const SizedBox(height: 14),
 
-            // 2. Search and Entries Row: [ 🔍 Search registered users... ] [ 10 ⌄ ]
-            Row(
-              children: [
-                // Search TextField
-                Expanded(
-                  child: Container(
-                    height: 42,
-                    decoration: BoxDecoration(
-                      color:
-                          _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: _isDarkMode
-                            ? const Color(0xFF334155)
-                            : const Color(0xFFCBD5E1),
-                      ),
-                    ),
-                    child: TextField(
-                      controller: _searchController,
-                      onChanged: (val) {
-                        setState(() {
-                          _searchQuery = val;
-                          _currentPage = 1;
-                        });
-                      },
-                      style: GoogleFonts.poppins(
-                        fontSize: 13,
-                        color: _isDarkMode ? Colors.white : Colors.black87,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: "Search registered users...",
-                        hintStyle: GoogleFonts.poppins(
-                          fontSize: 12.5,
-                          color: _isDarkMode
-                              ? Colors.white38
-                              : Colors.grey.shade400,
-                        ),
-                        prefixIcon: Icon(
-                          Icons.search,
-                          size: 18,
-                          color: _isDarkMode
-                              ? Colors.white54
-                              : Colors.grey.shade500,
-                        ),
-                        contentPadding:
-                            const EdgeInsets.symmetric(vertical: 10),
-                        border: InputBorder.none,
-                      ),
-                    ),
-                  ),
+            // 2. Search TextField (Full Width)
+            Container(
+              height: 42,
+              decoration: BoxDecoration(
+                color: _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: _isDarkMode
+                      ? const Color(0xFF334155)
+                      : const Color(0xFFCBD5E1),
                 ),
-                const SizedBox(width: 10),
-
-                // Dropdown [ 10 ⌄ ]
-                Container(
-                  height: 42,
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  decoration: BoxDecoration(
-                    color:
-                        _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: _isDarkMode
-                          ? const Color(0xFF334155)
-                          : const Color(0xFFCBD5E1),
-                    ),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<int>(
-                      value: _entriesPerPage,
-                      dropdownColor:
-                          _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-                      icon: Icon(
-                        Icons.keyboard_arrow_down,
-                        size: 18,
-                        color: _isDarkMode
-                            ? Colors.white
-                            : const Color(0xFF1E293B),
-                      ),
-                      style: GoogleFonts.poppins(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: _isDarkMode
-                            ? Colors.white
-                            : const Color(0xFF1E293B),
-                      ),
-                      items: [10, 20, 50, 100].map((int val) {
-                        return DropdownMenuItem<int>(
-                          value: val,
-                          child: Text("$val"),
-                        );
-                      }).toList(),
-                      onChanged: (int? newVal) {
-                        if (newVal != null) {
-                          setState(() {
-                            _entriesPerPage = newVal;
-                            _currentPage = 1;
-                          });
-                        }
-                      },
-                    ),
-                  ),
+              ),
+              child: TextField(
+                controller: _searchController,
+                onChanged: (val) {
+                  setState(() {
+                    _searchQuery = val;
+                  });
+                },
+                style: GoogleFonts.poppins(
+                  fontSize: 13,
+                  color: _isDarkMode ? Colors.white : Colors.black87,
                 ),
-              ],
+                decoration: InputDecoration(
+                  hintText: "Search registered users...",
+                  hintStyle: GoogleFonts.poppins(
+                    fontSize: 12.5,
+                    color: _isDarkMode
+                        ? Colors.white38
+                        : Colors.grey.shade400,
+                  ),
+                  prefixIcon: Icon(
+                    Icons.search,
+                    size: 18,
+                    color: _isDarkMode
+                        ? Colors.white54
+                        : Colors.grey.shade500,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                  border: InputBorder.none,
+                ),
+              ),
             ),
             const SizedBox(height: 14),
 
@@ -502,7 +507,7 @@ class _UsersScreenState extends State<UsersScreen> {
                 itemCount: displayedUsers.length,
                 itemBuilder: (ctx, index) {
                   final user = displayedUsers[index];
-                  final sn = ((_currentPage - 1) * _entriesPerPage) + index + 1;
+                  final sn = index + 1;
 
                   // Generate user initials for avatar
                   final nameWords = user.name.trim().split(RegExp(r'\s+'));
@@ -790,121 +795,8 @@ class _UsersScreenState extends State<UsersScreen> {
                 },
               ),
 
-            // 4. Bottom Pagination Bar
-            Padding(
-              padding: const EdgeInsets.only(top: 8, bottom: 20),
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final textWidget = Text(
-                    "Showing 1 to ${displayedUsers.length} of ${filtered.length} entries",
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: _isDarkMode
-                          ? Colors.grey.shade400
-                          : const Color(0xFF64748B),
-                    ),
-                  );
-
-                  final paginationWidget = SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _buildPageButton(
-                          text: "‹",
-                          isActive: false,
-                          onTap: _currentPage > 1
-                              ? () => setState(() => _currentPage--)
-                              : null,
-                        ),
-                        ...List.generate(totalPages, (i) {
-                          final pageNum = i + 1;
-                          return _buildPageButton(
-                            text: "$pageNum",
-                            isActive: _currentPage == pageNum,
-                            onTap: () => setState(() => _currentPage = pageNum),
-                          );
-                        }),
-                        _buildPageButton(
-                          text: "›",
-                          isActive: false,
-                          onTap: _currentPage < totalPages
-                              ? () => setState(() => _currentPage++)
-                              : null,
-                        ),
-                      ],
-                    ),
-                  );
-
-                  if (constraints.maxWidth > 580) {
-                    return Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        textWidget,
-                        paginationWidget,
-                      ],
-                    );
-                  } else {
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        textWidget,
-                        const SizedBox(height: 10),
-                        paginationWidget,
-                      ],
-                    );
-                  }
-                },
-              ),
-            ),
+            const SizedBox(height: 16),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPageButton({
-    required String text,
-    bool isActive = false,
-    VoidCallback? onTap,
-  }) {
-    return Container(
-      margin: const EdgeInsets.only(right: 6),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(6),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          constraints: const BoxConstraints(minWidth: 28),
-          decoration: BoxDecoration(
-            color: isActive
-                ? const Color(0xFF00A3FF)
-                : (_isDarkMode ? const Color(0xFF1E293B) : Colors.white),
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(
-              color: isActive
-                  ? const Color(0xFF00A3FF)
-                  : (_isDarkMode
-                      ? const Color(0xFF334155)
-                      : const Color(0xFFE2E8F0)),
-            ),
-          ),
-          alignment: Alignment.center,
-          child: Text(
-            text,
-            style: GoogleFonts.poppins(
-              fontSize: 12,
-              fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
-              color: isActive
-                  ? Colors.white
-                  : (_isDarkMode
-                      ? (onTap != null ? Colors.white : Colors.grey.shade600)
-                      : (onTap != null
-                          ? const Color(0xFF334155)
-                          : Colors.grey.shade400)),
-            ),
-          ),
         ),
       ),
     );

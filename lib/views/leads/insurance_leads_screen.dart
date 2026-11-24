@@ -41,8 +41,7 @@ class InsuranceLeadsScreen extends StatefulWidget {
 
 class _InsuranceLeadsScreenState extends State<InsuranceLeadsScreen> {
   bool _isDarkMode = false;
-  int _entriesPerPage = 10;
-  int _currentPage = 1;
+  final int _entriesPerPage = 10;
   String _searchQuery = "";
   bool _selectAll = false;
 
@@ -383,57 +382,6 @@ class _InsuranceLeadsScreenState extends State<InsuranceLeadsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. Heading Row: Circular (<) button + "Insurance Leads"
-            Row(
-              children: [
-                InkWell(
-                  onTap: () => Navigator.maybePop(context),
-                  borderRadius: BorderRadius.circular(20),
-                  child: Container(
-                    width: 34,
-                    height: 34,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: _isDarkMode
-                          ? const Color(0xFF1E293B)
-                          : Colors.white,
-                      border: Border.all(
-                        color: _isDarkMode
-                            ? const Color(0xFF334155)
-                            : const Color(0xFFE2E8F0),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(
-                              alpha: _isDarkMode ? 0.2 : 0.03),
-                          blurRadius: 4,
-                          offset: const Offset(0, 1),
-                        ),
-                      ],
-                    ),
-                    alignment: Alignment.center,
-                    child: Icon(
-                      Icons.chevron_left,
-                      size: 20,
-                      color: _isDarkMode
-                          ? Colors.white
-                          : const Color(0xFF334155),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  "Insurance Leads",
-                  style: GoogleFonts.poppins(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: _isDarkMode ? Colors.white : const Color(0xFF0F172A),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-
             // 2. Action Row: [ ] Select all  +  [ 🗑 Delete Selected (0) ]
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -534,108 +482,50 @@ class _InsuranceLeadsScreenState extends State<InsuranceLeadsScreen> {
             ),
             const SizedBox(height: 12),
 
-            // 3. Search and Entries Row: [ 🔍 Search insurance leads ] [ 10 ⌄ ]
-            Row(
-              children: [
-                // Search TextField
-                Expanded(
-                  child: Container(
-                    height: 42,
-                    decoration: BoxDecoration(
-                      color:
-                          _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: _isDarkMode
-                            ? const Color(0xFF334155)
-                            : const Color(0xFFCBD5E1),
-                      ),
-                    ),
-                    child: TextField(
-                      controller: _searchController,
-                      onChanged: (val) {
-                        setState(() {
-                          _searchQuery = val;
-                        });
-                      },
-                      style: GoogleFonts.poppins(
-                        fontSize: 13,
-                        color: _isDarkMode ? Colors.white : Colors.black87,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: "Search insurance leads",
-                        hintStyle: GoogleFonts.poppins(
-                          fontSize: 12.5,
-                          color: _isDarkMode
-                              ? Colors.white38
-                              : Colors.grey.shade400,
-                        ),
-                        prefixIcon: Icon(
-                          Icons.search,
-                          size: 18,
-                          color: _isDarkMode
-                              ? Colors.white54
-                              : Colors.grey.shade500,
-                        ),
-                        contentPadding:
-                            const EdgeInsets.symmetric(vertical: 10),
-                        border: InputBorder.none,
-                      ),
-                    ),
-                  ),
+            // 3. Search Row: [ 🔍 Search insurance leads ]
+            Container(
+              height: 42,
+              decoration: BoxDecoration(
+                color:
+                    _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: _isDarkMode
+                      ? const Color(0xFF334155)
+                      : const Color(0xFFCBD5E1),
                 ),
-                const SizedBox(width: 10),
-
-                // Dropdown [ 10 ⌄ ]
-                Container(
-                  height: 42,
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  decoration: BoxDecoration(
-                    color:
-                        _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: _isDarkMode
-                          ? const Color(0xFF334155)
-                          : const Color(0xFFCBD5E1),
-                    ),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<int>(
-                      value: _entriesPerPage,
-                      dropdownColor:
-                          _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-                      icon: Icon(
-                        Icons.keyboard_arrow_down,
-                        size: 18,
-                        color: _isDarkMode
-                            ? Colors.white
-                            : const Color(0xFF1E293B),
-                      ),
-                      style: GoogleFonts.poppins(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: _isDarkMode
-                            ? Colors.white
-                            : const Color(0xFF1E293B),
-                      ),
-                      items: [10, 25, 50, 100].map((int val) {
-                        return DropdownMenuItem<int>(
-                          value: val,
-                          child: Text("$val"),
-                        );
-                      }).toList(),
-                      onChanged: (int? newVal) {
-                        if (newVal != null) {
-                          setState(() {
-                            _entriesPerPage = newVal;
-                          });
-                        }
-                      },
-                    ),
-                  ),
+              ),
+              child: TextField(
+                controller: _searchController,
+                onChanged: (val) {
+                  setState(() {
+                    _searchQuery = val;
+                  });
+                },
+                style: GoogleFonts.poppins(
+                  fontSize: 13,
+                  color: _isDarkMode ? Colors.white : Colors.black87,
                 ),
-              ],
+                decoration: InputDecoration(
+                  hintText: "Search insurance leads",
+                  hintStyle: GoogleFonts.poppins(
+                    fontSize: 12.5,
+                    color: _isDarkMode
+                        ? Colors.white38
+                        : Colors.grey.shade400,
+                  ),
+                  prefixIcon: Icon(
+                    Icons.search,
+                    size: 18,
+                    color: _isDarkMode
+                        ? Colors.white54
+                        : Colors.grey.shade500,
+                  ),
+                  contentPadding:
+                      const EdgeInsets.symmetric(vertical: 10),
+                  border: InputBorder.none,
+                ),
+              ),
             ),
             const SizedBox(height: 14),
 
@@ -984,108 +874,8 @@ class _InsuranceLeadsScreenState extends State<InsuranceLeadsScreen> {
                 },
               ),
 
-            // 5. Bottom Pagination Bar
-            Padding(
-              padding: const EdgeInsets.only(top: 8, bottom: 20),
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final textWidget = Text(
-                    "Showing 1 to ${displayedLeads.length} of ${filtered.length} entries",
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: _isDarkMode
-                          ? Colors.grey.shade400
-                          : const Color(0xFF64748B),
-                    ),
-                  );
-
-                  final paginationWidget = SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _buildPageButton(
-                          text: "1",
-                          isActive: _currentPage == 1,
-                          onTap: () => setState(() => _currentPage = 1),
-                        ),
-                        _buildPageButton(
-                          text: "›",
-                          onTap: () {},
-                        ),
-                      ],
-                    ),
-                  );
-
-                  if (constraints.maxWidth > 580) {
-                    return Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        textWidget,
-                        paginationWidget,
-                      ],
-                    );
-                  } else {
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        textWidget,
-                        const SizedBox(height: 10),
-                        paginationWidget,
-                      ],
-                    );
-                  }
-                },
-              ),
-            ),
+            const SizedBox(height: 16),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPageButton({
-    required String text,
-    bool isActive = false,
-    VoidCallback? onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(4),
-      child: Container(
-        constraints: const BoxConstraints(minWidth: 32),
-        height: 32,
-        margin: const EdgeInsets.only(right: 4),
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: isActive
-              ? (_isDarkMode
-                  ? const Color(0xFF334155)
-                  : const Color(0xFFCBD5E1))
-              : (_isDarkMode ? const Color(0xFF1E293B) : Colors.white),
-          borderRadius: BorderRadius.circular(4),
-          border: Border.all(
-            color: isActive
-                ? const Color(0xFF00A3FF)
-                : (_isDarkMode
-                    ? const Color(0xFF475569)
-                    : const Color(0xFFCBD5E1)),
-            width: isActive ? 1.5 : 1.0,
-          ),
-        ),
-        child: Text(
-          text,
-          style: GoogleFonts.poppins(
-            fontSize: 12,
-            fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
-            color: isActive
-                ? (_isDarkMode ? Colors.white : const Color(0xFF0F172A))
-                : (_isDarkMode
-                    ? Colors.grey.shade300
-                    : const Color(0xFF475569)),
-          ),
         ),
       ),
     );

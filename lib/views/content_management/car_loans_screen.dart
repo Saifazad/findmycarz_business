@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../widgets/crm_drawer.dart';
 import '../widgets/custom_back_button.dart';
 import '../widgets/admin_profile_avatar.dart';
+import 'edit_car_loan_screen.dart';
 
 class CarLoanContentItem {
   final String id;
@@ -11,6 +12,7 @@ class CarLoanContentItem {
   String publishedDate;
   bool isActive;
   String description;
+  String visibility;
 
   CarLoanContentItem({
     required this.id,
@@ -19,6 +21,7 @@ class CarLoanContentItem {
     required this.publishedDate,
     required this.isActive,
     this.description = "",
+    this.visibility = "public",
   });
 }
 
@@ -31,7 +34,7 @@ class CarLoansScreen extends StatefulWidget {
 
 class _CarLoansScreenState extends State<CarLoansScreen> {
   bool _isDarkMode = false;
-  int _entriesPerPage = 10;
+  final int _entriesPerPage = 10;
   String _searchQuery = "";
 
   final TextEditingController _searchController = TextEditingController();
@@ -88,404 +91,149 @@ class _CarLoansScreenState extends State<CarLoansScreen> {
     }).toList();
   }
 
-  void _showAddDialog() {
-    final titleCtrl = TextEditingController();
-    final descCtrl = TextEditingController();
-    String category = "Used Car Loan";
-    bool isActive = true;
-
-    final categories = ["Used Car Loan", "New Car Loan", "BT + Topup", "Refinance"];
-
-    showDialog(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          backgroundColor:
-              _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: Text(
-            "Add New Loan Content",
-            style: GoogleFonts.poppins(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-              color: _isDarkMode ? Colors.white : const Color(0xFF0F172A),
-            ),
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Loan Content Title",
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color:
-                        _isDarkMode ? Colors.white70 : const Color(0xFF334155),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                TextField(
-                  controller: titleCtrl,
-                  decoration: InputDecoration(
-                    hintText: "e.g. Sale Purchase, Refinance",
-                    hintStyle: GoogleFonts.poppins(fontSize: 12),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 10),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  "Category",
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color:
-                        _isDarkMode ? Colors.white70 : const Color(0xFF334155),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                DropdownButtonFormField<String>(
-                  initialValue: category,
-                  dropdownColor:
-                      _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-                  items: categories.map((cat) {
-                    return DropdownMenuItem(
-                      value: cat,
-                      child: Text(cat, style: GoogleFonts.poppins(fontSize: 12)),
-                    );
-                  }).toList(),
-                  onChanged: (val) {
-                    if (val != null) {
-                      setDialogState(() {
-                        category = val;
-                      });
-                    }
-                  },
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 10),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  "Description (Optional)",
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color:
-                        _isDarkMode ? Colors.white70 : const Color(0xFF334155),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                TextField(
-                  controller: descCtrl,
-                  maxLines: 2,
-                  decoration: InputDecoration(
-                    hintText: "Enter short description...",
-                    hintStyle: GoogleFonts.poppins(fontSize: 12),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 10),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "Status: ${isActive ? 'Active' : 'Inactive'}",
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: isActive
-                            ? const Color(0xFF0F766E)
-                            : const Color(0xFFDC2626),
-                      ),
-                    ),
-                    Switch(
-                      value: isActive,
-                      activeThumbColor: const Color(0xFF00A3FF),
-                      onChanged: (val) {
-                        setDialogState(() {
-                          isActive = val;
-                        });
-                      },
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text("Cancel"),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF1E6FD9),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              onPressed: () {
-                if (titleCtrl.text.trim().isEmpty) return;
-                setState(() {
-                  _loanContents.insert(
-                    0,
-                    CarLoanContentItem(
-                      id: "LOAN-${DateTime.now().millisecondsSinceEpoch}",
-                      title: titleCtrl.text.trim(),
-                      category: category,
-                      publishedDate: "Today",
-                      isActive: isActive,
-                      description: descCtrl.text.trim(),
-                    ),
-                  );
-                });
-                Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text("Loan content added successfully!"),
-                    backgroundColor: Color(0xFF0F766E),
-                  ),
-                );
-              },
-              child: const Text("Add",
-                  style: TextStyle(color: Colors.white)),
-            ),
-          ],
+  void _openAddLoanScreen() async {
+    final newItem = CarLoanContentItem(
+      id: "LOAN-${DateTime.now().millisecondsSinceEpoch}",
+      title: "Sale Purchase",
+      category: "Used Car Loan",
+      description:
+          "Same rule will be applicable for used car sale purchase and refinance. We align the car price with our selling price or current market value. Max eligibility is 100% of car valuation.",
+      publishedDate: "Dec 8, 2025 @ 16:09",
+      isActive: true,
+    );
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditCarLoanScreen(
+          loanItem: newItem,
+          isAdd: true,
         ),
       ),
     );
-  }
-
-  void _showEditDialog(CarLoanContentItem item) {
-    final titleCtrl = TextEditingController(text: item.title);
-    final descCtrl = TextEditingController(text: item.description);
-    String category = item.category;
-    bool isActive = item.isActive;
-
-    final categories = ["Used Car Loan", "New Car Loan", "BT + Topup", "Refinance"];
-    if (!categories.contains(category)) {
-      categories.add(category);
+    if (result == true) {
+      setState(() {
+        _loanContents.insert(0, newItem);
+      });
     }
-
-    showDialog(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          backgroundColor:
-              _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: Text(
-            "Edit Loan Content",
-            style: GoogleFonts.poppins(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-              color: _isDarkMode ? Colors.white : const Color(0xFF0F172A),
-            ),
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Loan Content Title",
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color:
-                        _isDarkMode ? Colors.white70 : const Color(0xFF334155),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                TextField(
-                  controller: titleCtrl,
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 10),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  "Category",
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color:
-                        _isDarkMode ? Colors.white70 : const Color(0xFF334155),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                DropdownButtonFormField<String>(
-                  initialValue: category,
-                  dropdownColor:
-                      _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-                  items: categories.map((cat) {
-                    return DropdownMenuItem(
-                      value: cat,
-                      child: Text(cat, style: GoogleFonts.poppins(fontSize: 12)),
-                    );
-                  }).toList(),
-                  onChanged: (val) {
-                    if (val != null) {
-                      setDialogState(() {
-                        category = val;
-                      });
-                    }
-                  },
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 10),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  "Description (Optional)",
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color:
-                        _isDarkMode ? Colors.white70 : const Color(0xFF334155),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                TextField(
-                  controller: descCtrl,
-                  maxLines: 2,
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 10),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "Status: ${isActive ? 'Active' : 'Inactive'}",
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: isActive
-                            ? const Color(0xFF0F766E)
-                            : const Color(0xFFDC2626),
-                      ),
-                    ),
-                    Switch(
-                      value: isActive,
-                      activeThumbColor: const Color(0xFF00A3FF),
-                      onChanged: (val) {
-                        setDialogState(() {
-                          isActive = val;
-                        });
-                      },
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text("Cancel"),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF1E6FD9),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              onPressed: () {
-                setState(() {
-                  item.title = titleCtrl.text.trim();
-                  item.category = category;
-                  item.description = descCtrl.text.trim();
-                  item.isActive = isActive;
-                });
-                Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text("Loan content updated successfully!"),
-                    backgroundColor: Color(0xFF1E6FD9),
-                  ),
-                );
-              },
-              child: const Text("Save",
-                  style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   void _deleteLoanContent(CarLoanContentItem item) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => Dialog(
         backgroundColor: _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-        title: Text(
-          "Delete Loan Content",
-          style: GoogleFonts.poppins(
-            fontWeight: FontWeight.bold,
-            color: _isDarkMode ? Colors.white : Colors.black87,
-          ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
         ),
-        content: Text(
-          "Are you sure you want to delete '${item.title}'?",
-          style: GoogleFonts.poppins(
-            color: _isDarkMode ? Colors.white70 : Colors.black54,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text("Cancel"),
-          ),
-          ElevatedButton(
-            style:
-                ElevatedButton.styleFrom(backgroundColor: const Color(0xFFDC2626)),
-            onPressed: () {
-              setState(() {
-                _loanContents.removeWhere((l) => l.id == item.id);
-              });
-              Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text("Loan content deleted successfully!"),
-                  backgroundColor: Color(0xFFDC2626),
+        clipBehavior: Clip.antiAlias,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Header
+            Container(
+              color: const Color(0xFFEF4D56),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "Confirm Delete?",
+                    style: GoogleFonts.poppins(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  InkWell(
+                    onTap: () => Navigator.pop(ctx),
+                    child: const Icon(
+                      Icons.close,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Body Content
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 20, 16, 28),
+              child: Text(
+                "This action cannot be undone. Checks for dependencies will be performed.",
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  color: _isDarkMode ? Colors.white70 : const Color(0xFF4A5568),
+                  height: 1.4,
                 ),
-              );
-            },
-            child: const Text("Delete", style: TextStyle(color: Colors.white)),
-          ),
-        ],
+              ),
+            ),
+            // Actions
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF95A0C5),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      minimumSize: const Size(74, 36),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                    onPressed: () => Navigator.pop(ctx),
+                    child: Text(
+                      "Cancel",
+                      style: GoogleFonts.poppins(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFEF4D56),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      minimumSize: const Size(70, 36),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _loanContents.removeWhere((l) => l.id == item.id);
+                      });
+                      Navigator.pop(ctx);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("Loan content deleted successfully!"),
+                          backgroundColor: Color(0xFFEF4D56),
+                        ),
+                      );
+                    },
+                    child: Text(
+                      "Delete",
+                      style: GoogleFonts.poppins(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -543,39 +291,43 @@ class _CarLoansScreenState extends State<CarLoansScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. Heading: Manage Car Loans
-            Text(
-              "Manage Car Loans",
-              style: GoogleFonts.poppins(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: _isDarkMode ? Colors.white : const Color(0xFF0F172A),
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // 2. Full-Width "+ Add New Loan Content" Button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _showAddDialog,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF1E6FD9),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  elevation: 0,
-                ),
-                child: Text(
-                  "+ Add New Loan Content",
-                  style: GoogleFonts.poppins(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
+            // 1. Heading & "+ Add New Loan" Button Row
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    "Manage Car Loans",
+                    style: GoogleFonts.poppins(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color:
+                          _isDarkMode ? Colors.white : const Color(0xFF0F172A),
+                    ),
                   ),
                 ),
-              ),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: _openAddLoanScreen,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF1E6FD9),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 9),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: Text(
+                    "+ Add New Loan",
+                    style: GoogleFonts.poppins(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 16),
 
@@ -590,108 +342,48 @@ class _CarLoansScreenState extends State<CarLoansScreen> {
             ),
             const SizedBox(height: 10),
 
-            // 4. Search and Entries Row: [ 🔍 Search... ] [ 10 ⌄ ]
-            Row(
-              children: [
-                // Search TextField
-                Expanded(
-                  child: Container(
-                    height: 42,
-                    decoration: BoxDecoration(
-                      color:
-                          _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: _isDarkMode
-                            ? const Color(0xFF334155)
-                            : const Color(0xFFCBD5E1),
-                      ),
-                    ),
-                    child: TextField(
-                      controller: _searchController,
-                      onChanged: (val) {
-                        setState(() {
-                          _searchQuery = val;
-                        });
-                      },
-                      style: GoogleFonts.poppins(
-                        fontSize: 13,
-                        color: _isDarkMode ? Colors.white : Colors.black87,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: "Search...",
-                        hintStyle: GoogleFonts.poppins(
-                          fontSize: 12.5,
-                          color: _isDarkMode
-                              ? Colors.white38
-                              : Colors.grey.shade400,
-                        ),
-                        prefixIcon: Icon(
-                          Icons.search,
-                          size: 18,
-                          color: _isDarkMode
-                              ? Colors.white54
-                              : Colors.grey.shade500,
-                        ),
-                        contentPadding:
-                            const EdgeInsets.symmetric(vertical: 10),
-                        border: InputBorder.none,
-                      ),
-                    ),
-                  ),
+            // 4. Search TextField (Full Width)
+            Container(
+              height: 42,
+              decoration: BoxDecoration(
+                color: _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: _isDarkMode
+                      ? const Color(0xFF334155)
+                      : const Color(0xFFCBD5E1),
                 ),
-                const SizedBox(width: 10),
-
-                // Dropdown [ 10 ⌄ ]
-                Container(
-                  height: 42,
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  decoration: BoxDecoration(
-                    color:
-                        _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: _isDarkMode
-                          ? const Color(0xFF334155)
-                          : const Color(0xFFCBD5E1),
-                    ),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<int>(
-                      value: _entriesPerPage,
-                      dropdownColor:
-                          _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-                      icon: Icon(
-                        Icons.keyboard_arrow_down,
-                        size: 18,
-                        color: _isDarkMode
-                            ? Colors.white
-                            : const Color(0xFF1E293B),
-                      ),
-                      style: GoogleFonts.poppins(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: _isDarkMode
-                            ? Colors.white
-                            : const Color(0xFF1E293B),
-                      ),
-                      items: [10, 25, 50, 100].map((int val) {
-                        return DropdownMenuItem<int>(
-                          value: val,
-                          child: Text("$val"),
-                        );
-                      }).toList(),
-                      onChanged: (int? newVal) {
-                        if (newVal != null) {
-                          setState(() {
-                            _entriesPerPage = newVal;
-                          });
-                        }
-                      },
-                    ),
-                  ),
+              ),
+              child: TextField(
+                controller: _searchController,
+                onChanged: (val) {
+                  setState(() {
+                    _searchQuery = val;
+                  });
+                },
+                style: GoogleFonts.poppins(
+                  fontSize: 13,
+                  color: _isDarkMode ? Colors.white : Colors.black87,
                 ),
-              ],
+                decoration: InputDecoration(
+                  hintText: "Search...",
+                  hintStyle: GoogleFonts.poppins(
+                    fontSize: 12.5,
+                    color: _isDarkMode
+                        ? Colors.white38
+                        : Colors.grey.shade400,
+                  ),
+                  prefixIcon: Icon(
+                    Icons.search,
+                    size: 18,
+                    color: _isDarkMode
+                        ? Colors.white54
+                        : Colors.grey.shade500,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                  border: InputBorder.none,
+                ),
+              ),
             ),
             const SizedBox(height: 14),
 
@@ -868,7 +560,18 @@ class _CarLoansScreenState extends State<CarLoansScreen> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 InkWell(
-                                  onTap: () => _showEditDialog(item),
+                                  onTap: () async {
+                                    final updated = await Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            EditCarLoanScreen(loanItem: item),
+                                      ),
+                                    );
+                                    if (updated == true) {
+                                      setState(() {});
+                                    }
+                                  },
                                   borderRadius: BorderRadius.circular(4),
                                   child: Padding(
                                     padding: const EdgeInsets.all(4),
@@ -904,22 +607,7 @@ class _CarLoansScreenState extends State<CarLoansScreen> {
                 },
               ),
 
-            // 6. Bottom Showing Entries
-            Padding(
-              padding: const EdgeInsets.only(top: 8, bottom: 20),
-              child: Center(
-                child: Text(
-                  "Showing 1 to ${displayedList.length} of ${filtered.length} entries",
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: _isDarkMode
-                        ? Colors.grey.shade400
-                        : const Color(0xFF64748B),
-                  ),
-                ),
-              ),
-            ),
+            const SizedBox(height: 16),
           ],
         ),
       ),
