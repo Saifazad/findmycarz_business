@@ -25,16 +25,16 @@ class AdminDashboardModel {
   final List<RecentCarItem> recentCars;
 
   AdminDashboardModel({
-    this.totalCars = 900,
-    this.availableCars = 601,
-    this.soldCars = 299,
-    this.ownerListedCars = 168,
-    this.myInventory = 900,
-    this.totalBrands = 43,
-    this.totalLeads = 69,
-    this.totalLogins = 5,
-    this.totalDisbursed = 10,
-    this.insuranceLeads = 11,
+    this.totalCars = 0,
+    this.availableCars = 0,
+    this.soldCars = 0,
+    this.ownerListedCars = 0,
+    this.myInventory = 0,
+    this.totalBrands = 0,
+    this.totalLeads = 0,
+    this.totalLogins = 0,
+    this.totalDisbursed = 0,
+    this.insuranceLeads = 0,
     LoanCategoryStats? usedCarLoans,
     LoanCategoryStats? newCarLoans,
     LoanCategoryStats? btTopupLoans,
@@ -46,29 +46,21 @@ class AdminDashboardModel {
     List<CrmLeadModel>? recentLeads,
     List<RecentCarItem>? recentCars,
   })  : usedCarLoans = usedCarLoans ??
-            LoanCategoryStats(
-                files: 43, inBankLogin: 1, approved: 1, disbursed: 7, totalLeads: 43),
+            LoanCategoryStats(name: "Used Car Loan", colorHex: "#2563eb"),
         newCarLoans = newCarLoans ??
-            LoanCategoryStats(
-                files: 3, inBankLogin: 0, approved: 0, disbursed: 0, totalLeads: 3),
+            LoanCategoryStats(name: "New Car Loan", colorHex: "#059669"),
         btTopupLoans = btTopupLoans ??
-            LoanCategoryStats(
-                files: 14, inBankLogin: 4, approved: 0, disbursed: 0, totalLeads: 14),
+            LoanCategoryStats(name: "BT & Top-Up Loan", colorHex: "#7c3aed"),
         refinanceLoans = refinanceLoans ??
-            LoanCategoryStats(
-                files: 4, inBankLogin: 0, approved: 0, disbursed: 2, totalLeads: 4),
+            LoanCategoryStats(name: "Car Loan Refinance", colorHex: "#d97706"),
         personalLoans = personalLoans ??
-            LoanCategoryStats(
-                files: 2, inBankLogin: 0, approved: 0, disbursed: 0, totalLeads: 2),
+            LoanCategoryStats(name: "Personal Loan", colorHex: "#6366f1"),
         businessLoans = businessLoans ??
-            LoanCategoryStats(
-                files: 1, inBankLogin: 0, approved: 0, disbursed: 0, totalLeads: 1),
+            LoanCategoryStats(name: "Business Loan", colorHex: "#ec4899"),
         homeLoans = homeLoans ??
-            LoanCategoryStats(
-                files: 1, inBankLogin: 0, approved: 0, disbursed: 0, totalLeads: 1),
+            LoanCategoryStats(name: "Home Loan", colorHex: "#14b8a6"),
         lapLoans = lapLoans ??
-            LoanCategoryStats(
-                files: 1, inBankLogin: 0, approved: 0, disbursed: 1, totalLeads: 1),
+            LoanCategoryStats(name: "Loan Against Property", colorHex: "#f59e0b"),
         recentLeads = recentLeads ?? const [],
         recentCars = recentCars ?? const [];
 
@@ -94,16 +86,16 @@ class AdminDashboardModel {
     }
 
     return AdminDashboardModel(
-      totalCars: _parseInt(stats['total_cars'], 900),
-      availableCars: _parseInt(stats['available_cars'], 601),
-      soldCars: _parseInt(stats['sold_cars'], 299),
-      ownerListedCars: _parseInt(stats['owner_cars'] ?? stats['owner_listed_cars'], 168),
-      myInventory: _parseInt(stats['total_cars'], 900),
-      totalBrands: _parseInt(stats['total_brands'] ?? stats['brands'], 43),
-      totalLeads: _parseInt(stats['total_leads'], 69),
-      totalLogins: _parseInt(stats['total_login'], 5),
-      totalDisbursed: _parseInt(stats['total_disbursed'], 10),
-      insuranceLeads: _parseInt(stats['insurance_leads'], 11),
+      totalCars: _parseInt(stats['total_cars'], 0),
+      availableCars: _parseInt(stats['available_cars'], 0),
+      soldCars: _parseInt(stats['sold_cars'], 0),
+      ownerListedCars: _parseInt(stats['owner_cars'] ?? stats['owner_listed_cars'], 0),
+      myInventory: _parseInt(stats['my_inventory'] ?? stats['total_cars'], 0),
+      totalBrands: _parseInt(stats['total_brands'] ?? stats['brands'], 0),
+      totalLeads: _parseInt(stats['total_leads'], 0),
+      totalLogins: _parseInt(stats['total_login'] ?? stats['total_logins'], 0),
+      totalDisbursed: _parseInt(stats['total_disbursed'], 0),
+      insuranceLeads: _parseInt(stats['insurance_leads'], 0),
       usedCarLoans: LoanCategoryStats.fromJson(loansData['USED_CAR_LOAN'] ?? loansData['used_car_loan']),
       newCarLoans: LoanCategoryStats.fromJson(loansData['NEW_CAR_LOAN'] ?? loansData['new_car_loan']),
       btTopupLoans: LoanCategoryStats.fromJson(loansData['BT_TOPUP_LOAN'] ?? loansData['bt_topup_loan']),

@@ -30,6 +30,15 @@ class AdminProfileAvatar extends StatelessWidget {
         backgroundImage: imageUrl.startsWith('http')
             ? NetworkImage(imageUrl) as ImageProvider
             : AssetImage(imageUrl),
+        onBackgroundImageError: imageUrl.startsWith('http') ? (_, __) {} : null,
+        child: Text(
+          initial,
+          style: GoogleFonts.poppins(
+            fontSize: radius * 0.85,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
       );
     }
 

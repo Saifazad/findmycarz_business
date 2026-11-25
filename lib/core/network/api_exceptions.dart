@@ -2,8 +2,10 @@ import 'package:dio/dio.dart';
 
 class ApiException implements Exception {
   late String message;
+  final int? statusCode;
 
-  ApiException.fromDioException(DioException dioException) {
+  ApiException.fromDioException(DioException dioException)
+      : statusCode = dioException.response?.statusCode {
     switch (dioException.type) {
       case DioExceptionType.cancel:
         message = "Request to API server was cancelled.";
@@ -31,7 +33,11 @@ class ApiException implements Exception {
         break;
       case DioExceptionType.unknown:
       default:
-        message = "Something went wrong. Please try again.";
+        if (dioException.error != null) {
+          message = dioException.error.toString();
+        } else {
+          message = "Something went wrong. Please try again.";
+        }
         break;
     }
   }

@@ -60,8 +60,11 @@ class AuthViewModel extends ChangeNotifier {
     if (_token != null && _token!.isNotEmpty) {
       _isLoggedIn = true;
       _role = _parseRole(savedRole);
-      // Fetch fresh profile in background
-      fetchMe();
+      // Fetch fresh profile and validate token with backend
+      final valid = await fetchMe();
+      if (!valid && _token == null) {
+        _isLoggedIn = false;
+      }
     }
     notifyListeners();
   }
@@ -120,7 +123,7 @@ class AuthViewModel extends ChangeNotifier {
     return false;
   }
 
-  Future<void> fetchMe() async {
+  Future<bool> fetchMe() async {
     try {
       final response = await _dioClient.get(ApiConfig.authMe);
       if (response.statusCode == 200 && response.data != null) {
@@ -134,8 +137,17 @@ class AuthViewModel extends ChangeNotifier {
         }
         await _saveSession();
         notifyListeners();
+        return true;
       }
-    } catch (_) {}
+      return false;
+    } on ApiException catch (e) {
+      if (e.statusCode == 401) {
+        await logout();
+      }
+      return false;
+    } catch (_) {
+      return false;
+    }
   }
 
   Future<void> updateLocalProfile({String? name, String? phone, String? avatarUrl}) async {
