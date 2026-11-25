@@ -22,12 +22,16 @@ class EditCarLoanScreen extends StatefulWidget {
 class _EditCarLoanScreenState extends State<EditCarLoanScreen> {
   late TextEditingController _titleCtrl;
   late TextEditingController _descCtrl;
+  late TextEditingController _publishDateCtrl;
   late String _loanType;
   late String _status;
   late String _visibility;
   late String _publishDate;
+  late String _tempStatus;
+  late String _tempVisibility;
   bool _isEditingStatus = false;
   bool _isEditingVisibility = false;
+  bool _isEditingPublishDate = false;
 
   final List<String> _loanTypes = [
     "Used Car Loan",
@@ -49,14 +53,21 @@ class _EditCarLoanScreenState extends State<EditCarLoanScreen> {
         ? widget.loanItem.category
         : _loanTypes.first;
     _status = widget.loanItem.isActive ? "Active" : "Inactive";
-    _visibility = widget.loanItem.visibility;
-    _publishDate = "Dec 8, 2025 @ 16:09";
+    _visibility =
+        widget.loanItem.visibility.toLowerCase() == "private" ? "Private" : "Public";
+    _publishDate = widget.loanItem.publishedDate.isNotEmpty
+        ? widget.loanItem.publishedDate
+        : "Dec 8, 2025 @ 16:09";
+    _tempStatus = _status;
+    _tempVisibility = _visibility;
+    _publishDateCtrl = TextEditingController(text: _formatForInput(_publishDate));
   }
 
   @override
   void dispose() {
     _titleCtrl.dispose();
     _descCtrl.dispose();
+    _publishDateCtrl.dispose();
     super.dispose();
   }
 
@@ -108,6 +119,41 @@ class _EditCarLoanScreenState extends State<EditCarLoanScreen> {
     Navigator.pop(context, true);
   }
 
+  String _formatForInput(String displayDate) {
+    final now = DateTime.now();
+    final y = now.year.toString();
+    final m = now.month.toString().padLeft(2, '0');
+    final d = now.day.toString().padLeft(2, '0');
+    final hh = now.hour.toString().padLeft(2, '0');
+    final mm = now.minute.toString().padLeft(2, '0');
+    final match = RegExp(r'^([A-Za-z]{3})\s+(\d{1,2}),\s*(\d{4})\s*@\s*(\d{2}):(\d{2})$')
+        .firstMatch(displayDate.trim());
+    if (match == null) return "$y-$m-$d $hh:$mm";
+    const monthNames = [
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    ];
+    final mIdx = monthNames.indexOf(match.group(1)!);
+    if (mIdx == -1) return "$y-$m-$d $hh:$mm";
+    final mmNum = (mIdx + 1).toString().padLeft(2, '0');
+    final ddNum = match.group(2)!.padLeft(2, '0');
+    return "${match.group(3)}-$mmNum-$ddNum ${match.group(4)}:${match.group(5)}";
+  }
+
+  String _formatForDisplay(String input) {
+    final match = RegExp(r'^(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2})$')
+        .firstMatch(input.trim());
+    if (match == null) return input.trim();
+    const monthNames = [
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    ];
+    final mNum = int.tryParse(match.group(2)!) ?? 1;
+    final dNum = int.tryParse(match.group(3)!) ?? 1;
+    final mStr = monthNames[(mNum - 1).clamp(0, 11)];
+    return "$mStr $dNum, ${match.group(1)} @ ${match.group(4)}:${match.group(5)}";
+  }
+
   Future<void> _pickPublishDateTime() async {
     final now = DateTime.now();
     final pickedDate = await showDatePicker(
@@ -124,17 +170,14 @@ class _EditCarLoanScreenState extends State<EditCarLoanScreen> {
     );
     if (!mounted) return;
 
-    final time = pickedTime ?? const TimeOfDay(hour: 16, minute: 9);
-    final months = [
-      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-    ];
-    final mStr = months[pickedDate.month - 1];
+    final time = pickedTime ?? TimeOfDay.fromDateTime(now);
+    final mm = pickedDate.month.toString().padLeft(2, '0');
+    final dd = pickedDate.day.toString().padLeft(2, '0');
     final hh = time.hour.toString().padLeft(2, '0');
-    final mm = time.minute.toString().padLeft(2, '0');
+    final min = time.minute.toString().padLeft(2, '0');
 
     setState(() {
-      _publishDate = "$mStr ${pickedDate.day}, ${pickedDate.year} @ $hh:$mm";
+      _publishDateCtrl.text = "${pickedDate.year}-$mm-$dd $hh:$min";
     });
   }
 
@@ -204,27 +247,19 @@ class _EditCarLoanScreenState extends State<EditCarLoanScreen> {
                             color: Colors.white,
                           ),
                         ),
-                        OutlinedButton(
-                          onPressed: () => Navigator.pop(context),
-                          style: OutlinedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: AppColors.primary,
-                            side: const BorderSide(
-                              color: AppColors.primary,
-                              width: 1.5,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.18),
+                            borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
-                            "Back to List",
+                            "Required",
                             style: GoogleFonts.poppins(
-                              fontSize: 12,
+                              fontSize: 11,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.primary,
+                              color: Colors.white,
                             ),
                           ),
                         ),
@@ -444,6 +479,12 @@ class _EditCarLoanScreenState extends State<EditCarLoanScreen> {
                             // Row 1: Status: Active
                             Row(
                               children: [
+                                const Icon(
+                                  Icons.check_circle_outline,
+                                  size: 16,
+                                  color: AppColors.inputIcon,
+                                ),
+                                const SizedBox(width: 8),
                                 Text.rich(
                                   TextSpan(
                                     text: "Status: ",
@@ -471,8 +512,10 @@ class _EditCarLoanScreenState extends State<EditCarLoanScreen> {
                                 InkWell(
                                   onTap: () {
                                     setState(() {
+                                      _tempStatus = _status;
                                       _isEditingStatus = !_isEditingStatus;
                                       _isEditingVisibility = false;
+                                      _isEditingPublishDate = false;
                                     });
                                   },
                                   child: Padding(
@@ -492,68 +535,126 @@ class _EditCarLoanScreenState extends State<EditCarLoanScreen> {
                             ),
                             if (_isEditingStatus) ...[
                               const SizedBox(height: 8),
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
+                              DropdownButtonFormField<String>(
+                                initialValue: ["Active", "Inactive"].contains(_tempStatus)
+                                    ? _tempStatus
+                                    : "Active",
+                                dropdownColor: isDark
+                                    ? const Color(0xFF1E293B)
+                                    : Colors.white,
+                                icon: Icon(
+                                  Icons.keyboard_arrow_down,
+                                  size: 18,
                                   color: isDark
+                                      ? Colors.white54
+                                      : const Color(0xFF64748B),
+                                ),
+                                style: GoogleFonts.poppins(
+                                  fontSize: 13,
+                                  color: isDark
+                                      ? Colors.white
+                                      : const Color(0xFF0F172A),
+                                ),
+                                decoration: InputDecoration(
+                                  isDense: true,
+                                  filled: true,
+                                  fillColor: isDark
                                       ? const Color(0xFF0F172A)
-                                      : const Color(0xFFF8FAFC),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: isDark
-                                        ? const Color(0xFF334155)
-                                        : const Color(0xFFE2E8F0),
+                                      : Colors.white,
+                                  contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 10),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    borderSide: BorderSide(
+                                      color: isDark
+                                          ? const Color(0xFF334155)
+                                          : const Color(0xFFCBD5E1),
+                                    ),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    borderSide: BorderSide(
+                                      color: isDark
+                                          ? const Color(0xFF334155)
+                                          : const Color(0xFFCBD5E1),
+                                    ),
+                                  ),
+                                  focusedBorder: const OutlineInputBorder(
+                                    borderRadius:
+                                        BorderRadius.all(Radius.circular(8)),
+                                    borderSide: BorderSide(
+                                      color: AppColors.primary,
+                                      width: 1.5,
+                                    ),
                                   ),
                                 ),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceAround,
-                                  children:
-                                      ["Active", "Inactive", "Draft"].map((s) {
-                                    final isSel = _status == s;
-                                    return InkWell(
-                                      onTap: () {
-                                        setState(() {
-                                          _status = s;
-                                          _isEditingStatus = false;
-                                        });
-                                      },
-                                      borderRadius: BorderRadius.circular(6),
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 12, vertical: 6),
-                                        decoration: BoxDecoration(
-                                          color: isSel
-                                              ? AppColors.primary
-                                              : Colors.transparent,
-                                          borderRadius:
-                                              BorderRadius.circular(6),
-                                        ),
-                                        child: Text(
-                                          s,
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 12,
-                                            fontWeight: isSel
-                                                ? FontWeight.bold
-                                                : FontWeight.normal,
-                                            color: isSel
-                                                ? Colors.white
-                                                : (isDark
-                                                    ? Colors.white70
-                                                    : const Color(0xFF475569)),
-                                          ),
+                                items: ["Active", "Inactive"].map((s) {
+                                  return DropdownMenuItem<String>(
+                                    value: s,
+                                    child: Text(s),
+                                  );
+                                }).toList(),
+                                onChanged: (val) {
+                                  if (val != null) {
+                                    setState(() => _tempStatus = val);
+                                  }
+                                },
+                              ),
+                              const SizedBox(height: 6),
+                              Row(
+                                children: [
+                                  InkWell(
+                                    onTap: () {
+                                      setState(() {
+                                        _status = _tempStatus;
+                                        _isEditingStatus = false;
+                                      });
+                                    },
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 4, vertical: 4),
+                                      child: Text(
+                                        "OK",
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 12.5,
+                                          fontWeight: FontWeight.w600,
+                                          color: AppColors.primary,
                                         ),
                                       ),
-                                    );
-                                  }).toList(),
-                                ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 14),
+                                  InkWell(
+                                    onTap: () {
+                                      setState(() => _isEditingStatus = false);
+                                    },
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 4, vertical: 4),
+                                      child: Text(
+                                        "Cancel",
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 12.5,
+                                          fontWeight: FontWeight.w500,
+                                          color: AppColors.primary,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                             const SizedBox(height: 12),
 
-                            // Row 2: Visibility: public
+                            // Row 2: Visibility: Public
                             Row(
                               children: [
+                                const Icon(
+                                  Icons.visibility_outlined,
+                                  size: 16,
+                                  color: AppColors.inputIcon,
+                                ),
+                                const SizedBox(width: 8),
                                 Text.rich(
                                   TextSpan(
                                     text: "Visibility: ",
@@ -581,9 +682,11 @@ class _EditCarLoanScreenState extends State<EditCarLoanScreen> {
                                 InkWell(
                                   onTap: () {
                                     setState(() {
+                                      _tempVisibility = _visibility;
                                       _isEditingVisibility =
                                           !_isEditingVisibility;
                                       _isEditingStatus = false;
+                                      _isEditingPublishDate = false;
                                     });
                                   },
                                   child: Padding(
@@ -602,62 +705,96 @@ class _EditCarLoanScreenState extends State<EditCarLoanScreen> {
                               ],
                             ),
                             if (_isEditingVisibility) ...[
-                              const SizedBox(height: 8),
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: isDark
-                                      ? const Color(0xFF0F172A)
-                                      : const Color(0xFFF8FAFC),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: isDark
-                                        ? const Color(0xFF334155)
-                                        : const Color(0xFFE2E8F0),
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceAround,
-                                  children:
-                                      ["public", "private", "password"].map((v) {
-                                    final isSel = _visibility == v;
+                              const SizedBox(height: 6),
+                              RadioGroup<String>(
+                                groupValue: _tempVisibility,
+                                onChanged: (val) {
+                                  if (val != null) {
+                                    setState(() => _tempVisibility = val);
+                                  }
+                                },
+                                child: Column(
+                                  children: ["Public", "Private"].map((v) {
                                     return InkWell(
                                       onTap: () {
-                                        setState(() {
-                                          _visibility = v;
-                                          _isEditingVisibility = false;
-                                        });
+                                        setState(() => _tempVisibility = v);
                                       },
-                                      borderRadius: BorderRadius.circular(6),
-                                      child: Container(
+                                      child: Padding(
                                         padding: const EdgeInsets.symmetric(
-                                            horizontal: 12, vertical: 6),
-                                        decoration: BoxDecoration(
-                                          color: isSel
-                                              ? AppColors.primary
-                                              : Colors.transparent,
-                                          borderRadius:
-                                              BorderRadius.circular(6),
-                                        ),
-                                        child: Text(
-                                          v,
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 12,
-                                            fontWeight: isSel
-                                                ? FontWeight.bold
-                                                : FontWeight.normal,
-                                            color: isSel
-                                                ? Colors.white
-                                                : (isDark
+                                            vertical: 2),
+                                        child: Row(
+                                          children: [
+                                            SizedBox(
+                                              width: 24,
+                                              height: 24,
+                                              child: Radio<String>(
+                                                value: v,
+                                                activeColor: AppColors.primary,
+                                                materialTapTargetSize:
+                                                    MaterialTapTargetSize
+                                                        .shrinkWrap,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              v,
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 13,
+                                                color: isDark
                                                     ? Colors.white70
-                                                    : const Color(0xFF475569)),
-                                          ),
+                                                    : const Color(0xFF64748B),
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
                                     );
                                   }).toList(),
                                 ),
+                              ),
+                              const SizedBox(height: 6),
+                              Row(
+                                children: [
+                                  InkWell(
+                                    onTap: () {
+                                      setState(() {
+                                        _visibility = _tempVisibility;
+                                        _isEditingVisibility = false;
+                                      });
+                                    },
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 4, vertical: 4),
+                                      child: Text(
+                                        "OK",
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 12.5,
+                                          fontWeight: FontWeight.w600,
+                                          color: AppColors.primary,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 14),
+                                  InkWell(
+                                    onTap: () {
+                                      setState(
+                                          () => _isEditingVisibility = false);
+                                    },
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 4, vertical: 4),
+                                      child: Text(
+                                        "Cancel",
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 12.5,
+                                          fontWeight: FontWeight.w500,
+                                          color: AppColors.primary,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                             const SizedBox(height: 12),
@@ -665,32 +802,49 @@ class _EditCarLoanScreenState extends State<EditCarLoanScreen> {
                             // Row 3: Publish: Dec 8, 2025 @ 16:09
                             Row(
                               children: [
-                                Text.rich(
-                                  TextSpan(
-                                    text: "Publish: ",
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 13,
-                                      color: isDark
-                                          ? Colors.white70
-                                          : const Color(0xFF475569),
-                                    ),
-                                    children: [
-                                      TextSpan(
-                                        text: _publishDate,
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.bold,
-                                          color: isDark
-                                              ? Colors.white
-                                              : const Color(0xFF0F172A),
-                                        ),
+                                const Icon(
+                                  Icons.calendar_today_outlined,
+                                  size: 15,
+                                  color: AppColors.inputIcon,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text.rich(
+                                    TextSpan(
+                                      text: "Publish: ",
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 13,
+                                        color: isDark
+                                            ? Colors.white70
+                                            : const Color(0xFF475569),
                                       ),
-                                    ],
+                                      children: [
+                                        TextSpan(
+                                          text: _publishDate,
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.bold,
+                                            color: isDark
+                                                ? Colors.white
+                                                : const Color(0xFF0F172A),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
-                                const Spacer(),
                                 InkWell(
-                                  onTap: _pickPublishDateTime,
+                                  onTap: () {
+                                    setState(() {
+                                      _publishDateCtrl.text =
+                                          _formatForInput(_publishDate);
+                                      _isEditingPublishDate =
+                                          !_isEditingPublishDate;
+                                      _isEditingStatus = false;
+                                      _isEditingVisibility = false;
+                                    });
+                                  },
                                   child: Padding(
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 4, vertical: 2),
@@ -706,6 +860,110 @@ class _EditCarLoanScreenState extends State<EditCarLoanScreen> {
                                 ),
                               ],
                             ),
+                            if (_isEditingPublishDate) ...[
+                              const SizedBox(height: 8),
+                              TextField(
+                                controller: _publishDateCtrl,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 13,
+                                  color: isDark
+                                      ? Colors.white
+                                      : const Color(0xFF0F172A),
+                                ),
+                                decoration: InputDecoration(
+                                  isDense: true,
+                                  hintText: "YYYY-MM-DD HH:MM",
+                                  suffixIcon: IconButton(
+                                    icon: const Icon(
+                                      Icons.calendar_month_outlined,
+                                      size: 18,
+                                      color: AppColors.inputIcon,
+                                    ),
+                                    onPressed: _pickPublishDateTime,
+                                  ),
+                                  filled: true,
+                                  fillColor: isDark
+                                      ? const Color(0xFF0F172A)
+                                      : Colors.white,
+                                  contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 10),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    borderSide: BorderSide(
+                                      color: isDark
+                                          ? const Color(0xFF334155)
+                                          : const Color(0xFFCBD5E1),
+                                    ),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    borderSide: BorderSide(
+                                      color: isDark
+                                          ? const Color(0xFF334155)
+                                          : const Color(0xFFCBD5E1),
+                                    ),
+                                  ),
+                                  focusedBorder: const OutlineInputBorder(
+                                    borderRadius:
+                                        BorderRadius.all(Radius.circular(8)),
+                                    borderSide: BorderSide(
+                                      color: AppColors.primary,
+                                      width: 1.5,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  InkWell(
+                                    onTap: () {
+                                      setState(() {
+                                        if (_publishDateCtrl.text
+                                            .trim()
+                                            .isNotEmpty) {
+                                          _publishDate = _formatForDisplay(
+                                              _publishDateCtrl.text);
+                                        }
+                                        _isEditingPublishDate = false;
+                                      });
+                                    },
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 4, vertical: 4),
+                                      child: Text(
+                                        "OK",
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 12.5,
+                                          fontWeight: FontWeight.w600,
+                                          color: AppColors.primary,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 14),
+                                  InkWell(
+                                    onTap: () {
+                                      setState(
+                                          () => _isEditingPublishDate = false);
+                                    },
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 4, vertical: 4),
+                                      child: Text(
+                                        "Cancel",
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 12.5,
+                                          fontWeight: FontWeight.w500,
+                                          color: AppColors.primary,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ],
                         ),
                       ),
