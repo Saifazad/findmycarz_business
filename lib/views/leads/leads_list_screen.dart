@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../widgets/crm_drawer.dart';
 import '../widgets/custom_back_button.dart';
 import '../widgets/admin_profile_avatar.dart';
+import 'create_loan_lead_screen.dart';
 
 class LoanCategoryFilter {
   final String label;
@@ -42,6 +43,28 @@ class LeadsListScreen extends StatefulWidget {
 class _LeadsListScreenState extends State<LeadsListScreen> {
   bool _isDarkMode = false;
   String _activeCategory = "All";
+  bool _isSyncing = false;
+  bool _isFiltersExpanded = false;
+
+  void _handleLiveSync() async {
+    if (_isSyncing) return;
+    setState(() {
+      _isSyncing = true;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Leads live sync completed"),
+        backgroundColor: Color(0xFF22C55E),
+        duration: Duration(milliseconds: 900),
+      ),
+    );
+    await Future.delayed(const Duration(milliseconds: 600));
+    if (mounted) {
+      setState(() {
+        _isSyncing = false;
+      });
+    }
+  }
 
   @override
   void initState() {
@@ -247,244 +270,11 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
   ];
 
   void _showCreateLeadModal() {
-    final nameCtrl = TextEditingController();
-    final phoneCtrl = TextEditingController();
-    final amountCtrl = TextEditingController();
-    final vehicleCtrl = TextEditingController();
-    String loanType = "Used Car Loan";
-    final formKey = GlobalKey<FormState>();
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const CreateLoanLeadScreen(),
       ),
-      builder: (ctx) {
-        return StatefulBuilder(
-          builder: (modalCtx, setModalState) {
-            return Padding(
-              padding: EdgeInsets.only(
-                left: 20,
-                right: 20,
-                top: 20,
-                bottom: MediaQuery.of(modalCtx).viewInsets.bottom + 20,
-              ),
-              child: Form(
-                key: formKey,
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            "Create Loan Lead",
-                            style: GoogleFonts.poppins(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: _isDarkMode
-                                  ? Colors.white
-                                  : const Color(0xFF0F172A),
-                            ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.close),
-                            color:
-                                _isDarkMode ? Colors.white70 : Colors.black54,
-                            onPressed: () => Navigator.pop(ctx),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 14),
-                      _buildFormField(
-                        label: "Customer Name",
-                        controller: nameCtrl,
-                        hint: "e.g. Rahul Sharma",
-                        validator: (val) => val == null || val.trim().isEmpty
-                            ? "Required"
-                            : null,
-                      ),
-                      const SizedBox(height: 12),
-                      _buildFormField(
-                        label: "Phone Number",
-                        controller: phoneCtrl,
-                        hint: "e.g. 9876543210",
-                        validator: (val) => val == null || val.trim().isEmpty
-                            ? "Required"
-                            : null,
-                      ),
-                      const SizedBox(height: 12),
-                      _buildFormField(
-                        label: "Loan Amount (₹)",
-                        controller: amountCtrl,
-                        hint: "e.g. 500000",
-                        validator: (val) => val == null || val.trim().isEmpty
-                            ? "Required"
-                            : null,
-                      ),
-                      const SizedBox(height: 12),
-                      _buildFormField(
-                        label: "Vehicle Interested",
-                        controller: vehicleCtrl,
-                        hint: "e.g. Hyundai Creta 2022",
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        "Loan Category",
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: _isDarkMode
-                              ? Colors.white70
-                              : const Color(0xFF334155),
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: _isDarkMode
-                                ? const Color(0xFF475569)
-                                : const Color(0xFFCBD5E1),
-                          ),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<String>(
-                            value: loanType,
-                            isExpanded: true,
-                            dropdownColor: _isDarkMode
-                                ? const Color(0xFF1E293B)
-                                : Colors.white,
-                            items: [
-                              "Used Car Loan",
-                              "New Car Loan",
-                              "Loan Against Car",
-                              "Refinance",
-                              "Personal Loan"
-                            ].map((c) {
-                              return DropdownMenuItem(
-                                value: c,
-                                child: Text(
-                                  c,
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 13,
-                                    color: _isDarkMode
-                                        ? Colors.white
-                                        : Colors.black87,
-                                  ),
-                                ),
-                              );
-                            }).toList(),
-                            onChanged: (val) {
-                              if (val != null) {
-                                setModalState(() => loanType = val);
-                              }
-                            },
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 18),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 46,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF00A3FF),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          onPressed: () {
-                            if (formKey.currentState?.validate() ?? false) {
-                              Navigator.pop(ctx);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content:
-                                      Text("Loan lead created successfully!"),
-                                  backgroundColor: Color(0xFF10B981),
-                                ),
-                              );
-                            }
-                          },
-                          child: Text(
-                            "Submit Lead",
-                            style: GoogleFonts.poppins(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildFormField({
-    required String label,
-    required TextEditingController controller,
-    String? hint,
-    String? Function(String?)? validator,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: GoogleFonts.poppins(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: _isDarkMode ? Colors.white70 : const Color(0xFF334155),
-          ),
-        ),
-        const SizedBox(height: 6),
-        TextFormField(
-          controller: controller,
-          validator: validator,
-          style: GoogleFonts.poppins(
-            fontSize: 13,
-            color: _isDarkMode ? Colors.white : Colors.black87,
-          ),
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: GoogleFonts.poppins(
-              fontSize: 13,
-              color: _isDarkMode ? Colors.white38 : Colors.grey.shade400,
-            ),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(
-                color: _isDarkMode
-                    ? const Color(0xFF475569)
-                    : const Color(0xFFCBD5E1),
-              ),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(
-                color: _isDarkMode
-                    ? const Color(0xFF475569)
-                    : const Color(0xFFCBD5E1),
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 
@@ -494,6 +284,73 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
         content: Text("Viewing ${stage.title} (${stage.count} leads)"),
         backgroundColor: const Color(0xFF00A3FF),
         duration: const Duration(seconds: 1),
+      ),
+    );
+  }
+
+  Widget _buildCategoryChip(LoanCategoryFilter cat) {
+    final isActive = _activeCategory == cat.label;
+    return InkWell(
+      onTap: () => setState(() => _activeCategory = cat.label),
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isActive
+              ? const Color(0xFF1E293B)
+              : (_isDarkMode
+                  ? const Color(0xFF1E293B)
+                  : const Color(0xFFF1F5F9)),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isActive
+                ? const Color(0xFF1E293B)
+                : (_isDarkMode
+                    ? const Color(0xFF334155)
+                    : const Color(0xFFE2E8F0)),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              cat.label,
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+                color: isActive
+                    ? Colors.white
+                    : (_isDarkMode
+                        ? Colors.grey.shade300
+                        : const Color(0xFF334155)),
+              ),
+            ),
+            const SizedBox(width: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+              decoration: BoxDecoration(
+                color: isActive
+                    ? Colors.white.withValues(alpha: 0.2)
+                    : (_isDarkMode
+                        ? const Color(0xFF334155)
+                        : const Color(0xFFE2E8F0)),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                "${cat.count}",
+                style: GoogleFonts.poppins(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: isActive
+                      ? Colors.white
+                      : (_isDarkMode
+                          ? Colors.white70
+                          : const Color(0xFF475569)),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -544,345 +401,375 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
           const SizedBox(width: 14),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 1. Header: "Loan Pipeline" & "+ Create Lead"
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Fixed Top Section (Live Sync, Create Lead, and Filters)
+          Container(
+            color:
+                _isDarkMode ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+            padding:
+                const EdgeInsets.only(left: 14, right: 14, top: 14, bottom: 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  "Loan Pipeline",
-                  style: GoogleFonts.poppins(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: _isDarkMode ? Colors.white : const Color(0xFF0F172A),
-                  ),
-                ),
-                ElevatedButton.icon(
-                  onPressed: _showCreateLeadModal,
-                  icon: const Icon(Icons.add, size: 16, color: Colors.white),
-                  label: Text(
-                    "Create Lead",
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF00A3FF),
-                    elevation: 0,
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-
-            // 2. Filters Row (Exact match to Image 1)
-            Row(
-              children: [
-                Icon(
-                  Icons.filter_alt_outlined,
-                  size: 16,
-                  color: _isDarkMode
-                      ? Colors.grey.shade400
-                      : const Color(0xFF64748B),
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  "Filters:",
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: _isDarkMode
-                        ? Colors.grey.shade400
-                        : const Color(0xFF64748B),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: _categories.map((cat) {
-                        final isActive = _activeCategory == cat.label;
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: InkWell(
-                            onTap: () =>
-                                setState(() => _activeCategory = cat.label),
-                            borderRadius: BorderRadius.circular(20),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: isActive
-                                    ? const Color(0xFF1E293B)
-                                    : (_isDarkMode
-                                        ? const Color(0xFF1E293B)
-                                        : const Color(0xFFF1F5F9)),
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: isActive
-                                      ? const Color(0xFF1E293B)
-                                      : (_isDarkMode
-                                          ? const Color(0xFF334155)
-                                          : const Color(0xFFE2E8F0)),
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    cat.label,
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 12,
-                                      fontWeight: isActive
-                                          ? FontWeight.bold
-                                          : FontWeight.w500,
-                                      color: isActive
-                                          ? Colors.white
-                                          : (_isDarkMode
-                                              ? Colors.grey.shade300
-                                              : const Color(0xFF334155)),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 6, vertical: 1.5),
-                                    decoration: BoxDecoration(
-                                      color: isActive
-                                          ? Colors.white.withValues(alpha: 0.2)
-                                          : (_isDarkMode
-                                              ? const Color(0xFF334155)
-                                              : const Color(0xFFE2E8F0)),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: Text(
-                                      "${cat.count}",
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.bold,
-                                        color: isActive
-                                            ? Colors.white
-                                            : (_isDarkMode
-                                                ? Colors.white70
-                                                : const Color(0xFF475569)),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // 3. INCOMING LEADS Section
-            Text(
-              "INCOMING LEADS (7)",
-              style: GoogleFonts.poppins(
-                fontSize: 11.5,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF0D9488),
-                letterSpacing: 0.5,
-              ),
-            ),
-            const SizedBox(height: 10),
-
-            // Total New Leads Big Purple Banner
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF4F46E5), Color(0xFF6366F1)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(14),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF4F46E5).withValues(alpha: 0.3),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+                // 1. Header: "Live Sync" (Left) & "+ Create Lead" (Right)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        "TOTAL NEW LEADS",
-                        style: GoogleFonts.poppins(
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white.withValues(alpha: 0.9),
-                          letterSpacing: 0.5,
+                      OutlinedButton.icon(
+                        onPressed: _handleLiveSync,
+                        icon: _isSyncing
+                            ? const SizedBox(
+                                width: 14,
+                                height: 14,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Color(0xFF22C55E),
+                                ),
+                              )
+                            : const Icon(Icons.sync,
+                                size: 16, color: Color(0xFF22C55E)),
+                        label: Text(
+                          "Live Sync",
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF22C55E),
+                          ),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          backgroundColor: _isDarkMode
+                              ? const Color(0xFF1E293B)
+                              : Colors.white,
+                          side: const BorderSide(
+                              color: Color(0xFF22C55E), width: 1.2),
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 8),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          "+7 New",
+                      ElevatedButton.icon(
+                        onPressed: _showCreateLeadModal,
+                        icon: const Icon(Icons.add,
+                            size: 16, color: Colors.white),
+                        label: Text(
+                          "Create Lead",
                           style: GoogleFonts.poppins(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
                             color: Colors.white,
                           ),
                         ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF00A3FF),
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 8),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    "7",
-                    style: GoogleFonts.poppins(
-                      fontSize: 34,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      height: 1.1,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Divider(
-                    height: 1,
-                    thickness: 1,
-                    color: Colors.white.withValues(alpha: 0.2),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        "Today",
-                        style: GoogleFonts.poppins(
-                          fontSize: 11.5,
-                          color: Colors.white.withValues(alpha: 0.85),
+                ),
+                const SizedBox(height: 12),
+
+                // 2. Filters Section (Expandable on tap)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        InkWell(
+                          onTap: () {
+                            setState(() {
+                              _isFiltersExpanded = !_isFiltersExpanded;
+                            });
+                          },
+                          borderRadius: BorderRadius.circular(6),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 4, horizontal: 2),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.filter_alt_outlined,
+                                  size: 16,
+                                  color: _isDarkMode
+                                      ? Colors.grey.shade400
+                                      : const Color(0xFF64748B),
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  "Filters:",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: _isDarkMode
+                                        ? Colors.grey.shade400
+                                        : const Color(0xFF64748B),
+                                  ),
+                                ),
+                                const SizedBox(width: 2),
+                                Icon(
+                                  _isFiltersExpanded
+                                      ? Icons.keyboard_arrow_up_rounded
+                                      : Icons.keyboard_arrow_down_rounded,
+                                  size: 18,
+                                  color: _isDarkMode
+                                      ? Colors.grey.shade400
+                                      : const Color(0xFF64748B),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
+                        if (!_isFiltersExpanded) ...[
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                children: _categories.map((cat) {
+                                  return Padding(
+                                    padding: const EdgeInsets.only(right: 8),
+                                    child: _buildCategoryChip(cat),
+                                  );
+                                }).toList(),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    if (_isFiltersExpanded) ...[
+                      const SizedBox(height: 10),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: _categories.map((cat) {
+                          return _buildCategoryChip(cat);
+                        }).toList(),
                       ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 14),
+
+                // 3. INCOMING LEADS Section Title
+                Text(
+                  "INCOMING LEADS (7)",
+                  style: GoogleFonts.poppins(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF0D9488),
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(height: 8),
+
+                // Total New Leads Big Purple Banner
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF4F46E5), Color(0xFF6366F1)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF4F46E5).withValues(alpha: 0.3),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "TOTAL NEW LEADS",
+                            style: GoogleFonts.poppins(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white.withValues(alpha: 0.9),
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              "+7 New",
+                              style: GoogleFonts.poppins(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
                       Text(
-                        "0",
+                        "7",
                         style: GoogleFonts.poppins(
-                          fontSize: 13,
+                          fontSize: 34,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
+                          height: 1.1,
                         ),
                       ),
+                      const SizedBox(height: 10),
+                      Divider(
+                        height: 1,
+                        thickness: 1,
+                        color: Colors.white.withValues(alpha: 0.2),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "Today",
+                            style: GoogleFonts.poppins(
+                              fontSize: 11.5,
+                              color: Colors.white.withValues(alpha: 0.85),
+                            ),
+                          ),
+                          Text(
+                            "0",
+                            style: GoogleFonts.poppins(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 10),
-
-            // 3 Incoming Sub-Cards Row: WEB ENQUIRY, CALLBACK, MANUAL
-            Row(
-              children: [
-                Expanded(
-                  child: _buildIncomingSubCard(
-                    title: "WEB ENQUIRY",
-                    titleColor: const Color(0xFF10B981),
-                    count: 1,
-                    pillText: "+1 New",
-                    todayCount: 0,
-                    newCount: 1,
-                    newColor: const Color(0xFF10B981),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _buildIncomingSubCard(
-                    title: "CALLBACK",
-                    titleColor: const Color(0xFFD97706),
-                    count: 3,
-                    pillText: "+3 New",
-                    todayCount: 0,
-                    newCount: 3,
-                    newColor: const Color(0xFFD97706),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _buildIncomingSubCard(
-                    title: "MANUAL",
-                    titleColor: const Color(0xFF00A3FF),
-                    count: 3,
-                    pillText: "+3 New",
-                    todayCount: 0,
-                    newCount: 3,
-                    newColor: const Color(0xFF00A3FF),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 20),
+          ),
 
-            // 4. PROCESSING PIPELINE (61) Section
-            Text(
-              "PROCESSING PIPELINE (61)",
-              style: GoogleFonts.poppins(
-                fontSize: 11.5,
-                fontWeight: FontWeight.bold,
-                color: _isDarkMode ? Colors.white70 : const Color(0xFF334155),
-                letterSpacing: 0.5,
-              ),
-            ),
-            const SizedBox(height: 10),
-
-            // 2-Column Grid of Pipeline Stages
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: (_stages.length / 2).ceil(),
-              itemBuilder: (ctx, rowIndex) {
-                final leftIndex = rowIndex * 2;
-                final rightIndex = leftIndex + 1;
-
-                final leftStage = _stages[leftIndex];
-                final rightStage =
-                    rightIndex < _stages.length ? _stages[rightIndex] : null;
-
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Row(
+          // Scrollable Content Below
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.only(
+                  left: 14, right: 14, top: 4, bottom: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 3 Incoming Sub-Cards Row: WEB ENQUIRY, CALLBACK, MANUAL
+                  Row(
                     children: [
-                      Expanded(child: _buildStageCard(leftStage)),
+                      Expanded(
+                        child: _buildIncomingSubCard(
+                          title: "WEB ENQUIRY",
+                          titleColor: const Color(0xFF10B981),
+                          count: 1,
+                          pillText: "+1 New",
+                          todayCount: 0,
+                          newCount: 1,
+                          newColor: const Color(0xFF10B981),
+                        ),
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
-                        child: rightStage != null
-                            ? _buildStageCard(rightStage)
-                            : const SizedBox(),
+                        child: _buildIncomingSubCard(
+                          title: "CALLBACK",
+                          titleColor: const Color(0xFFD97706),
+                          count: 3,
+                          pillText: "+3 New",
+                          todayCount: 0,
+                          newCount: 3,
+                          newColor: const Color(0xFFD97706),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _buildIncomingSubCard(
+                          title: "MANUAL",
+                          titleColor: const Color(0xFF00A3FF),
+                          count: 3,
+                          pillText: "+3 New",
+                          todayCount: 0,
+                          newCount: 3,
+                          newColor: const Color(0xFF00A3FF),
+                        ),
                       ),
                     ],
                   ),
-                );
-              },
+                  const SizedBox(height: 20),
+
+                  // 4. PROCESSING PIPELINE (61) Section
+                  Text(
+                    "PROCESSING PIPELINE (61)",
+                    style: GoogleFonts.poppins(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.bold,
+                      color: _isDarkMode
+                          ? Colors.white70
+                          : const Color(0xFF334155),
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+
+                  // 2-Column Grid of Pipeline Stages
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: (_stages.length / 2).ceil(),
+                    itemBuilder: (ctx, rowIndex) {
+                      final leftIndex = rowIndex * 2;
+                      final rightIndex = leftIndex + 1;
+
+                      final leftStage = _stages[leftIndex];
+                      final rightStage = rightIndex < _stages.length
+                          ? _stages[rightIndex]
+                          : null;
+
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Row(
+                          children: [
+                            Expanded(child: _buildStageCard(leftStage)),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: rightStage != null
+                                  ? _buildStageCard(rightStage)
+                                  : const SizedBox(),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
