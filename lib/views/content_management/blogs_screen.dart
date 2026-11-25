@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
+import '../../core/theme/app_colors.dart';
 import '../widgets/crm_drawer.dart';
 import '../widgets/custom_back_button.dart';
 import '../widgets/admin_profile_avatar.dart';
@@ -34,9 +36,28 @@ class BlogsScreen extends StatefulWidget {
 
 class _BlogsScreenState extends State<BlogsScreen> {
   bool _isDarkMode = false;
+  final int _entriesPerPage = 10;
   String _searchQuery = "";
 
   final TextEditingController _searchController = TextEditingController();
+
+  late final PagingController<int, BlogItem> _pagingController =
+      PagingController(
+    getNextPageKey: (state) {
+      if (state.keys == null || state.keys!.isEmpty) return 1;
+      final lastPage = state.pages?.last;
+      if (lastPage == null || lastPage.length < _entriesPerPage) return null;
+      return (state.keys!.last) + 1;
+    },
+    fetchPage: (pageKey) async {
+      final allFiltered = _filteredBlogs;
+      final startIndex = (pageKey - 1) * _entriesPerPage;
+      if (startIndex >= allFiltered.length) return [];
+      final endIndex =
+          (startIndex + _entriesPerPage).clamp(0, allFiltered.length);
+      return allFiltered.sublist(startIndex, endIndex);
+    },
+  );
 
   final List<BlogItem> _blogs = [
     BlogItem(
@@ -86,6 +107,7 @@ class _BlogsScreenState extends State<BlogsScreen> {
 
   @override
   void dispose() {
+    _pagingController.dispose();
     _searchController.dispose();
     super.dispose();
   }
@@ -122,6 +144,7 @@ class _BlogsScreenState extends State<BlogsScreen> {
       setState(() {
         _blogs.insert(0, newBlog);
       });
+      _pagingController.refresh();
     }
   }
 
@@ -134,6 +157,7 @@ class _BlogsScreenState extends State<BlogsScreen> {
     );
     if (result == true && mounted) {
       setState(() {});
+      _pagingController.refresh();
     }
   }
 
@@ -232,6 +256,7 @@ class _BlogsScreenState extends State<BlogsScreen> {
                       setState(() {
                         _blogs.removeWhere((b) => b.id == blog.id);
                       });
+                      _pagingController.refresh();
                       Navigator.pop(ctx);
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
@@ -265,18 +290,24 @@ class _BlogsScreenState extends State<BlogsScreen> {
 
     return Scaffold(
       backgroundColor:
-          _isDarkMode ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+          _isDarkMode ? const Color(0xFF0F172A) : AppColors.background,
       drawer: const CrmDrawer(),
       appBar: AppBar(
         backgroundColor: _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
         elevation: 0.5,
         leading: CustomBackButton(isDarkMode: _isDarkMode),
-        title: Text(
-          "Blogs Management",
-          style: GoogleFonts.poppins(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: _isDarkMode ? Colors.white : const Color(0xFF0F172A),
+        titleSpacing: 0,
+        title: FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Text(
+            "Blogs Management",
+            style: GoogleFonts.poppins(
+              fontSize: 16.5,
+              fontWeight: FontWeight.bold,
+              color: _isDarkMode ? Colors.white : const Color(0xFF0F172A),
+            ),
+            maxLines: 1,
           ),
         ),
         actions: [
@@ -307,354 +338,406 @@ class _BlogsScreenState extends State<BlogsScreen> {
           const SizedBox(width: 14),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 1. Heading Row: Manage Blogs + "+ Add New Blog"
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  "Manage Blogs",
+                // 1. Search TextField (Full Width, 12px spacing above and below)
+                TextField(
+                  controller: _searchController,
+                  onChanged: (val) {
+                    setState(() {
+                      _searchQuery = val;
+                    });
+                    _pagingController.refresh();
+                  },
                   style: GoogleFonts.poppins(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: _isDarkMode ? Colors.white : const Color(0xFF0F172A),
+                    fontSize: 13,
+                    color: _isDarkMode ? Colors.white : Colors.black87,
                   ),
-                ),
-                ElevatedButton(
-                  onPressed: _openAddBlogScreen,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF007BFF),
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                  decoration: InputDecoration(
+                    hintText: "Search...",
+                    hintStyle: GoogleFonts.poppins(
+                      fontSize: 13,
+                      color: const Color(0xFF94A3B8),
                     ),
-                    elevation: 0,
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.add, size: 16, color: Colors.white),
-                      const SizedBox(width: 4),
-                      Text(
-                        "Add New Blog",
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-
-            // 2. Subheading: "All Blogs"
-            Text(
-              "All Blogs",
-              style: GoogleFonts.poppins(
-                fontSize: 13.5,
-                fontWeight: FontWeight.bold,
-                color: _isDarkMode
-                    ? Colors.grey.shade300
-                    : const Color(0xFF1E293B),
-              ),
-            ),
-            const SizedBox(height: 10),
-
-            // 3. Search TextField (Full Width)
-            Container(
-              height: 42,
-              decoration: BoxDecoration(
-                color: _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: _isDarkMode
-                      ? const Color(0xFF334155)
-                      : const Color(0xFFCBD5E1),
-                ),
-              ),
-              child: TextField(
-                controller: _searchController,
-                onChanged: (val) {
-                  setState(() {
-                    _searchQuery = val;
-                  });
-                },
-                style: GoogleFonts.poppins(
-                  fontSize: 13,
-                  color: _isDarkMode ? Colors.white : Colors.black87,
-                ),
-                decoration: InputDecoration(
-                  hintText: "Search...",
-                  hintStyle: GoogleFonts.poppins(
-                    fontSize: 12.5,
-                    color: _isDarkMode
-                        ? Colors.white38
-                        : Colors.grey.shade400,
-                  ),
-                  prefixIcon: Icon(
-                    Icons.search,
-                    size: 18,
-                    color: _isDarkMode
-                        ? Colors.white54
-                        : Colors.grey.shade500,
-                  ),
-                  contentPadding:
-                      const EdgeInsets.symmetric(vertical: 10),
-                  border: InputBorder.none,
-                ),
-              ),
-            ),
-            const SizedBox(height: 14),
-
-            // 4. Blogs List
-            if (displayedBlogs.isEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 40),
-                child: Center(
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.article_outlined,
-                        size: 44,
-                        color: _isDarkMode
-                            ? Colors.grey.shade600
-                            : Colors.grey.shade400,
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        "No Blogs Found",
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: _isDarkMode
-                              ? Colors.grey.shade400
-                              : Colors.grey.shade600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              )
-            else
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: displayedBlogs.length,
-                itemBuilder: (ctx, index) {
-                  final blog = displayedBlogs[index];
-
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color:
-                          _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
+                    prefixIcon: Icon(
+                      Icons.search,
+                      size: 20,
+                      color: _isDarkMode
+                          ? Colors.grey.shade400
+                          : const Color(0xFF003366),
+                    ),
+                    suffixIcon: _searchController.text.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear, size: 18),
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() {
+                                _searchQuery = "";
+                              });
+                              _pagingController.refresh();
+                            },
+                          )
+                        : null,
+                    filled: true,
+                    fillColor: _isDarkMode
+                        ? const Color(0xFF1E293B)
+                        : const Color(0xFFF8FAFC),
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 10),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(
                         color: _isDarkMode
                             ? const Color(0xFF334155)
                             : const Color(0xFFE2E8F0),
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black
-                              .withValues(alpha: _isDarkMode ? 0.2 : 0.03),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Row: Thumbnail + (Badges & Title)
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Thumbnail (Image or Placeholder)
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: Container(
-                                width: 80,
-                                height: 56,
-                                color: _isDarkMode
-                                    ? const Color(0xFF334155)
-                                    : const Color(0xFFE2E8F0),
-                                alignment: Alignment.center,
-                                child: blog.imagePath != null
-                                    ? Image.asset(
-                                        blog.imagePath!,
-                                        width: 80,
-                                        height: 56,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (c, o, s) => Icon(
-                                          Icons.image_outlined,
-                                          size: 24,
-                                          color: _isDarkMode
-                                              ? Colors.grey.shade500
-                                              : Colors.grey.shade400,
-                                        ),
-                                      )
-                                    : Icon(
-                                        Icons.image_outlined,
-                                        size: 24,
-                                        color: _isDarkMode
-                                            ? Colors.grey.shade500
-                                            : Colors.grey.shade400,
-                                      ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(
+                        color: _isDarkMode
+                            ? const Color(0xFF334155)
+                            : const Color(0xFFE2E8F0),
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(
+                        color: _isDarkMode
+                            ? const Color(0xFF00A3FF)
+                            : const Color(0xFF003366),
+                        width: 1.5,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
 
-                            // Badges & Title
-                            Expanded(
+                // 2. Count & Compact "+ Add New" Button Row
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        displayedBlogs.isEmpty
+                            ? "No Blogs"
+                            : displayedBlogs.length == 1
+                                ? "1 Blog"
+                                : "${displayedBlogs.length} Blogs",
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: _isDarkMode ? Colors.white : AppColors.text,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    SizedBox(
+                      height: 38,
+                      child: ElevatedButton.icon(
+                        onPressed: _openAddBlogScreen,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        icon: const Icon(Icons.add,
+                            size: 16, color: Colors.white),
+                        label: Text(
+                          "Add New",
+                          style: GoogleFonts.poppins(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // 4. Blogs List
+          Expanded(
+            child: PagingListener<int, BlogItem>(
+              controller: _pagingController,
+              builder: (context, state, fetchNextPage) => RefreshIndicator(
+                color: AppColors.primary,
+                onRefresh: () => Future.sync(() => _pagingController.refresh()),
+                child: CustomScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  slivers: [
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+                      sliver: PagedSliverList<int, BlogItem>(
+                        state: state,
+                        fetchNextPage: fetchNextPage,
+                        builderDelegate: PagedChildBuilderDelegate<BlogItem>(
+                          itemBuilder: (ctx, blog, index) =>
+                              _buildBlogCard(blog, index),
+                          noItemsFoundIndicatorBuilder: (ctx) => Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 40),
+                            child: Center(
                               child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  // Badges: #S.N. + Active/Inactive
-                                  Row(
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 6, vertical: 2),
-                                        decoration: BoxDecoration(
-                                          color: _isDarkMode
-                                              ? const Color(0xFF334155)
-                                              : const Color(0xFFF1F5F9),
-                                          borderRadius:
-                                              BorderRadius.circular(4),
-                                        ),
-                                        child: Text(
-                                          "#${index + 1}",
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 10.5,
-                                            fontWeight: FontWeight.bold,
-                                            color: _isDarkMode
-                                                ? Colors.white70
-                                                : const Color(0xFF334155),
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 6),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 8, vertical: 2),
-                                        decoration: BoxDecoration(
-                                          color: blog.isActive
-                                              ? const Color(
-                                                  0xFF0F766E) // Teal/Green
-                                              : const Color(0xFFDC2626), // Red
-                                          borderRadius:
-                                              BorderRadius.circular(4),
-                                        ),
-                                        child: Text(
-                                          blog.isActive ? "Active" : "Inactive",
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 10.5,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
+                                  Icon(
+                                    Icons.article_outlined,
+                                    size: 44,
+                                    color: _isDarkMode
+                                        ? Colors.grey.shade600
+                                        : Colors.grey.shade400,
                                   ),
-                                  const SizedBox(height: 6),
-
-                                  // Blog Title
+                                  const SizedBox(height: 10),
                                   Text(
-                                    blog.title,
+                                    "No Blogs Found",
                                     style: GoogleFonts.poppins(
-                                      fontSize: 12.5,
-                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
                                       color: _isDarkMode
-                                          ? Colors.white
-                                          : const Color(0xFF0F172A),
-                                      height: 1.3,
+                                          ? Colors.grey.shade400
+                                          : Colors.grey.shade600,
                                     ),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ],
                               ),
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-
-                        // Divider
-                        Divider(
-                          height: 1,
-                          thickness: 1,
-                          color: _isDarkMode
-                              ? const Color(0xFF334155)
-                              : const Color(0xFFF1F5F9),
-                        ),
-                        const SizedBox(height: 8),
-
-                        // Card Footer: Author · Date (Left) + Edit & Delete Icons (Right)
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              "${blog.author} · ${blog.date}",
-                              style: GoogleFonts.poppins(
-                                fontSize: 11,
-                                color: _isDarkMode
-                                    ? Colors.grey.shade400
-                                    : const Color(0xFF64748B),
+                          ),
+                          firstPageProgressIndicatorBuilder: (ctx) =>
+                              const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 30),
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                color: AppColors.primary,
                               ),
                             ),
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                InkWell(
-                                  onTap: () => _showEditBlogDialog(blog),
-                                  borderRadius: BorderRadius.circular(4),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(4),
-                                    child: Icon(
-                                      Icons.edit_outlined,
-                                      size: 18,
-                                      color: _isDarkMode
-                                          ? Colors.grey.shade400
-                                          : const Color(0xFF64748B),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                InkWell(
-                                  onTap: () => _deleteBlog(blog),
-                                  borderRadius: BorderRadius.circular(4),
-                                  child: const Padding(
-                                    padding: EdgeInsets.all(4),
-                                    child: Icon(
-                                      Icons.delete_outline,
-                                      size: 18,
-                                      color: Color(0xFFDC2626),
-                                    ),
-                                  ),
-                                ),
-                              ],
+                          ),
+                          newPageProgressIndicatorBuilder: (ctx) =>
+                              const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                color: AppColors.primary,
+                              ),
                             ),
-                          ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBlogCard(BlogItem blog, int index) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color:
+              _isDarkMode ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: _isDarkMode ? 0.2 : 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Row: Thumbnail + (Badges & Title)
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Thumbnail (Image or Placeholder)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  width: 80,
+                  height: 56,
+                  color: _isDarkMode
+                      ? const Color(0xFF334155)
+                      : const Color(0xFFE2E8F0),
+                  alignment: Alignment.center,
+                  child: blog.imagePath != null
+                      ? Image.asset(
+                          blog.imagePath!,
+                          width: 80,
+                          height: 56,
+                          fit: BoxFit.cover,
+                          errorBuilder: (c, o, s) => Icon(
+                            Icons.image_outlined,
+                            size: 24,
+                            color: _isDarkMode
+                                ? Colors.grey.shade500
+                                : Colors.grey.shade400,
+                          ),
+                        )
+                      : Icon(
+                          Icons.image_outlined,
+                          size: 24,
+                          color: _isDarkMode
+                              ? Colors.grey.shade500
+                              : Colors.grey.shade400,
+                        ),
+                ),
+              ),
+              const SizedBox(width: 12),
+
+              // Badges & Title
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Badges: #S.N. + Active/Inactive
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: _isDarkMode
+                                ? const Color(0xFF334155)
+                                : const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            "#${index + 1}",
+                            style: GoogleFonts.poppins(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.bold,
+                              color:
+                                  _isDarkMode ? Colors.white70 : AppColors.text,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: blog.isActive
+                                ? AppColors.chipActiveBg
+                                : AppColors.chipInactiveBg,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            blog.isActive ? "Active" : "Inactive",
+                            style: GoogleFonts.poppins(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.bold,
+                              color: blog.isActive
+                                  ? AppColors.chipActiveText
+                                  : AppColors.chipInactiveText,
+                            ),
+                          ),
                         ),
                       ],
                     ),
-                  );
-                },
-              ),
+                    const SizedBox(height: 6),
 
-            const SizedBox(height: 16),
-          ],
-        ),
+                    // Blog Title
+                    Text(
+                      blog.title,
+                      style: GoogleFonts.poppins(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.bold,
+                        color: _isDarkMode
+                            ? Colors.white
+                            : const Color(0xFF0F172A),
+                        height: 1.3,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+
+          // Divider
+          Divider(
+            height: 1,
+            thickness: 1,
+            color:
+                _isDarkMode ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
+          ),
+          const SizedBox(height: 8),
+
+          // Card Footer: Author · Date (Left) + Edit & Delete Icons (Right)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "${blog.author} · ${blog.date}",
+                style: GoogleFonts.poppins(
+                  fontSize: 11,
+                  color: _isDarkMode
+                      ? Colors.grey.shade400
+                      : const Color(0xFF64748B),
+                ),
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  InkWell(
+                    onTap: () => _showEditBlogDialog(blog),
+                    borderRadius: BorderRadius.circular(4),
+                    child: Padding(
+                      padding: const EdgeInsets.all(4),
+                      child: Icon(
+                        Icons.edit_outlined,
+                        size: 18,
+                        color: _isDarkMode
+                            ? Colors.grey.shade400
+                            : const Color(0xFF64748B),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  InkWell(
+                    onTap: () => _deleteBlog(blog),
+                    borderRadius: BorderRadius.circular(4),
+                    child: const Padding(
+                      padding: EdgeInsets.all(4),
+                      child: Icon(
+                        Icons.delete_outline,
+                        size: 18,
+                        color: Color(0xFFDC2626),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

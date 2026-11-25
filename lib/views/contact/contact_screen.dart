@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
+import '../../core/theme/app_colors.dart';
 import '../widgets/crm_drawer.dart';
 import '../widgets/custom_back_button.dart';
 import '../widgets/admin_profile_avatar.dart';
@@ -40,6 +42,24 @@ class _ContactScreenState extends State<ContactScreen> {
   bool _selectAll = false;
 
   final TextEditingController _searchController = TextEditingController();
+
+  late final PagingController<int, ContactEnquiry> _pagingController =
+      PagingController(
+    getNextPageKey: (state) {
+      if (state.keys == null || state.keys!.isEmpty) return 1;
+      final lastPage = state.pages?.last;
+      if (lastPage == null || lastPage.length < _entriesPerPage) return null;
+      return (state.keys!.last) + 1;
+    },
+    fetchPage: (pageKey) async {
+      final allFiltered = _filteredEnquiries;
+      final startIndex = (pageKey - 1) * _entriesPerPage;
+      if (startIndex >= allFiltered.length) return [];
+      final endIndex =
+          (startIndex + _entriesPerPage).clamp(0, allFiltered.length);
+      return allFiltered.sublist(startIndex, endIndex);
+    },
+  );
 
   final List<ContactEnquiry> _enquiries = [
     ContactEnquiry(
@@ -95,6 +115,7 @@ class _ContactScreenState extends State<ContactScreen> {
 
   @override
   void dispose() {
+    _pagingController.dispose();
     _searchController.dispose();
     super.dispose();
   }
@@ -147,6 +168,7 @@ class _ContactScreenState extends State<ContactScreen> {
                 _enquiries.removeWhere((e) => e.isSelected);
                 _selectAll = false;
               });
+              _pagingController.refresh();
               Navigator.pop(ctx);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -197,6 +219,7 @@ class _ContactScreenState extends State<ContactScreen> {
                   _selectAll = _enquiries.every((e) => e.isSelected);
                 }
               });
+              _pagingController.refresh();
               Navigator.pop(ctx);
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
@@ -326,12 +349,18 @@ class _ContactScreenState extends State<ContactScreen> {
         backgroundColor: _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
         elevation: 0.5,
         leading: CustomBackButton(isDarkMode: _isDarkMode),
-        title: Text(
-          "Contact Enquiries",
-          style: GoogleFonts.poppins(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: _isDarkMode ? Colors.white : const Color(0xFF0F172A),
+        titleSpacing: 0,
+        title: FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Text(
+            "Contact Enquiries",
+            style: GoogleFonts.poppins(
+              fontSize: 16.5,
+              fontWeight: FontWeight.bold,
+              color: _isDarkMode ? Colors.white : const Color(0xFF0F172A),
+            ),
+            maxLines: 1,
           ),
         ),
         actions: [
@@ -362,475 +391,515 @@ class _ContactScreenState extends State<ContactScreen> {
           const SizedBox(width: 14),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 2. Action Row: [ ] Select all  +  [ 🗑 Delete Selected (0) ]
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Select all Checkbox
+                // 2. Action Row: [ ] Select all  +  [ 🗑 Delete Selected (0) ]
                 Row(
-                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    SizedBox(
-                      width: 22,
-                      height: 22,
-                      child: Checkbox(
-                        value: _selectAll,
-                        activeColor: const Color(0xFF00A3FF),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(4),
+                    // Select all Checkbox
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: Checkbox(
+                            value: _selectAll,
+                            activeColor: const Color(0xFF00A3FF),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            side: BorderSide(
+                              color: _isDarkMode
+                                  ? const Color(0xFF64748B)
+                                  : const Color(0xFF94A3B8),
+                              width: 1.5,
+                            ),
+                            onChanged: (val) {
+                              setState(() {
+                                _selectAll = val ?? false;
+                                for (var enq in _enquiries) {
+                                  enq.isSelected = _selectAll;
+                                }
+                              });
+                            },
+                          ),
                         ),
-                        side: BorderSide(
-                          color: _isDarkMode
-                              ? const Color(0xFF64748B)
-                              : const Color(0xFF94A3B8),
-                          width: 1.5,
+                        const SizedBox(width: 8),
+                        Text(
+                          "Select all",
+                          style: GoogleFonts.poppins(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w500,
+                            color: _isDarkMode
+                                ? Colors.grey.shade300
+                                : const Color(0xFF475569),
+                          ),
                         ),
-                        onChanged: (val) {
-                          setState(() {
-                            _selectAll = val ?? false;
-                            for (var enq in _enquiries) {
-                              enq.isSelected = _selectAll;
-                            }
-                          });
-                        },
-                      ),
+                      ],
                     ),
-                    const SizedBox(width: 8),
-                    Text(
-                      "Select all",
-                      style: GoogleFonts.poppins(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w500,
-                        color: _isDarkMode
-                            ? Colors.grey.shade300
-                            : const Color(0xFF475569),
+
+                    // Delete Selected (N) Button
+                    InkWell(
+                      onTap: _selectedCount > 0 ? _deleteSelected : null,
+                      borderRadius: BorderRadius.circular(8),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: _isDarkMode
+                              ? const Color(0xFF1E293B)
+                              : Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: _selectedCount > 0
+                                ? const Color(0xFFDC2626)
+                                : (_isDarkMode
+                                    ? const Color(0xFF334155)
+                                    : const Color(0xFFCBD5E1)),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.delete_outline,
+                              size: 15,
+                              color: _selectedCount > 0
+                                  ? const Color(0xFFDC2626)
+                                  : (_isDarkMode
+                                      ? Colors.grey.shade400
+                                      : const Color(0xFF64748B)),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              "Delete Selected ($_selectedCount)",
+                              style: GoogleFonts.poppins(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w500,
+                                color: _selectedCount > 0
+                                    ? const Color(0xFFDC2626)
+                                    : (_isDarkMode
+                                        ? Colors.grey.shade400
+                                        : const Color(0xFF64748B)),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],
                 ),
+                const SizedBox(height: 12),
 
-                // Delete Selected (N) Button
-                InkWell(
-                  onTap: _selectedCount > 0 ? _deleteSelected : null,
-                  borderRadius: BorderRadius.circular(8),
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color:
-                          _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: _selectedCount > 0
-                            ? const Color(0xFFDC2626)
-                            : (_isDarkMode
-                                ? const Color(0xFF334155)
-                                : const Color(0xFFCBD5E1)),
+                // 3. Search Field
+                TextField(
+                  controller: _searchController,
+                  onChanged: (val) {
+                    setState(() {
+                      _searchQuery = val;
+                    });
+                    _pagingController.refresh();
+                  },
+                  style: GoogleFonts.poppins(
+                    fontSize: 13,
+                    color: _isDarkMode ? Colors.white : Colors.black87,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: "Search enquiries...",
+                    hintStyle: GoogleFonts.poppins(
+                      fontSize: 13,
+                      color: const Color(0xFF94A3B8),
+                    ),
+                    prefixIcon: Icon(
+                      Icons.search,
+                      size: 20,
+                      color: _isDarkMode
+                          ? Colors.grey.shade400
+                          : const Color(0xFF003366),
+                    ),
+                    suffixIcon: _searchController.text.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear, size: 18),
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() {
+                                _searchQuery = "";
+                              });
+                              _pagingController.refresh();
+                            },
+                          )
+                        : null,
+                    filled: true,
+                    fillColor: _isDarkMode
+                        ? const Color(0xFF1E293B)
+                        : const Color(0xFFF8FAFC),
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 10),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(
+                        color: _isDarkMode
+                            ? const Color(0xFF334155)
+                            : const Color(0xFFE2E8F0),
                       ),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.delete_outline,
-                          size: 15,
-                          color: _selectedCount > 0
-                              ? const Color(0xFFDC2626)
-                              : (_isDarkMode
-                                  ? Colors.grey.shade400
-                                  : const Color(0xFF64748B)),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          "Delete Selected ($_selectedCount)",
-                          style: GoogleFonts.poppins(
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w500,
-                            color: _selectedCount > 0
-                                ? const Color(0xFFDC2626)
-                                : (_isDarkMode
-                                    ? Colors.grey.shade400
-                                    : const Color(0xFF64748B)),
-                          ),
-                        ),
-                      ],
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(
+                        color: _isDarkMode
+                            ? const Color(0xFF334155)
+                            : const Color(0xFFE2E8F0),
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(
+                        color: _isDarkMode
+                            ? const Color(0xFF00A3FF)
+                            : const Color(0xFF003366),
+                        width: 1.5,
+                      ),
                     ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+          ),
 
-            // 3. Search Field
-            TextField(
-              controller: _searchController,
-              onChanged: (val) {
-                setState(() {
-                  _searchQuery = val;
-                });
-              },
-              style: GoogleFonts.poppins(
-                fontSize: 13,
-                color: _isDarkMode ? Colors.white : Colors.black87,
-              ),
-              decoration: InputDecoration(
-                hintText: "Search enquiries...",
-                hintStyle: GoogleFonts.poppins(
-                  fontSize: 13,
-                  color: const Color(0xFF94A3B8),
-                ),
-                prefixIcon: Icon(
-                  Icons.search,
-                  size: 20,
-                  color: _isDarkMode
-                      ? Colors.grey.shade400
-                      : const Color(0xFF003366),
-                ),
-                filled: true,
-                fillColor: _isDarkMode
-                    ? const Color(0xFF1E293B)
-                    : const Color(0xFFF8FAFC),
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(
-                    color: _isDarkMode
-                        ? const Color(0xFF334155)
-                        : const Color(0xFFE2E8F0),
-                  ),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(
-                    color: _isDarkMode
-                        ? const Color(0xFF334155)
-                        : const Color(0xFFE2E8F0),
-                  ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(
-                    color: _isDarkMode
-                        ? const Color(0xFF00A3FF)
-                        : const Color(0xFF003366),
-                    width: 1.5,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 14),
-
-            // 4. Contact Enquiry Cards List
-            if (displayedEnquiries.isEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 40),
-                child: Center(
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.mail_outline_rounded,
-                        size: 44,
-                        color: _isDarkMode
-                            ? Colors.grey.shade600
-                            : Colors.grey.shade400,
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        "No Contact Enquiries Found",
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: _isDarkMode
-                              ? Colors.grey.shade400
-                              : Colors.grey.shade600,
+          // 4. Contact Enquiry Cards List
+          Expanded(
+            child: PagingListener<int, ContactEnquiry>(
+              controller: _pagingController,
+              builder: (context, state, fetchNextPage) => RefreshIndicator(
+                color: AppColors.primary,
+                onRefresh: () => Future.sync(() => _pagingController.refresh()),
+                child: CustomScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  slivers: [
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+                      sliver: PagedSliverList<int, ContactEnquiry>(
+                        state: state,
+                        fetchNextPage: fetchNextPage,
+                        builderDelegate:
+                            PagedChildBuilderDelegate<ContactEnquiry>(
+                          itemBuilder: (ctx, enq, index) =>
+                              _buildEnquiryCard(enq, index),
+                          noItemsFoundIndicatorBuilder: (ctx) => Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 40),
+                            child: Center(
+                              child: Column(
+                                children: [
+                                  Icon(
+                                    Icons.mail_outline_rounded,
+                                    size: 44,
+                                    color: _isDarkMode
+                                        ? Colors.grey.shade600
+                                        : Colors.grey.shade400,
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    "No Contact Enquiries Found",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: _isDarkMode
+                                          ? Colors.grey.shade400
+                                          : Colors.grey.shade600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          firstPageProgressIndicatorBuilder: (ctx) =>
+                              const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 30),
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ),
+                          newPageProgressIndicatorBuilder: (ctx) =>
+                              const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                    ],
-                  ),
-                ),
-              )
-            else
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: displayedEnquiries.length,
-                itemBuilder: (ctx, index) {
-                  final enq = displayedEnquiries[index];
-
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color:
-                          _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: _isDarkMode
-                            ? const Color(0xFF334155)
-                            : const Color(0xFFE2E8F0),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black
-                              .withValues(alpha: _isDarkMode ? 0.2 : 0.03),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Row 1: Checkbox + #S.N. + Name
-                        Row(
-                          children: [
-                            // Checkbox
-                            SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: Checkbox(
-                                value: enq.isSelected,
-                                activeColor: const Color(0xFF00A3FF),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                side: BorderSide(
-                                  color: _isDarkMode
-                                      ? const Color(0xFF64748B)
-                                      : const Color(0xFF94A3B8),
-                                  width: 1.5,
-                                ),
-                                onChanged: (val) {
-                                  setState(() {
-                                    enq.isSelected = val ?? false;
-                                    _selectAll =
-                                        _enquiries.every((e) => e.isSelected);
-                                  });
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-
-                            // #S.N. Badge
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: _isDarkMode
-                                    ? const Color(0xFF334155)
-                                    : const Color(0xFFF1F5F9),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                "#${index + 1}",
-                                style: GoogleFonts.poppins(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                  color: _isDarkMode
-                                      ? Colors.white70
-                                      : const Color(0xFF334155),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-
-                            // Name
-                            Expanded(
-                              child: Text(
-                                enq.name,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 13.5,
-                                  fontWeight: FontWeight.bold,
-                                  color: _isDarkMode
-                                      ? Colors.white
-                                      : const Color(0xFF0F172A),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-
-                        // Row 2: Phone
-                        Row(
-                          children: [
-                            SizedBox(
-                              width: 75,
-                              child: Text(
-                                "Phone",
-                                style: GoogleFonts.poppins(
-                                  fontSize: 11.5,
-                                  color: _isDarkMode
-                                      ? Colors.grey.shade400
-                                      : const Color(0xFF64748B),
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: Text(
-                                enq.phone,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: _isDarkMode
-                                      ? Colors.white
-                                      : const Color(0xFF0F172A),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-
-                        // Row 3: Email
-                        Row(
-                          children: [
-                            SizedBox(
-                              width: 75,
-                              child: Text(
-                                "Email",
-                                style: GoogleFonts.poppins(
-                                  fontSize: 11.5,
-                                  color: _isDarkMode
-                                      ? Colors.grey.shade400
-                                      : const Color(0xFF64748B),
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: Text(
-                                enq.email,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: _isDarkMode
-                                      ? Colors.white
-                                      : const Color(0xFF0F172A),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-
-                        // Row 4: City
-                        Row(
-                          children: [
-                            SizedBox(
-                              width: 75,
-                              child: Text(
-                                "City",
-                                style: GoogleFonts.poppins(
-                                  fontSize: 11.5,
-                                  color: _isDarkMode
-                                      ? Colors.grey.shade400
-                                      : const Color(0xFF64748B),
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: Text(
-                                enq.city,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: _isDarkMode
-                                      ? Colors.white
-                                      : const Color(0xFF0F172A),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-
-                        // Divider Line
-                        Divider(
-                          height: 1,
-                          thickness: 1,
-                          color: _isDarkMode
-                              ? const Color(0xFF334155)
-                              : const Color(0xFFF1F5F9),
-                        ),
-                        const SizedBox(height: 8),
-
-                        // Row 5: Date Time (Left) + Eye & Delete Icons (Right)
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              enq.date,
+                    if (displayedEnquiries.isNotEmpty)
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 8, bottom: 20),
+                          child: Center(
+                            child: Text(
+                              "Showing 1 to ${displayedEnquiries.length} of ${filtered.length} entries",
                               style: GoogleFonts.poppins(
-                                fontSize: 11,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
                                 color: _isDarkMode
                                     ? Colors.grey.shade400
                                     : const Color(0xFF64748B),
                               ),
                             ),
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                InkWell(
-                                  onTap: () => _viewEnquiryDetails(enq),
-                                  borderRadius: BorderRadius.circular(4),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(4),
-                                    child: Icon(
-                                      Icons.visibility_outlined,
-                                      size: 18,
-                                      color: _isDarkMode
-                                          ? Colors.grey.shade400
-                                          : const Color(0xFF64748B),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                InkWell(
-                                  onTap: () => _deleteSingleEnquiry(enq),
-                                  borderRadius: BorderRadius.circular(4),
-                                  child: const Padding(
-                                    padding: EdgeInsets.all(4),
-                                    child: Icon(
-                                      Icons.delete_outline,
-                                      size: 18,
-                                      color: Color(0xFFDC2626),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
+                          ),
                         ),
-                      ],
-                    ),
-                  );
-                },
+                      ),
+                  ],
+                ),
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-            // 5. Bottom Pagination / Showing entries
-            Padding(
-              padding: const EdgeInsets.only(top: 8, bottom: 20),
-              child: Center(
+  Widget _buildEnquiryCard(ContactEnquiry enq, int index) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color:
+              _isDarkMode ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: _isDarkMode ? 0.2 : 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Row 1: Checkbox + #S.N. + Name
+          Row(
+            children: [
+              // Checkbox
+              SizedBox(
+                width: 20,
+                height: 20,
+                child: Checkbox(
+                  value: enq.isSelected,
+                  activeColor: const Color(0xFF00A3FF),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  side: BorderSide(
+                    color: _isDarkMode
+                        ? const Color(0xFF64748B)
+                        : const Color(0xFF94A3B8),
+                    width: 1.5,
+                  ),
+                  onChanged: (val) {
+                    setState(() {
+                      enq.isSelected = val ?? false;
+                      _selectAll = _enquiries.every((e) => e.isSelected);
+                    });
+                  },
+                ),
+              ),
+              const SizedBox(width: 8),
+
+              // #S.N. Badge
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: _isDarkMode
+                      ? const Color(0xFF334155)
+                      : const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(4),
+                ),
                 child: Text(
-                  "Showing 1 to ${displayedEnquiries.length} of ${filtered.length} entries",
+                  "#${index + 1}",
                   style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color:
+                        _isDarkMode ? Colors.white70 : const Color(0xFF334155),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+
+              // Name
+              Expanded(
+                child: Text(
+                  enq.name,
+                  style: GoogleFonts.poppins(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.bold,
+                    color: _isDarkMode ? Colors.white : const Color(0xFF0F172A),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+
+          // Row 2: Phone
+          Row(
+            children: [
+              SizedBox(
+                width: 75,
+                child: Text(
+                  "Phone",
+                  style: GoogleFonts.poppins(
+                    fontSize: 11.5,
                     color: _isDarkMode
                         ? Colors.grey.shade400
                         : const Color(0xFF64748B),
                   ),
                 ),
               ),
-            ),
-          ],
-        ),
+              Expanded(
+                child: Text(
+                  enq.phone,
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: _isDarkMode ? Colors.white : const Color(0xFF0F172A),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+
+          // Row 3: Email
+          Row(
+            children: [
+              SizedBox(
+                width: 75,
+                child: Text(
+                  "Email",
+                  style: GoogleFonts.poppins(
+                    fontSize: 11.5,
+                    color: _isDarkMode
+                        ? Colors.grey.shade400
+                        : const Color(0xFF64748B),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  enq.email,
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: _isDarkMode ? Colors.white : const Color(0xFF0F172A),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+
+          // Row 4: City
+          Row(
+            children: [
+              SizedBox(
+                width: 75,
+                child: Text(
+                  "City",
+                  style: GoogleFonts.poppins(
+                    fontSize: 11.5,
+                    color: _isDarkMode
+                        ? Colors.grey.shade400
+                        : const Color(0xFF64748B),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  enq.city,
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: _isDarkMode ? Colors.white : const Color(0xFF0F172A),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+
+          // Divider Line
+          Divider(
+            height: 1,
+            thickness: 1,
+            color:
+                _isDarkMode ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
+          ),
+          const SizedBox(height: 8),
+
+          // Row 5: Date Time (Left) + Eye & Delete Icons (Right)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                enq.date,
+                style: GoogleFonts.poppins(
+                  fontSize: 11,
+                  color: _isDarkMode
+                      ? Colors.grey.shade400
+                      : const Color(0xFF64748B),
+                ),
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  InkWell(
+                    onTap: () => _viewEnquiryDetails(enq),
+                    borderRadius: BorderRadius.circular(4),
+                    child: Padding(
+                      padding: const EdgeInsets.all(4),
+                      child: Icon(
+                        Icons.visibility_outlined,
+                        size: 18,
+                        color: _isDarkMode
+                            ? Colors.grey.shade400
+                            : const Color(0xFF64748B),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  InkWell(
+                    onTap: () => _deleteSingleEnquiry(enq),
+                    borderRadius: BorderRadius.circular(4),
+                    child: const Padding(
+                      padding: EdgeInsets.all(4),
+                      child: Icon(
+                        Icons.delete_outline,
+                        size: 18,
+                        color: Color(0xFFDC2626),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

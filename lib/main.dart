@@ -10,6 +10,7 @@ import 'viewmodels/admin_dashboard_viewmodel.dart';
 import 'viewmodels/payout_viewmodel.dart';
 import 'viewmodels/leads_viewmodel.dart';
 import 'viewmodels/inventory_viewmodel.dart';
+import 'viewmodels/theme_viewmodel.dart';
 import 'views/splash/splash_screen.dart';
 
 void main() async {
@@ -41,6 +42,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => PayoutViewModel()),
         ChangeNotifierProvider(create: (_) => LeadsViewModel()),
         ChangeNotifierProvider(create: (_) => InventoryViewModel()),
+        ChangeNotifierProvider(create: (_) => ThemeViewModel()),
       ],
       child: const FindMyCarzBusinessApp(),
     ),
@@ -52,9 +54,12 @@ class FindMyCarzBusinessApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeVM = context.watch<ThemeViewModel>();
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Find My Carz Business',
+      themeMode: themeVM.themeMode,
       theme: ThemeData(
         useMaterial3: true,
         primaryColor: const Color(0xFF003366),
@@ -69,6 +74,25 @@ class FindMyCarzBusinessApp extends StatelessWidget {
         appBarTheme: const AppBarTheme(
           backgroundColor: Colors.white,
           foregroundColor: Colors.black87,
+          elevation: 0.5,
+        ),
+      ),
+      darkTheme: ThemeData(
+        brightness: Brightness.dark,
+        useMaterial3: true,
+        primaryColor: const Color(0xFF003366),
+        scaffoldBackgroundColor: const Color(0xFF0F172A),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF003366),
+          primary: const Color(0xFF003366),
+          brightness: Brightness.dark,
+        ),
+        textTheme: GoogleFonts.poppinsTextTheme(
+          ThemeData.dark().textTheme,
+        ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFF1E293B),
+          foregroundColor: Colors.white,
           elevation: 0.5,
         ),
       ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../core/theme/app_colors.dart';
 import '../widgets/custom_back_button.dart';
 import '../widgets/admin_profile_avatar.dart';
 import 'testimonials_screen.dart';
@@ -171,7 +172,7 @@ class _EditTestimonialScreenState extends State<EditTestimonialScreen> {
       },
       child: Scaffold(
         backgroundColor:
-            isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+            isDark ? const Color(0xFF0F172A) : AppColors.background,
         appBar: AppBar(
           backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
           elevation: 0.5,
@@ -226,13 +227,13 @@ class _EditTestimonialScreenState extends State<EditTestimonialScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // ================= 1. HEADER BANNER (PURPLE GRADIENT) =================
+                    // ================= 1. HEADER BANNER (ROYAL BLUE GRADIENT) =================
                     Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 18, vertical: 18),
                       decoration: const BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [Color(0xFF4F46E5), Color(0xFF6366F1)],
+                          colors: [AppColors.primary, AppColors.primaryDark],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
@@ -284,37 +285,37 @@ class _EditTestimonialScreenState extends State<EditTestimonialScreen> {
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
                                     color: isCompleted
-                                        ? const Color(0xFF22C55E)
+                                        ? AppColors.success
                                         : isCurrent
-                                            ? const Color(0xFF6366F1)
+                                            ? AppColors.primary
                                             : (isDark
                                                 ? const Color(0xFF1E293B)
-                                                : const Color(0xFFF1F5F9)),
+                                                : AppColors.stepInactiveBg),
                                     border: Border.all(
                                       color: isCompleted
-                                          ? const Color(0xFF22C55E)
+                                          ? AppColors.success
                                           : isCurrent
-                                              ? const Color(0xFF6366F1)
+                                              ? AppColors.primary
                                               : (isDark
                                                   ? const Color(0xFF334155)
-                                                  : const Color(0xFFCBD5E1)),
-                                      width: 1.5,
+                                                  : AppColors.stepInactiveBorder),
+                                      width: isCurrent ? 2 : 1,
                                     ),
                                     boxShadow: isCurrent
                                         ? [
                                             BoxShadow(
-                                              color: const Color(0xFF6366F1)
-                                                  .withValues(alpha: 0.35),
-                                              blurRadius: 10,
-                                              offset: const Offset(0, 3),
+                                              color: AppColors.primary
+                                                  .withValues(alpha: 0.25),
+                                              blurRadius: 6,
+                                              offset: const Offset(0, 2),
                                             ),
                                           ]
                                         : null,
                                   ),
                                   alignment: Alignment.center,
                                   child: isCompleted
-                                      ? const Icon(Icons.check,
-                                          size: 20, color: Colors.white)
+                                      ? const Icon(Icons.check_rounded,
+                                          size: 18, color: Colors.white)
                                       : Text(
                                           "${index + 1}",
                                           style: GoogleFonts.poppins(
@@ -324,7 +325,7 @@ class _EditTestimonialScreenState extends State<EditTestimonialScreen> {
                                                 ? Colors.white
                                                 : (isDark
                                                     ? Colors.grey.shade400
-                                                    : const Color(0xFF64748B)),
+                                                    : AppColors.stepInactiveText),
                                           ),
                                         ),
                                 ),
@@ -334,13 +335,17 @@ class _EditTestimonialScreenState extends State<EditTestimonialScreen> {
                                   style: GoogleFonts.poppins(
                                     fontSize: 12,
                                     fontWeight: isCurrent
-                                        ? FontWeight.bold
+                                        ? FontWeight.w600
                                         : FontWeight.w500,
                                     color: isCurrent
-                                        ? const Color(0xFF10B981)
-                                        : (isDark
-                                            ? Colors.grey.shade400
-                                            : const Color(0xFF64748B)),
+                                        ? (isDark
+                                            ? Colors.white
+                                            : AppColors.primary)
+                                        : (isCompleted
+                                            ? AppColors.success
+                                            : (isDark
+                                                ? Colors.grey.shade400
+                                                : AppColors.stepInactiveText)),
                                   ),
                                 ),
                               ],
@@ -391,10 +396,10 @@ class _EditTestimonialScreenState extends State<EditTestimonialScreen> {
                                 onPressed: _previousStep,
                                 style: OutlinedButton.styleFrom(
                                   side: const BorderSide(
-                                    color: Color(0xFF22C55E),
-                                    width: 1.2,
+                                    color: AppColors.primary,
+                                    width: 1.5,
                                   ),
-                                  foregroundColor: const Color(0xFF22C55E),
+                                  foregroundColor: AppColors.primary,
                                   backgroundColor: isDark
                                       ? const Color(0xFF1E293B)
                                       : Colors.white,
@@ -409,7 +414,7 @@ class _EditTestimonialScreenState extends State<EditTestimonialScreen> {
                                   style: GoogleFonts.poppins(
                                     fontSize: 13.5,
                                     fontWeight: FontWeight.w600,
-                                    color: const Color(0xFF22C55E),
+                                    color: AppColors.primary,
                                   ),
                                 ),
                               ),
@@ -422,7 +427,7 @@ class _EditTestimonialScreenState extends State<EditTestimonialScreen> {
                             child: ElevatedButton(
                               onPressed: _nextStep,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF00A3FF),
+                                backgroundColor: AppColors.primary,
                                 foregroundColor: Colors.white,
                                 elevation: 0,
                                 padding: const EdgeInsets.symmetric(
@@ -490,7 +495,7 @@ class _EditTestimonialScreenState extends State<EditTestimonialScreen> {
           controller: _nameCtrl,
           hint: "Enter client name...",
           isRequired: true,
-          prefixIcon: const Icon(Icons.person, color: Color(0xFF6366F1), size: 18),
+          prefixIcon: const Icon(Icons.person, color: AppColors.inputIcon, size: 18),
         ),
         const SizedBox(height: 14),
 
@@ -501,7 +506,7 @@ class _EditTestimonialScreenState extends State<EditTestimonialScreen> {
           hint: "e.g. CEO, Tech Inc.",
           isRequired: false,
           prefixIcon:
-              const Icon(Icons.work_outline, color: Color(0xFF8B5CF6), size: 18),
+              const Icon(Icons.work_outline, color: AppColors.inputIcon, size: 18),
         ),
         const SizedBox(height: 14),
 
@@ -771,7 +776,7 @@ class _EditTestimonialScreenState extends State<EditTestimonialScreen> {
                           size: 16,
                           color: isDark
                               ? Colors.white60
-                              : const Color(0xFF64748B),
+                              : AppColors.inputIcon,
                         ),
                         const SizedBox(width: 10),
                         Text.rich(
@@ -800,7 +805,7 @@ class _EditTestimonialScreenState extends State<EditTestimonialScreen> {
                         const Spacer(),
                         Switch(
                           value: _isActive,
-                          activeThumbColor: const Color(0xFF00A3FF),
+                          activeThumbColor: AppColors.primary,
                           onChanged: (val) {
                             setState(() => _isActive = val);
                           },
@@ -846,7 +851,7 @@ class _EditTestimonialScreenState extends State<EditTestimonialScreen> {
       style: GoogleFonts.poppins(
         fontSize: 13.5,
         fontWeight: FontWeight.bold,
-        color: const Color(0xFF10B981),
+        color: AppColors.primary,
       ),
     );
   }
@@ -888,35 +893,47 @@ class _EditTestimonialScreenState extends State<EditTestimonialScreen> {
           ],
         ),
         const SizedBox(height: 6),
-        Container(
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
-              width: 1.2,
-            ),
+        TextField(
+          controller: controller,
+          minLines: minLines,
+          maxLines: maxLines,
+          style: GoogleFonts.poppins(
+            fontSize: 13,
+            color: isDark ? Colors.white : const Color(0xFF0F172A),
           ),
-          child: TextField(
-            controller: controller,
-            minLines: minLines,
-            maxLines: maxLines,
-            style: GoogleFonts.poppins(
-              fontSize: 13,
-              color: isDark ? Colors.white : const Color(0xFF0F172A),
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: GoogleFonts.poppins(
+              fontSize: 12.5,
+              color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
             ),
-            decoration: InputDecoration(
-              hintText: hint,
-              hintStyle: GoogleFonts.poppins(
-                fontSize: 12.5,
-                color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+            prefixIcon: prefixIcon,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 12,
+            ),
+            filled: true,
+            fillColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(
+                color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
+                width: 1.2,
               ),
-              prefixIcon: prefixIcon,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 14,
-                vertical: 12,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(
+                color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
+                width: 1.2,
               ),
-              border: InputBorder.none,
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(
+                color: AppColors.primary,
+                width: 1.5,
+              ),
             ),
           ),
         ),

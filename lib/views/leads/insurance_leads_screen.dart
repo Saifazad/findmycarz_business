@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
+import '../../core/theme/app_colors.dart';
 import '../widgets/crm_drawer.dart';
 import '../widgets/custom_back_button.dart';
 import '../widgets/admin_profile_avatar.dart';
@@ -46,6 +48,24 @@ class _InsuranceLeadsScreenState extends State<InsuranceLeadsScreen> {
   bool _selectAll = false;
 
   final TextEditingController _searchController = TextEditingController();
+
+  late final PagingController<int, InsuranceLead> _pagingController =
+      PagingController(
+    getNextPageKey: (state) {
+      if (state.keys == null || state.keys!.isEmpty) return 1;
+      final lastPage = state.pages?.last;
+      if (lastPage == null || lastPage.length < _entriesPerPage) return null;
+      return (state.keys!.last) + 1;
+    },
+    fetchPage: (pageKey) async {
+      final allFiltered = _filteredLeads;
+      final startIndex = (pageKey - 1) * _entriesPerPage;
+      if (startIndex >= allFiltered.length) return [];
+      final endIndex =
+          (startIndex + _entriesPerPage).clamp(0, allFiltered.length);
+      return allFiltered.sublist(startIndex, endIndex);
+    },
+  );
 
   final List<InsuranceLead> _leads = [
     InsuranceLead(
@@ -100,6 +120,7 @@ class _InsuranceLeadsScreenState extends State<InsuranceLeadsScreen> {
 
   @override
   void dispose() {
+    _pagingController.dispose();
     _searchController.dispose();
     super.dispose();
   }
@@ -146,13 +167,14 @@ class _InsuranceLeadsScreenState extends State<InsuranceLeadsScreen> {
             child: const Text("Cancel"),
           ),
           ElevatedButton(
-            style:
-                ElevatedButton.styleFrom(backgroundColor: const Color(0xFFDC2626)),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFDC2626)),
             onPressed: () {
               setState(() {
                 _leads.removeWhere((l) => l.isSelected);
                 _selectAll = false;
               });
+              _pagingController.refresh();
               Navigator.pop(ctx);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -192,8 +214,8 @@ class _InsuranceLeadsScreenState extends State<InsuranceLeadsScreen> {
             child: const Text("Cancel"),
           ),
           ElevatedButton(
-            style:
-                ElevatedButton.styleFrom(backgroundColor: const Color(0xFFDC2626)),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFDC2626)),
             onPressed: () {
               setState(() {
                 _leads.removeWhere((l) => l.id == lead.id);
@@ -203,6 +225,7 @@ class _InsuranceLeadsScreenState extends State<InsuranceLeadsScreen> {
                   _selectAll = _leads.every((l) => l.isSelected);
                 }
               });
+              _pagingController.refresh();
               Navigator.pop(ctx);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -241,7 +264,8 @@ class _InsuranceLeadsScreenState extends State<InsuranceLeadsScreen> {
                     style: GoogleFonts.poppins(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: _isDarkMode ? Colors.white : const Color(0xFF0F172A),
+                      color:
+                          _isDarkMode ? Colors.white : const Color(0xFF0F172A),
                     ),
                   ),
                   Container(
@@ -310,7 +334,9 @@ class _InsuranceLeadsScreenState extends State<InsuranceLeadsScreen> {
               label,
               style: GoogleFonts.poppins(
                 fontSize: 12,
-                color: _isDarkMode ? Colors.grey.shade400 : const Color(0xFF64748B),
+                color: _isDarkMode
+                    ? Colors.grey.shade400
+                    : const Color(0xFF64748B),
               ),
             ),
           ),
@@ -331,9 +357,6 @@ class _InsuranceLeadsScreenState extends State<InsuranceLeadsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final filtered = _filteredLeads;
-    final displayedLeads = filtered.take(_entriesPerPage).toList();
-
     return Scaffold(
       backgroundColor:
           _isDarkMode ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
@@ -342,17 +365,24 @@ class _InsuranceLeadsScreenState extends State<InsuranceLeadsScreen> {
         backgroundColor: _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
         elevation: 0.5,
         leading: CustomBackButton(isDarkMode: _isDarkMode),
-        title: Text(
-          "Insurance Leads",
-          style: GoogleFonts.poppins(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: _isDarkMode ? Colors.white : const Color(0xFF0F172A),
+        titleSpacing: 0,
+        title: FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Text(
+            "Insurance Leads",
+            style: GoogleFonts.poppins(
+              fontSize: 16.5,
+              fontWeight: FontWeight.bold,
+              color: _isDarkMode ? Colors.white : const Color(0xFF0F172A),
+            ),
+            maxLines: 1,
           ),
         ),
         actions: [
           IconButton(
-            tooltip: _isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode",
+            tooltip:
+                _isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode",
             icon: Icon(
               _isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_outlined,
               color: _isDarkMode
@@ -377,506 +407,558 @@ class _InsuranceLeadsScreenState extends State<InsuranceLeadsScreen> {
           const SizedBox(width: 14),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 2. Action Row: [ ] Select all  +  [ 🗑 Delete Selected (0) ]
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Select all Checkbox
+                // 2. Action Row: [ ] Select all  +  [ 🗑 Delete Selected (0) ]
                 Row(
-                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    SizedBox(
-                      width: 22,
-                      height: 22,
-                      child: Checkbox(
-                        value: _selectAll,
-                        activeColor: const Color(0xFF00A3FF),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(4),
+                    // Select all Checkbox
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: Checkbox(
+                            value: _selectAll,
+                            activeColor: const Color(0xFF00A3FF),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            side: BorderSide(
+                              color: _isDarkMode
+                                  ? const Color(0xFF64748B)
+                                  : const Color(0xFF94A3B8),
+                              width: 1.5,
+                            ),
+                            onChanged: (val) {
+                              setState(() {
+                                _selectAll = val ?? false;
+                                for (var lead in _leads) {
+                                  lead.isSelected = _selectAll;
+                                }
+                              });
+                            },
+                          ),
                         ),
-                        side: BorderSide(
-                          color: _isDarkMode
-                              ? const Color(0xFF64748B)
-                              : const Color(0xFF94A3B8),
-                          width: 1.5,
+                        const SizedBox(width: 8),
+                        Text(
+                          "Select all",
+                          style: GoogleFonts.poppins(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w500,
+                            color: _isDarkMode
+                                ? Colors.grey.shade300
+                                : const Color(0xFF475569),
+                          ),
                         ),
-                        onChanged: (val) {
-                          setState(() {
-                            _selectAll = val ?? false;
-                            for (var lead in _leads) {
-                              lead.isSelected = _selectAll;
-                            }
-                          });
-                        },
-                      ),
+                      ],
                     ),
-                    const SizedBox(width: 8),
-                    Text(
-                      "Select all",
-                      style: GoogleFonts.poppins(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w500,
-                        color: _isDarkMode
-                            ? Colors.grey.shade300
-                            : const Color(0xFF475569),
+
+                    // Delete Selected (N) Button
+                    InkWell(
+                      onTap: _selectedCount > 0 ? _deleteSelected : null,
+                      borderRadius: BorderRadius.circular(8),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: _isDarkMode
+                              ? const Color(0xFF1E293B)
+                              : Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: _selectedCount > 0
+                                ? const Color(0xFFDC2626)
+                                : (_isDarkMode
+                                    ? const Color(0xFF334155)
+                                    : const Color(0xFFCBD5E1)),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.delete_outline,
+                              size: 15,
+                              color: _selectedCount > 0
+                                  ? const Color(0xFFDC2626)
+                                  : (_isDarkMode
+                                      ? Colors.grey.shade400
+                                      : const Color(0xFF64748B)),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              "Delete Selected ($_selectedCount)",
+                              style: GoogleFonts.poppins(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w500,
+                                color: _selectedCount > 0
+                                    ? const Color(0xFFDC2626)
+                                    : (_isDarkMode
+                                        ? Colors.grey.shade400
+                                        : const Color(0xFF64748B)),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],
                 ),
+                const SizedBox(height: 12),
 
-                // Delete Selected (N) Button
-                InkWell(
-                  onTap: _selectedCount > 0 ? _deleteSelected : null,
-                  borderRadius: BorderRadius.circular(8),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
+                // 3. Search Row: [ 🔍 Search insurance leads ]
+                TextField(
+                  controller: _searchController,
+                  onChanged: (val) {
+                    setState(() {
+                      _searchQuery = val;
+                    });
+                    _pagingController.refresh();
+                  },
+                  style: GoogleFonts.poppins(
+                    fontSize: 13,
+                    color: _isDarkMode ? Colors.white : Colors.black87,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: "Search insurance leads",
+                    hintStyle: GoogleFonts.poppins(
+                      fontSize: 13,
+                      color: const Color(0xFF94A3B8),
+                    ),
+                    prefixIcon: Icon(
+                      Icons.search,
+                      size: 20,
                       color: _isDarkMode
-                          ? const Color(0xFF1E293B)
-                          : Colors.white,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: _selectedCount > 0
-                            ? const Color(0xFFDC2626)
-                            : (_isDarkMode
-                                ? const Color(0xFF334155)
-                                : const Color(0xFFCBD5E1)),
+                          ? Colors.grey.shade400
+                          : const Color(0xFF003366),
+                    ),
+                    suffixIcon: _searchController.text.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear, size: 18),
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() {
+                                _searchQuery = "";
+                              });
+                              _pagingController.refresh();
+                            },
+                          )
+                        : null,
+                    filled: true,
+                    fillColor: _isDarkMode
+                        ? const Color(0xFF1E293B)
+                        : const Color(0xFFF8FAFC),
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 10),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(
+                        color: _isDarkMode
+                            ? const Color(0xFF334155)
+                            : const Color(0xFFE2E8F0),
                       ),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.delete_outline,
-                          size: 15,
-                          color: _selectedCount > 0
-                              ? const Color(0xFFDC2626)
-                              : (_isDarkMode
-                                  ? Colors.grey.shade400
-                                  : const Color(0xFF64748B)),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          "Delete Selected ($_selectedCount)",
-                          style: GoogleFonts.poppins(
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w500,
-                            color: _selectedCount > 0
-                                ? const Color(0xFFDC2626)
-                                : (_isDarkMode
-                                    ? Colors.grey.shade400
-                                    : const Color(0xFF64748B)),
-                          ),
-                        ),
-                      ],
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(
+                        color: _isDarkMode
+                            ? const Color(0xFF334155)
+                            : const Color(0xFFE2E8F0),
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(
+                        color: _isDarkMode
+                            ? const Color(0xFF00A3FF)
+                            : const Color(0xFF003366),
+                        width: 1.5,
+                      ),
                     ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+          ),
 
-            // 3. Search Row: [ 🔍 Search insurance leads ]
-            Container(
-              height: 42,
-              decoration: BoxDecoration(
-                color:
-                    _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: _isDarkMode
-                      ? const Color(0xFF334155)
-                      : const Color(0xFFCBD5E1),
-                ),
-              ),
-              child: TextField(
-                controller: _searchController,
-                onChanged: (val) {
-                  setState(() {
-                    _searchQuery = val;
-                  });
-                },
-                style: GoogleFonts.poppins(
-                  fontSize: 13,
-                  color: _isDarkMode ? Colors.white : Colors.black87,
-                ),
-                decoration: InputDecoration(
-                  hintText: "Search insurance leads",
-                  hintStyle: GoogleFonts.poppins(
-                    fontSize: 12.5,
-                    color: _isDarkMode
-                        ? Colors.white38
-                        : Colors.grey.shade400,
-                  ),
-                  prefixIcon: Icon(
-                    Icons.search,
-                    size: 18,
-                    color: _isDarkMode
-                        ? Colors.white54
-                        : Colors.grey.shade500,
-                  ),
-                  contentPadding:
-                      const EdgeInsets.symmetric(vertical: 10),
-                  border: InputBorder.none,
+          // 4. Insurance Leads Cards List (Exact Match to Screenshot)
+          Expanded(
+            child: PagingListener<int, InsuranceLead>(
+              controller: _pagingController,
+              builder: (context, state, fetchNextPage) => RefreshIndicator(
+                color: AppColors.primary,
+                onRefresh: () => Future.sync(() => _pagingController.refresh()),
+                child: CustomScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  slivers: [
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+                      sliver: PagedSliverList<int, InsuranceLead>(
+                        state: state,
+                        fetchNextPage: fetchNextPage,
+                        builderDelegate:
+                            PagedChildBuilderDelegate<InsuranceLead>(
+                          itemBuilder: (ctx, lead, index) =>
+                              _buildLeadCard(lead, index),
+                          noItemsFoundIndicatorBuilder: (ctx) => Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 40),
+                            child: Center(
+                              child: Column(
+                                children: [
+                                  Icon(
+                                    Icons.assignment_late_outlined,
+                                    size: 44,
+                                    color: _isDarkMode
+                                        ? Colors.grey.shade600
+                                        : Colors.grey.shade400,
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    "No Insurance Leads Found",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: _isDarkMode
+                                          ? Colors.grey.shade400
+                                          : Colors.grey.shade600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          firstPageProgressIndicatorBuilder: (ctx) =>
+                              const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 30),
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ),
+                          newPageProgressIndicatorBuilder: (ctx) =>
+                              const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-            const SizedBox(height: 14),
+          ),
+        ],
+      ),
+    );
+  }
 
-            // 4. Insurance Leads Cards List (Exact Match to Screenshot)
-            if (displayedLeads.isEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 40),
-                child: Center(
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.assignment_late_outlined,
-                        size: 44,
-                        color: _isDarkMode
-                            ? Colors.grey.shade600
-                            : Colors.grey.shade400,
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        "No Insurance Leads Found",
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: _isDarkMode
-                              ? Colors.grey.shade400
-                              : Colors.grey.shade600,
-                        ),
-                      ),
-                    ],
+  Widget _buildLeadCard(InsuranceLead lead, int index) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color:
+              _isDarkMode ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: _isDarkMode ? 0.2 : 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Row 1: Checkbox + #S.N. + [LEAD ID] (Left) + [Status] Badge (Right)
+          Row(
+            children: [
+              // Checkbox
+              SizedBox(
+                width: 20,
+                height: 20,
+                child: Checkbox(
+                  value: lead.isSelected,
+                  activeColor: const Color(0xFF00A3FF),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  side: BorderSide(
+                    color: _isDarkMode
+                        ? const Color(0xFF64748B)
+                        : const Color(0xFF94A3B8),
+                    width: 1.5,
+                  ),
+                  onChanged: (val) {
+                    setState(() {
+                      lead.isSelected = val ?? false;
+                      _selectAll = _leads.every((l) => l.isSelected);
+                    });
+                  },
+                ),
+              ),
+              const SizedBox(width: 8),
+
+              // #S.N. Badge
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: _isDarkMode
+                      ? const Color(0xFF334155)
+                      : const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  "#${index + 1}",
+                  style: GoogleFonts.poppins(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color:
+                        _isDarkMode ? Colors.white70 : const Color(0xFF334155),
                   ),
                 ),
-              )
-            else
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: displayedLeads.length,
-                itemBuilder: (ctx, index) {
-                  final lead = displayedLeads[index];
+              ),
+              const SizedBox(width: 8),
 
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color:
-                          _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: _isDarkMode
-                            ? const Color(0xFF334155)
-                            : const Color(0xFFE2E8F0),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black
-                              .withValues(alpha: _isDarkMode ? 0.2 : 0.03),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Row 1: Checkbox + #S.N. + [LEAD ID] (Left) + [Status] Badge (Right)
-                        Row(
-                          children: [
-                            // Checkbox
-                            SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: Checkbox(
-                                value: lead.isSelected,
-                                activeColor: const Color(0xFF00A3FF),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                side: BorderSide(
-                                  color: _isDarkMode
-                                      ? const Color(0xFF64748B)
-                                      : const Color(0xFF94A3B8),
-                                  width: 1.5,
-                                ),
-                                onChanged: (val) {
-                                  setState(() {
-                                    lead.isSelected = val ?? false;
-                                    _selectAll =
-                                        _leads.every((l) => l.isSelected);
-                                  });
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-
-                            // #S.N. Badge
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: _isDarkMode
-                                    ? const Color(0xFF334155)
-                                    : const Color(0xFFF1F5F9),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                "#${index + 1}",
-                                style: GoogleFonts.poppins(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                  color: _isDarkMode
-                                      ? Colors.white70
-                                      : const Color(0xFF334155),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-
-                            // [LEAD ID]
-                            Expanded(
-                              child: Text(
-                                lead.id,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.bold,
-                                  color: _isDarkMode
-                                      ? Colors.white
-                                      : const Color(0xFF0F172A),
-                                ),
-                              ),
-                            ),
-
-                            // [Status] Badge
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 3.5),
-                              decoration: BoxDecoration(
-                                color: lead.statusColor,
-                                borderRadius: BorderRadius.circular(5),
-                              ),
-                              child: Text(
-                                lead.status,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 10.5,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-
-                        // Row 2: Owner [OWNER NAME]
-                        Row(
-                          children: [
-                            SizedBox(
-                              width: 90,
-                              child: Text(
-                                "Owner",
-                                style: GoogleFonts.poppins(
-                                  fontSize: 11.5,
-                                  color: _isDarkMode
-                                      ? Colors.grey.shade400
-                                      : const Color(0xFF64748B),
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: Text(
-                                lead.ownerName,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: _isDarkMode
-                                      ? Colors.white
-                                      : const Color(0xFF0F172A),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-
-                        // Row 3: Reg Number [REG NUMBER]
-                        Row(
-                          children: [
-                            SizedBox(
-                              width: 90,
-                              child: Text(
-                                "Reg Number",
-                                style: GoogleFonts.poppins(
-                                  fontSize: 11.5,
-                                  color: _isDarkMode
-                                      ? Colors.grey.shade400
-                                      : const Color(0xFF64748B),
-                                ),
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: _isDarkMode
-                                    ? const Color(0xFF0F172A)
-                                    : const Color(0xFFEFF6FF),
-                                borderRadius: BorderRadius.circular(4),
-                                border: Border.all(
-                                  color: _isDarkMode
-                                      ? const Color(0xFF334155)
-                                      : const Color(0xFFDBEAFE),
-                                ),
-                              ),
-                              child: Text(
-                                lead.regNumber,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF2563EB),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-
-                        // Row 4: Phone / Email
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SizedBox(
-                              width: 90,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    "Phone /",
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 11,
-                                      color: _isDarkMode
-                                          ? Colors.grey.shade400
-                                          : const Color(0xFF64748B),
-                                    ),
-                                  ),
-                                  Text(
-                                    "Email",
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 11,
-                                      color: _isDarkMode
-                                          ? Colors.grey.shade400
-                                          : const Color(0xFF64748B),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    lead.phone,
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 11.5,
-                                      fontWeight: FontWeight.w600,
-                                      color: _isDarkMode
-                                          ? Colors.white70
-                                          : const Color(0xFF334155),
-                                    ),
-                                  ),
-                                  Text(
-                                    lead.email,
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 11,
-                                      color: _isDarkMode
-                                          ? Colors.grey.shade400
-                                          : const Color(0xFF64748B),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-
-                        // Dotted Divider
-                        Divider(
-                          height: 1,
-                          thickness: 1,
-                          color: _isDarkMode
-                              ? const Color(0xFF334155)
-                              : const Color(0xFFF1F5F9),
-                        ),
-                        const SizedBox(height: 8),
-
-                        // Row 5: Submitted on [DATE] (Left) + Eye & Delete Icons (Right)
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              "Submitted on ${lead.date}",
-                              style: GoogleFonts.poppins(
-                                fontSize: 11,
-                                color: _isDarkMode
-                                    ? Colors.grey.shade400
-                                    : const Color(0xFF64748B),
-                              ),
-                            ),
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                InkWell(
-                                  onTap: () => _viewLeadDetails(lead),
-                                  borderRadius: BorderRadius.circular(4),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(4),
-                                    child: Icon(
-                                      Icons.visibility_outlined,
-                                      size: 18,
-                                      color: _isDarkMode
-                                          ? Colors.grey.shade400
-                                          : const Color(0xFF64748B),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                InkWell(
-                                  onTap: () => _deleteLead(lead),
-                                  borderRadius: BorderRadius.circular(4),
-                                  child: const Padding(
-                                    padding: EdgeInsets.all(4),
-                                    child: Icon(
-                                      Icons.delete_outline,
-                                      size: 18,
-                                      color: Color(0xFFDC2626),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  );
-                },
+              // [LEAD ID]
+              Expanded(
+                child: Text(
+                  lead.id,
+                  style: GoogleFonts.poppins(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: _isDarkMode ? Colors.white : const Color(0xFF0F172A),
+                  ),
+                ),
               ),
 
-            const SizedBox(height: 16),
-          ],
-        ),
+              // [Status] Badge
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 3.5),
+                decoration: BoxDecoration(
+                  color: lead.statusColor,
+                  borderRadius: BorderRadius.circular(5),
+                ),
+                child: Text(
+                  lead.status,
+                  style: GoogleFonts.poppins(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+
+          // Row 2: Owner [OWNER NAME]
+          Row(
+            children: [
+              SizedBox(
+                width: 90,
+                child: Text(
+                  "Owner",
+                  style: GoogleFonts.poppins(
+                    fontSize: 11.5,
+                    color: _isDarkMode
+                        ? Colors.grey.shade400
+                        : const Color(0xFF64748B),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  lead.ownerName,
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: _isDarkMode ? Colors.white : const Color(0xFF0F172A),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+
+          // Row 3: Reg Number [REG NUMBER]
+          Row(
+            children: [
+              SizedBox(
+                width: 90,
+                child: Text(
+                  "Reg Number",
+                  style: GoogleFonts.poppins(
+                    fontSize: 11.5,
+                    color: _isDarkMode
+                        ? Colors.grey.shade400
+                        : const Color(0xFF64748B),
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: _isDarkMode
+                      ? const Color(0xFF0F172A)
+                      : const Color(0xFFEFF6FF),
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(
+                    color: _isDarkMode
+                        ? const Color(0xFF334155)
+                        : const Color(0xFFDBEAFE),
+                  ),
+                ),
+                child: Text(
+                  lead.regNumber,
+                  style: GoogleFonts.poppins(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF2563EB),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+
+          // Row 4: Phone / Email
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: 90,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Phone /",
+                      style: GoogleFonts.poppins(
+                        fontSize: 11,
+                        color: _isDarkMode
+                            ? Colors.grey.shade400
+                            : const Color(0xFF64748B),
+                      ),
+                    ),
+                    Text(
+                      "Email",
+                      style: GoogleFonts.poppins(
+                        fontSize: 11,
+                        color: _isDarkMode
+                            ? Colors.grey.shade400
+                            : const Color(0xFF64748B),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      lead.phone,
+                      style: GoogleFonts.poppins(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        color: _isDarkMode
+                            ? Colors.white70
+                            : const Color(0xFF334155),
+                      ),
+                    ),
+                    Text(
+                      lead.email,
+                      style: GoogleFonts.poppins(
+                        fontSize: 11,
+                        color: _isDarkMode
+                            ? Colors.grey.shade400
+                            : const Color(0xFF64748B),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+
+          // Dotted Divider
+          Divider(
+            height: 1,
+            thickness: 1,
+            color:
+                _isDarkMode ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
+          ),
+          const SizedBox(height: 8),
+
+          // Row 5: Submitted on [DATE] (Left) + Eye & Delete Icons (Right)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "Submitted on ${lead.date}",
+                style: GoogleFonts.poppins(
+                  fontSize: 11,
+                  color: _isDarkMode
+                      ? Colors.grey.shade400
+                      : const Color(0xFF64748B),
+                ),
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  InkWell(
+                    onTap: () => _viewLeadDetails(lead),
+                    borderRadius: BorderRadius.circular(4),
+                    child: Padding(
+                      padding: const EdgeInsets.all(4),
+                      child: Icon(
+                        Icons.visibility_outlined,
+                        size: 18,
+                        color: _isDarkMode
+                            ? Colors.grey.shade400
+                            : const Color(0xFF64748B),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  InkWell(
+                    onTap: () => _deleteLead(lead),
+                    borderRadius: BorderRadius.circular(4),
+                    child: const Padding(
+                      padding: EdgeInsets.all(4),
+                      child: Icon(
+                        Icons.delete_outline,
+                        size: 18,
+                        color: Color(0xFFDC2626),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../core/theme/app_colors.dart';
 import '../widgets/custom_back_button.dart';
 import '../widgets/admin_profile_avatar.dart';
 import 'flash_news_screen.dart';
@@ -77,7 +78,7 @@ class _AddFlashAnnouncementScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("Please enter Announcement Title / Headline!"),
-          backgroundColor: Color(0xFFDC2626),
+          backgroundColor: AppColors.danger,
         ),
       );
       return;
@@ -119,17 +120,23 @@ class _AddFlashAnnouncementScreenState
 
     return Scaffold(
       backgroundColor:
-          _isDarkMode ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+          _isDarkMode ? const Color(0xFF0F172A) : AppColors.background,
       appBar: AppBar(
         backgroundColor: _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
         elevation: 0.5,
         leading: CustomBackButton(isDarkMode: _isDarkMode),
-        title: Text(
-          isEdit ? "Edit Flash Announcement" : "Add Flash Announcement",
-          style: GoogleFonts.poppins(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: _isDarkMode ? Colors.white : const Color(0xFF0F172A),
+        titleSpacing: 0,
+        title: FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Text(
+            isEdit ? "Edit Flash Announcement" : "Add Flash Announcement",
+            style: GoogleFonts.poppins(
+              fontSize: 16.5,
+              fontWeight: FontWeight.bold,
+              color: _isDarkMode ? Colors.white : const Color(0xFF0F172A),
+            ),
+            maxLines: 1,
           ),
         ),
         actions: [
@@ -165,54 +172,72 @@ class _AddFlashAnnouncementScreenState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Top Section: Header with Edit Flash Announcement + [ ← Back ]
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      isEdit ? Icons.edit_square : Icons.add_circle,
-                      color: const Color(0xFF10B981),
-                      size: 20,
+            // Top Section: Header Banner with Primary Gradient + [ Back ]
+            Container(
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [AppColors.primary, AppColors.primaryDark],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.25),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        isEdit ? Icons.edit_square : Icons.add_circle,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        isEdit ? "Edit Flash Announcement" : "Add New Flash",
+                        style: GoogleFonts.poppins(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                  OutlinedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: AppColors.primary,
+                      side: const BorderSide(
+                        color: AppColors.primary,
+                        width: 1.5,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
                     ),
-                    const SizedBox(width: 8),
-                    Text(
-                      isEdit
-                          ? "Edit Flash Announcement"
-                          : "Add New Flash",
+                    child: Text(
+                      "Back",
                       style: GoogleFonts.poppins(
-                        fontSize: 16.5,
-                        fontWeight: FontWeight.bold,
-                        color: _isDarkMode
-                            ? Colors.white
-                            : const Color(0xFF0F172A),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primary,
                       ),
                     ),
-                  ],
-                ),
-                ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF8692A6),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 7),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    elevation: 0,
                   ),
-                  child: Text(
-                    "← Back",
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
             const SizedBox(height: 14),
 
@@ -295,7 +320,7 @@ class _AddFlashAnnouncementScreenState
                         const Icon(
                           Icons.link,
                           size: 18,
-                          color: Color(0xFFF59E0B),
+                          color: AppColors.inputIcon,
                         ),
                         const SizedBox(width: 6),
                         Text(
@@ -303,9 +328,7 @@ class _AddFlashAnnouncementScreenState
                           style: GoogleFonts.poppins(
                             fontSize: 12.5,
                             fontWeight: FontWeight.w600,
-                            color: _isDarkMode
-                                ? Colors.white
-                                : const Color(0xFF0F172A),
+                            color: AppColors.primary,
                           ),
                         ),
                       ],
@@ -407,9 +430,9 @@ class _AddFlashAnnouncementScreenState
                     children: [
                       Switch(
                         value: _openInNewTab,
-                        activeThumbColor: const Color(0xFF10B981),
+                        activeThumbColor: AppColors.primary,
                         activeTrackColor:
-                            const Color(0xFF10B981).withValues(alpha: 0.5),
+                            AppColors.primary.withValues(alpha: 0.5),
                         onChanged: (val) {
                           setState(() {
                             _openInNewTab = val;
@@ -434,16 +457,19 @@ class _AddFlashAnnouncementScreenState
                   // Actions: [ Cancel ] [ Save / Update Flash Announcement ]
                   Row(
                     children: [
-                      ElevatedButton(
+                      OutlinedButton(
                         onPressed: () => Navigator.pop(context),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _isDarkMode
-                              ? const Color(0xFF334155)
-                              : const Color(0xFFF1F5F9),
+                        style: OutlinedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: AppColors.primary,
+                          side: const BorderSide(
+                            color: AppColors.primary,
+                            width: 1.5,
+                          ),
                           elevation: 0,
                           padding: const EdgeInsets.symmetric(
                               horizontal: 16, vertical: 8),
-                          minimumSize: const Size(64, 36),
+                          minimumSize: const Size(64, 38),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(6),
                           ),
@@ -453,9 +479,7 @@ class _AddFlashAnnouncementScreenState
                           style: GoogleFonts.poppins(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
-                            color: _isDarkMode
-                                ? Colors.white70
-                                : const Color(0xFF334155),
+                            color: AppColors.primary,
                           ),
                         ),
                       ),
@@ -464,11 +488,12 @@ class _AddFlashAnnouncementScreenState
                         child: ElevatedButton(
                           onPressed: _save,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF0284C7),
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
                             elevation: 0,
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 10, vertical: 8),
-                            minimumSize: const Size(0, 36),
+                            minimumSize: const Size(0, 38),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(6),
                             ),
@@ -521,14 +546,14 @@ class _AddFlashAnnouncementScreenState
           style: GoogleFonts.poppins(
             fontSize: 12.5,
             fontWeight: FontWeight.w600,
-            color: _isDarkMode ? Colors.white : const Color(0xFF0F172A),
+            color: AppColors.primary,
           ),
           children: [
             TextSpan(text: parts[0]),
             const TextSpan(
               text: "*",
               style: TextStyle(
-                color: Color(0xFFDC2626), // Red asterisk
+                color: AppColors.danger, // Red asterisk
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -541,7 +566,7 @@ class _AddFlashAnnouncementScreenState
       style: GoogleFonts.poppins(
         fontSize: 12.5,
         fontWeight: FontWeight.w600,
-        color: _isDarkMode ? Colors.white : const Color(0xFF0F172A),
+        color: AppColors.primary,
       ),
     );
   }
@@ -569,10 +594,10 @@ class _AddFlashAnnouncementScreenState
               _isDarkMode ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
         ),
       ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(
-          color: Color(0xFF0284C7),
+      focusedBorder: const OutlineInputBorder(
+        borderRadius: BorderRadius.all(Radius.circular(8)),
+        borderSide: BorderSide(
+          color: AppColors.primary,
           width: 1.5,
         ),
       ),

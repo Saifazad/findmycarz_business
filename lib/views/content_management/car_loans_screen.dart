@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
+import '../../core/theme/app_colors.dart';
 import '../widgets/crm_drawer.dart';
 import '../widgets/custom_back_button.dart';
 import '../widgets/admin_profile_avatar.dart';
@@ -39,6 +41,24 @@ class _CarLoansScreenState extends State<CarLoansScreen> {
 
   final TextEditingController _searchController = TextEditingController();
 
+  late final PagingController<int, CarLoanContentItem> _pagingController =
+      PagingController(
+    getNextPageKey: (state) {
+      if (state.keys == null || state.keys!.isEmpty) return 1;
+      final lastPage = state.pages?.last;
+      if (lastPage == null || lastPage.length < _entriesPerPage) return null;
+      return (state.keys!.last) + 1;
+    },
+    fetchPage: (pageKey) async {
+      final allFiltered = _filteredList;
+      final startIndex = (pageKey - 1) * _entriesPerPage;
+      if (startIndex >= allFiltered.length) return [];
+      final endIndex =
+          (startIndex + _entriesPerPage).clamp(0, allFiltered.length);
+      return allFiltered.sublist(startIndex, endIndex);
+    },
+  );
+
   final List<CarLoanContentItem> _loanContents = [
     CarLoanContentItem(
       id: "LOAN-001",
@@ -46,7 +66,8 @@ class _CarLoansScreenState extends State<CarLoansScreen> {
       category: "Used Car Loan",
       publishedDate: "08 Dec, 2025",
       isActive: true,
-      description: "Quick finance for pre-owned car purchase with low interest rates.",
+      description:
+          "Quick finance for pre-owned car purchase with low interest rates.",
     ),
     CarLoanContentItem(
       id: "LOAN-002",
@@ -54,7 +75,8 @@ class _CarLoansScreenState extends State<CarLoansScreen> {
       category: "New Car Loan",
       publishedDate: "08 Dec, 2025",
       isActive: true,
-      description: "Up to 100% on-road funding for brand new cars from top banks.",
+      description:
+          "Up to 100% on-road funding for brand new cars from top banks.",
     ),
     CarLoanContentItem(
       id: "LOAN-003",
@@ -62,7 +84,8 @@ class _CarLoansScreenState extends State<CarLoansScreen> {
       category: "Used Car Loan",
       publishedDate: "08 Dec, 2025",
       isActive: true,
-      description: "Balance transfer your existing car loan and get extra top-up cash.",
+      description:
+          "Balance transfer your existing car loan and get extra top-up cash.",
     ),
     CarLoanContentItem(
       id: "LOAN-004",
@@ -70,12 +93,14 @@ class _CarLoansScreenState extends State<CarLoansScreen> {
       category: "Used Car Loan",
       publishedDate: "08 Dec, 2025",
       isActive: true,
-      description: "Unlock cash against your fully paid car with quick refinance approval.",
+      description:
+          "Unlock cash against your fully paid car with quick refinance approval.",
     ),
   ];
 
   @override
   void dispose() {
+    _pagingController.dispose();
     _searchController.dispose();
     super.dispose();
   }
@@ -114,6 +139,7 @@ class _CarLoansScreenState extends State<CarLoansScreen> {
       setState(() {
         _loanContents.insert(0, newItem);
       });
+      _pagingController.refresh();
     }
   }
 
@@ -212,6 +238,7 @@ class _CarLoansScreenState extends State<CarLoansScreen> {
                       setState(() {
                         _loanContents.removeWhere((l) => l.id == item.id);
                       });
+                      _pagingController.refresh();
                       Navigator.pop(ctx);
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
@@ -241,11 +268,10 @@ class _CarLoansScreenState extends State<CarLoansScreen> {
   @override
   Widget build(BuildContext context) {
     final filtered = _filteredList;
-    final displayedList = filtered.take(_entriesPerPage).toList();
 
     return Scaffold(
       backgroundColor:
-          _isDarkMode ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+          _isDarkMode ? const Color(0xFF0F172A) : AppColors.background,
       drawer: const CrmDrawer(),
       appBar: AppBar(
         backgroundColor: _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
@@ -261,7 +287,8 @@ class _CarLoansScreenState extends State<CarLoansScreen> {
         ),
         actions: [
           IconButton(
-            tooltip: _isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode",
+            tooltip:
+                _isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode",
             icon: Icon(
               _isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_outlined,
               color: _isDarkMode
@@ -286,330 +313,389 @@ class _CarLoansScreenState extends State<CarLoansScreen> {
           const SizedBox(width: 14),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 1. Heading & "+ Add New Loan" Button Row
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: Text(
-                    "Manage Car Loans",
-                    style: GoogleFonts.poppins(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color:
-                          _isDarkMode ? Colors.white : const Color(0xFF0F172A),
+                // 1. Search TextField (Full Width)
+                TextField(
+                  controller: _searchController,
+                  onChanged: (val) {
+                    setState(() {
+                      _searchQuery = val;
+                    });
+                    _pagingController.refresh();
+                  },
+                  style: GoogleFonts.poppins(
+                    fontSize: 13,
+                    color: _isDarkMode ? Colors.white : Colors.black87,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: "Search...",
+                    hintStyle: GoogleFonts.poppins(
+                      fontSize: 13,
+                      color: const Color(0xFF94A3B8),
                     ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed: _openAddLoanScreen,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1E6FD9),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 9),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                    prefixIcon: Icon(
+                      Icons.search,
+                      size: 20,
+                      color: _isDarkMode
+                          ? Colors.grey.shade400
+                          : const Color(0xFF003366),
                     ),
-                    elevation: 0,
-                  ),
-                  child: Text(
-                    "+ Add New Loan",
-                    style: GoogleFonts.poppins(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // 3. Subheading: "All Car Loan Contents"
-            Text(
-              "All Car Loan Contents",
-              style: GoogleFonts.poppins(
-                fontSize: 13.5,
-                fontWeight: FontWeight.bold,
-                color: _isDarkMode ? Colors.grey.shade300 : const Color(0xFF1E293B),
-              ),
-            ),
-            const SizedBox(height: 10),
-
-            // 4. Search TextField (Full Width)
-            Container(
-              height: 42,
-              decoration: BoxDecoration(
-                color: _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: _isDarkMode
-                      ? const Color(0xFF334155)
-                      : const Color(0xFFCBD5E1),
-                ),
-              ),
-              child: TextField(
-                controller: _searchController,
-                onChanged: (val) {
-                  setState(() {
-                    _searchQuery = val;
-                  });
-                },
-                style: GoogleFonts.poppins(
-                  fontSize: 13,
-                  color: _isDarkMode ? Colors.white : Colors.black87,
-                ),
-                decoration: InputDecoration(
-                  hintText: "Search...",
-                  hintStyle: GoogleFonts.poppins(
-                    fontSize: 12.5,
-                    color: _isDarkMode
-                        ? Colors.white38
-                        : Colors.grey.shade400,
-                  ),
-                  prefixIcon: Icon(
-                    Icons.search,
-                    size: 18,
-                    color: _isDarkMode
-                        ? Colors.white54
-                        : Colors.grey.shade500,
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 10),
-                  border: InputBorder.none,
-                ),
-              ),
-            ),
-            const SizedBox(height: 14),
-
-            // 5. Loan Content Cards List
-            if (displayedList.isEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 40),
-                child: Center(
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.directions_car_outlined,
-                        size: 44,
-                        color: _isDarkMode
-                            ? Colors.grey.shade600
-                            : Colors.grey.shade400,
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        "No Car Loan Contents Found",
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: _isDarkMode
-                              ? Colors.grey.shade400
-                              : Colors.grey.shade600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              )
-            else
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: displayedList.length,
-                itemBuilder: (ctx, index) {
-                  final item = displayedList[index];
-
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color:
-                          _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
+                    suffixIcon: _searchController.text.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear, size: 18),
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() {
+                                _searchQuery = "";
+                              });
+                              _pagingController.refresh();
+                            },
+                          )
+                        : null,
+                    filled: true,
+                    fillColor: _isDarkMode
+                        ? const Color(0xFF1E293B)
+                        : const Color(0xFFF8FAFC),
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 10),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(
                         color: _isDarkMode
                             ? const Color(0xFF334155)
                             : const Color(0xFFE2E8F0),
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black
-                              .withValues(alpha: _isDarkMode ? 0.2 : 0.03),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Row 1: Badges Row (#S.N. + Category Badge on Left, Active Badge on Right)
-                        Row(
-                          children: [
-                            // #S.N. Badge
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: _isDarkMode
-                                    ? const Color(0xFF334155)
-                                    : const Color(0xFFF1F5F9),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                "#${index + 1}",
-                                style: GoogleFonts.poppins(
-                                  fontSize: 10.5,
-                                  fontWeight: FontWeight.bold,
-                                  color: _isDarkMode
-                                      ? Colors.white70
-                                      : const Color(0xFF334155),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(
+                        color: _isDarkMode
+                            ? const Color(0xFF334155)
+                            : const Color(0xFFE2E8F0),
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(
+                        color: _isDarkMode
+                            ? const Color(0xFF00A3FF)
+                            : const Color(0xFF003366),
+                        width: 1.5,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
 
-                            // Category Badge (e.g. "Used Car Loan", "New Car Loan")
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 2.5),
-                              decoration: BoxDecoration(
-                                color: _isDarkMode
-                                    ? const Color(0xFF134E4A)
-                                    : const Color(0xFFCCFBF1),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                item.category,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 10.5,
-                                  fontWeight: FontWeight.bold,
-                                  color: _isDarkMode
-                                      ? const Color(0xFF5EEAD4)
-                                      : const Color(0xFF0F766E),
-                                ),
-                              ),
-                            ),
-                            const Spacer(),
-
-                            // Active / Inactive Badge
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 2.5),
-                              decoration: BoxDecoration(
-                                color: item.isActive
-                                    ? const Color(0xFF0F766E)
-                                    : const Color(0xFFDC2626),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                item.isActive ? "Active" : "Inactive",
-                                style: GoogleFonts.poppins(
-                                  fontSize: 10.5,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ],
+                // 2. Count & Compact "+ Add New" Button Row
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        filtered.isEmpty
+                            ? "No Car Loans"
+                            : filtered.length == 1
+                                ? "1 Car Loan"
+                                : "${filtered.length} Car Loans",
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: _isDarkMode ? Colors.white : AppColors.text,
                         ),
-                        const SizedBox(height: 10),
-
-                        // Title
-                        Text(
-                          item.title,
-                          style: GoogleFonts.poppins(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: _isDarkMode
-                                ? Colors.white
-                                : const Color(0xFF0F172A),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    SizedBox(
+                      height: 38,
+                      child: ElevatedButton.icon(
+                        onPressed: _openAddLoanScreen,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                        const SizedBox(height: 10),
-
-                        // Divider
-                        Divider(
-                          height: 1,
-                          thickness: 1,
-                          color: _isDarkMode
-                              ? const Color(0xFF334155)
-                              : const Color(0xFFF1F5F9),
+                        icon: const Icon(Icons.add,
+                            size: 16, color: Colors.white),
+                        label: Text(
+                          "Add New",
+                          style: GoogleFonts.poppins(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
                         ),
-                        const SizedBox(height: 8),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
 
-                        // Row 3: Published Date (Left) + Edit & Delete Icons (Right)
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              "Published ${item.publishedDate}",
-                              style: GoogleFonts.poppins(
-                                fontSize: 11,
-                                color: _isDarkMode
-                                    ? Colors.grey.shade400
-                                    : const Color(0xFF64748B),
-                              ),
-                            ),
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                InkWell(
-                                  onTap: () async {
-                                    final updated = await Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            EditCarLoanScreen(loanItem: item),
-                                      ),
-                                    );
-                                    if (updated == true) {
-                                      setState(() {});
-                                    }
-                                  },
-                                  borderRadius: BorderRadius.circular(4),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(4),
-                                    child: Icon(
-                                      Icons.edit_outlined,
-                                      size: 18,
+          // 5. Loan Content Cards List
+          Expanded(
+            child: PagingListener<int, CarLoanContentItem>(
+              controller: _pagingController,
+              builder: (context, state, fetchNextPage) => RefreshIndicator(
+                color: AppColors.primary,
+                onRefresh: () => Future.sync(() => _pagingController.refresh()),
+                child: CustomScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  slivers: [
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+                      sliver: PagedSliverList<int, CarLoanContentItem>(
+                        state: state,
+                        fetchNextPage: fetchNextPage,
+                        builderDelegate:
+                            PagedChildBuilderDelegate<CarLoanContentItem>(
+                          itemBuilder: (ctx, item, index) =>
+                              _buildLoanCard(item, index),
+                          noItemsFoundIndicatorBuilder: (ctx) => Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 40),
+                            child: Center(
+                              child: Column(
+                                children: [
+                                  Icon(
+                                    Icons.directions_car_outlined,
+                                    size: 44,
+                                    color: _isDarkMode
+                                        ? Colors.grey.shade600
+                                        : Colors.grey.shade400,
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    "No Car Loan Contents Found",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
                                       color: _isDarkMode
                                           ? Colors.grey.shade400
-                                          : const Color(0xFF64748B),
+                                          : Colors.grey.shade600,
                                     ),
                                   ),
-                                ),
-                                const SizedBox(width: 10),
-                                InkWell(
-                                  onTap: () => _deleteLoanContent(item),
-                                  borderRadius: BorderRadius.circular(4),
-                                  child: const Padding(
-                                    padding: EdgeInsets.all(4),
-                                    child: Icon(
-                                      Icons.delete_outline,
-                                      size: 18,
-                                      color: Color(0xFFDC2626),
-                                    ),
-                                  ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ],
+                          ),
+                          firstPageProgressIndicatorBuilder: (ctx) =>
+                              const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 30),
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ),
+                          newPageProgressIndicatorBuilder: (ctx) =>
+                              const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ),
                         ),
-                      ],
+                      ),
                     ),
-                  );
-                },
+                  ],
+                ),
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-            const SizedBox(height: 16),
-          ],
+  Widget _buildLoanCard(CarLoanContentItem item, int index) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color:
+              _isDarkMode ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: _isDarkMode ? 0.2 : 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Row 1: Badges Row (#S.N. + Category Badge on Left, Active Badge on Right)
+          Row(
+            children: [
+              // #S.N. Badge
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: _isDarkMode
+                      ? const Color(0xFF334155)
+                      : const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  "#${index + 1}",
+                  style: GoogleFonts.poppins(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.bold,
+                    color: _isDarkMode ? Colors.white70 : AppColors.text,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+
+              // Category Badge (e.g. "Used Car Loan", "New Car Loan")
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
+                decoration: BoxDecoration(
+                  color: item.category.toLowerCase().contains("new")
+                      ? AppColors.chipNewCarLoanBg
+                      : AppColors.chipUsedCarLoanBg,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  item.category,
+                  style: GoogleFonts.poppins(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.bold,
+                    color: item.category.toLowerCase().contains("new")
+                        ? AppColors.chipNewCarLoanText
+                        : AppColors.chipUsedCarLoanText,
+                  ),
+                ),
+              ),
+              const Spacer(),
+
+              // Active / Inactive Badge
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
+                decoration: BoxDecoration(
+                  color: item.isActive
+                      ? AppColors.chipActiveBg
+                      : AppColors.chipInactiveBg,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  item.isActive ? "Active" : "Inactive",
+                  style: GoogleFonts.poppins(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.bold,
+                    color: item.isActive
+                        ? AppColors.chipActiveText
+                        : AppColors.chipInactiveText,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+
+          // Title
+          Text(
+            item.title,
+            style: GoogleFonts.poppins(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: _isDarkMode ? Colors.white : const Color(0xFF0F172A),
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          // Divider
+          Divider(
+            height: 1,
+            thickness: 1,
+            color:
+                _isDarkMode ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
+          ),
+          const SizedBox(height: 8),
+
+          // Row 3: Published Date (Left) + Edit & Delete Icons (Right)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "Published ${item.publishedDate}",
+                style: GoogleFonts.poppins(
+                  fontSize: 11,
+                  color: _isDarkMode
+                      ? Colors.grey.shade400
+                      : const Color(0xFF64748B),
+                ),
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  InkWell(
+                    onTap: () async {
+                      final updated = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              EditCarLoanScreen(loanItem: item),
+                        ),
+                      );
+                      if (updated == true) {
+                        setState(() {});
+                        _pagingController.refresh();
+                      }
+                    },
+                    borderRadius: BorderRadius.circular(4),
+                    child: Padding(
+                      padding: const EdgeInsets.all(4),
+                      child: Icon(
+                        Icons.edit_outlined,
+                        size: 18,
+                        color: _isDarkMode
+                            ? Colors.grey.shade400
+                            : const Color(0xFF64748B),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  InkWell(
+                    onTap: () => _deleteLoanContent(item),
+                    borderRadius: BorderRadius.circular(4),
+                    child: const Padding(
+                      padding: EdgeInsets.all(4),
+                      child: Icon(
+                        Icons.delete_outline,
+                        size: 18,
+                        color: Color(0xFFDC2626),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

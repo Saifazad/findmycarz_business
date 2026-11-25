@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
+import '../../core/theme/app_colors.dart';
 import '../widgets/crm_drawer.dart';
 import '../widgets/custom_back_button.dart';
 import '../widgets/admin_profile_avatar.dart';
@@ -33,9 +35,28 @@ class UsersScreen extends StatefulWidget {
 
 class _UsersScreenState extends State<UsersScreen> {
   bool _isDarkMode = false;
+  final int _entriesPerPage = 10;
   String _searchQuery = "";
 
   final TextEditingController _searchController = TextEditingController();
+
+  late final PagingController<int, RegisteredUser> _pagingController =
+      PagingController(
+    getNextPageKey: (state) {
+      if (state.keys == null || state.keys!.isEmpty) return 1;
+      final lastPage = state.pages?.last;
+      if (lastPage == null || lastPage.length < _entriesPerPage) return null;
+      return (state.keys!.last) + 1;
+    },
+    fetchPage: (pageKey) async {
+      final allFiltered = _filteredUsers;
+      final startIndex = (pageKey - 1) * _entriesPerPage;
+      if (startIndex >= allFiltered.length) return [];
+      final endIndex =
+          (startIndex + _entriesPerPage).clamp(0, allFiltered.length);
+      return allFiltered.sublist(startIndex, endIndex);
+    },
+  );
 
   final List<RegisteredUser> _users = [
     RegisteredUser(
@@ -87,6 +108,7 @@ class _UsersScreenState extends State<UsersScreen> {
 
   @override
   void dispose() {
+    _pagingController.dispose();
     _searchController.dispose();
     super.dispose();
   }
@@ -196,6 +218,7 @@ class _UsersScreenState extends State<UsersScreen> {
                       setState(() {
                         _users.removeWhere((u) => u.id == user.id);
                       });
+                      _pagingController.refresh();
                       Navigator.pop(ctx);
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
@@ -246,7 +269,8 @@ class _UsersScreenState extends State<UsersScreen> {
                     style: GoogleFonts.poppins(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: _isDarkMode ? Colors.white : const Color(0xFF0F172A),
+                      color:
+                          _isDarkMode ? Colors.white : const Color(0xFF0F172A),
                     ),
                   ),
                   IconButton(
@@ -303,7 +327,9 @@ class _UsersScreenState extends State<UsersScreen> {
               label,
               style: GoogleFonts.poppins(
                 fontSize: 12,
-                color: _isDarkMode ? Colors.grey.shade400 : const Color(0xFF64748B),
+                color: _isDarkMode
+                    ? Colors.grey.shade400
+                    : const Color(0xFF64748B),
               ),
             ),
           ),
@@ -324,9 +350,6 @@ class _UsersScreenState extends State<UsersScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final filtered = _filteredUsers;
-    final displayedUsers = filtered;
-
     return Scaffold(
       backgroundColor:
           _isDarkMode ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
@@ -336,7 +359,7 @@ class _UsersScreenState extends State<UsersScreen> {
         elevation: 0.5,
         leading: CustomBackButton(isDarkMode: _isDarkMode),
         title: Text(
-          "Users Management",
+          "Users",
           style: GoogleFonts.poppins(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -345,7 +368,8 @@ class _UsersScreenState extends State<UsersScreen> {
         ),
         actions: [
           IconButton(
-            tooltip: _isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode",
+            tooltip:
+                _isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode",
             icon: Icon(
               _isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_outlined,
               color: _isDarkMode
@@ -370,50 +394,15 @@ class _UsersScreenState extends State<UsersScreen> {
           const SizedBox(width: 14),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 1. Heading Row: Circular (<) button + "Registered Users"
-            Row(
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                InkWell(
-                  onTap: () => Navigator.maybePop(context),
-                  borderRadius: BorderRadius.circular(20),
-                  child: Container(
-                    width: 34,
-                    height: 34,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: _isDarkMode
-                          ? const Color(0xFF1E293B)
-                          : Colors.white,
-                      border: Border.all(
-                        color: _isDarkMode
-                            ? const Color(0xFF334155)
-                            : const Color(0xFFE2E8F0),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(
-                              alpha: _isDarkMode ? 0.2 : 0.03),
-                          blurRadius: 4,
-                          offset: const Offset(0, 1),
-                        ),
-                      ],
-                    ),
-                    alignment: Alignment.center,
-                    child: Icon(
-                      Icons.chevron_left,
-                      size: 20,
-                      color: _isDarkMode
-                          ? Colors.white
-                          : const Color(0xFF334155),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
+                // 1. Heading: "Registered Users"
                 Text(
                   "Registered Users",
                   style: GoogleFonts.poppins(
@@ -422,382 +411,439 @@ class _UsersScreenState extends State<UsersScreen> {
                     color: _isDarkMode ? Colors.white : const Color(0xFF0F172A),
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 14),
+                const SizedBox(height: 14),
 
-            // 2. Search TextField (Full Width)
-            Container(
-              height: 42,
-              decoration: BoxDecoration(
-                color: _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: _isDarkMode
-                      ? const Color(0xFF334155)
-                      : const Color(0xFFCBD5E1),
-                ),
-              ),
-              child: TextField(
-                controller: _searchController,
-                onChanged: (val) {
-                  setState(() {
-                    _searchQuery = val;
-                  });
-                },
-                style: GoogleFonts.poppins(
-                  fontSize: 13,
-                  color: _isDarkMode ? Colors.white : Colors.black87,
-                ),
-                decoration: InputDecoration(
-                  hintText: "Search registered users...",
-                  hintStyle: GoogleFonts.poppins(
-                    fontSize: 12.5,
-                    color: _isDarkMode
-                        ? Colors.white38
-                        : Colors.grey.shade400,
+                // 2. Search TextField (Full Width)
+                TextField(
+                  controller: _searchController,
+                  onChanged: (val) {
+                    setState(() {
+                      _searchQuery = val;
+                    });
+                    _pagingController.refresh();
+                  },
+                  style: GoogleFonts.poppins(
+                    fontSize: 13,
+                    color: _isDarkMode ? Colors.white : Colors.black87,
                   ),
-                  prefixIcon: Icon(
-                    Icons.search,
-                    size: 18,
-                    color: _isDarkMode
-                        ? Colors.white54
-                        : Colors.grey.shade500,
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 10),
-                  border: InputBorder.none,
-                ),
-              ),
-            ),
-            const SizedBox(height: 14),
-
-            // 3. Registered Users Cards List (without checkboxes)
-            if (displayedUsers.isEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 40),
-                child: Center(
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.groups_outlined,
-                        size: 44,
-                        color: _isDarkMode
-                            ? Colors.grey.shade600
-                            : Colors.grey.shade400,
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        "No Registered Users Found",
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: _isDarkMode
-                              ? Colors.grey.shade400
-                              : Colors.grey.shade600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              )
-            else
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: displayedUsers.length,
-                itemBuilder: (ctx, index) {
-                  final user = displayedUsers[index];
-                  final sn = index + 1;
-
-                  // Generate user initials for avatar
-                  final nameWords = user.name.trim().split(RegExp(r'\s+'));
-                  final String initials;
-                  if (nameWords.isEmpty || user.name.trim().isEmpty) {
-                    initials = "U";
-                  } else if (nameWords.length == 1) {
-                    initials = nameWords[0].length >= 2
-                        ? nameWords[0].substring(0, 2).toUpperCase()
-                        : nameWords[0].toUpperCase();
-                  } else {
-                    initials = (nameWords[0][0] + nameWords[1][0]).toUpperCase();
-                  }
-
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color:
-                          _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
+                  decoration: InputDecoration(
+                    hintText: "Search registered users...",
+                    hintStyle: GoogleFonts.poppins(
+                      fontSize: 13,
+                      color: const Color(0xFF94A3B8),
+                    ),
+                    prefixIcon: Icon(
+                      Icons.search,
+                      size: 20,
+                      color: _isDarkMode
+                          ? Colors.grey.shade400
+                          : const Color(0xFF003366),
+                    ),
+                    suffixIcon: _searchController.text.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear, size: 18),
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() {
+                                _searchQuery = "";
+                              });
+                              _pagingController.refresh();
+                            },
+                          )
+                        : null,
+                    filled: true,
+                    fillColor: _isDarkMode
+                        ? const Color(0xFF1E293B)
+                        : const Color(0xFFF8FAFC),
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 10),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(
                         color: _isDarkMode
                             ? const Color(0xFF334155)
                             : const Color(0xFFE2E8F0),
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black
-                              .withValues(alpha: _isDarkMode ? 0.2 : 0.03),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Row 1: Avatar + (Name & City & Joined) + Status Badge
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            // Circular Avatar with S.N. Badge
-                            Stack(
-                              clipBehavior: Clip.none,
-                              children: [
-                                Container(
-                                  width: 42,
-                                  height: 42,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(
+                        color: _isDarkMode
+                            ? const Color(0xFF334155)
+                            : const Color(0xFFE2E8F0),
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(
+                        color: _isDarkMode
+                            ? const Color(0xFF00A3FF)
+                            : const Color(0xFF003366),
+                        width: 1.5,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // 3. Registered Users Cards List (without checkboxes)
+          Expanded(
+            child: PagingListener<int, RegisteredUser>(
+              controller: _pagingController,
+              builder: (context, state, fetchNextPage) => RefreshIndicator(
+                color: AppColors.primary,
+                onRefresh: () => Future.sync(() => _pagingController.refresh()),
+                child: CustomScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  slivers: [
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+                      sliver: PagedSliverList<int, RegisteredUser>(
+                        state: state,
+                        fetchNextPage: fetchNextPage,
+                        builderDelegate:
+                            PagedChildBuilderDelegate<RegisteredUser>(
+                          itemBuilder: (ctx, user, index) =>
+                              _buildUserCard(user, index),
+                          noItemsFoundIndicatorBuilder: (ctx) => Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 40),
+                            child: Center(
+                              child: Column(
+                                children: [
+                                  Icon(
+                                    Icons.groups_outlined,
+                                    size: 44,
                                     color: _isDarkMode
-                                        ? const Color(0xFF0F2B48)
-                                        : const Color(0xFFEFF6FF),
-                                    border: Border.all(
-                                      color: _isDarkMode
-                                          ? const Color(0xFF1D4ED8)
-                                          : const Color(0xFFBFDBFE),
-                                      width: 1.2,
-                                    ),
+                                        ? Colors.grey.shade600
+                                        : Colors.grey.shade400,
                                   ),
-                                  alignment: Alignment.center,
-                                  child: Text(
-                                    initials,
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    "No Registered Users Found",
                                     style: GoogleFonts.poppins(
-                                      fontSize: 13.5,
-                                      fontWeight: FontWeight.bold,
-                                      color: const Color(0xFF00A3FF),
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: _isDarkMode
+                                          ? Colors.grey.shade400
+                                          : Colors.grey.shade600,
                                     ),
-                                  ),
-                                ),
-                                Positioned(
-                                  top: -4,
-                                  left: -4,
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 5, vertical: 1),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF0F172A),
-                                      borderRadius: BorderRadius.circular(10),
-                                      border: Border.all(
-                                        color: _isDarkMode
-                                            ? const Color(0xFF1E293B)
-                                            : Colors.white,
-                                        width: 1.2,
-                                      ),
-                                    ),
-                                    child: Text(
-                                      "#$sn",
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 9,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(width: 12),
-
-                            // User Name, City Chip & Joined Date
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  InkWell(
-                                    onTap: () => _showUserDetails(user),
-                                    child: Text(
-                                      user.name,
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 14.5,
-                                        fontWeight: FontWeight.bold,
-                                        color: _isDarkMode
-                                            ? Colors.white
-                                            : const Color(0xFF0F172A),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 3),
-                                  Row(
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 7, vertical: 1.5),
-                                        decoration: BoxDecoration(
-                                          color: _isDarkMode
-                                              ? const Color(0xFF0F172A)
-                                              : const Color(0xFFEFF6FF),
-                                          borderRadius:
-                                              BorderRadius.circular(4),
-                                          border: Border.all(
-                                            color: _isDarkMode
-                                                ? const Color(0xFF334155)
-                                                : const Color(0xFFDBEAFE),
-                                          ),
-                                        ),
-                                        child: Text(
-                                          user.city,
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 10.5,
-                                            fontWeight: FontWeight.w600,
-                                            color: const Color(0xFF2563EB),
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        "Joined ${user.registrationDate}",
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 11,
-                                          color: _isDarkMode
-                                              ? Colors.grey.shade400
-                                              : const Color(0xFF64748B),
-                                        ),
-                                      ),
-                                    ],
                                   ),
                                 ],
                               ),
                             ),
-
-                            // Status Badge
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 9, vertical: 3.5),
-                              decoration: BoxDecoration(
-                                color: user.status == "Active"
-                                    ? const Color(0xFF0F766E)
-                                    : const Color(0xFFDC2626),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                user.status,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 10.5,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
+                          ),
+                          firstPageProgressIndicatorBuilder: (ctx) =>
+                              const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 30),
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                color: AppColors.primary,
                               ),
                             ),
-                          ],
+                          ),
+                          newPageProgressIndicatorBuilder: (ctx) =>
+                              const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ),
                         ),
-                        const SizedBox(height: 12),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-                        // Divider
-                        Divider(
-                          height: 1,
-                          thickness: 1,
+  Widget _buildUserCard(RegisteredUser user, int index) {
+    final sn = index + 1;
+
+    // Generate user initials for avatar
+    final nameWords = user.name.trim().split(RegExp(r'\s+'));
+    final String initials;
+    if (nameWords.isEmpty || user.name.trim().isEmpty) {
+      initials = "U";
+    } else if (nameWords.length == 1) {
+      initials = nameWords[0].length >= 2
+          ? nameWords[0].substring(0, 2).toUpperCase()
+          : nameWords[0].toUpperCase();
+    } else {
+      initials = (nameWords[0][0] + nameWords[1][0]).toUpperCase();
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color:
+              _isDarkMode ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: _isDarkMode ? 0.2 : 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Row 1: Avatar + (Name & City & Joined) + Status Badge
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Circular Avatar with S.N. Badge
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    width: 42,
+                    height: 42,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: _isDarkMode
+                          ? const Color(0xFF0F2B48)
+                          : const Color(0xFFEFF6FF),
+                      border: Border.all(
+                        color: _isDarkMode
+                            ? const Color(0xFF1D4ED8)
+                            : const Color(0xFFBFDBFE),
+                        width: 1.2,
+                      ),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      initials,
+                      style: GoogleFonts.poppins(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF00A3FF),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: -4,
+                    left: -4,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 5, vertical: 1),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0F172A),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
                           color: _isDarkMode
-                              ? const Color(0xFF334155)
-                              : const Color(0xFFF1F5F9),
+                              ? const Color(0xFF1E293B)
+                              : Colors.white,
+                          width: 1.2,
                         ),
-                        const SizedBox(height: 10),
+                      ),
+                      child: Text(
+                        "#$sn",
+                        style: GoogleFonts.poppins(
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(width: 12),
 
-                        // Row 2: Phone & Email with Icons + Delete Button
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  // Phone Row
-                                  Row(
-                                    children: [
-                                      Icon(
-                                        Icons.phone_outlined,
-                                        size: 14,
-                                        color: _isDarkMode
-                                            ? const Color(0xFF60A5FA)
-                                            : const Color(0xFF0284C7),
-                                      ),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        user.phone,
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w500,
-                                          color: _isDarkMode
-                                              ? Colors.white70
-                                              : const Color(0xFF334155),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 4),
-                                  // Email Row
-                                  Row(
-                                    children: [
-                                      Icon(
-                                        Icons.mail_outline_rounded,
-                                        size: 14,
-                                        color: _isDarkMode
-                                            ? Colors.grey.shade400
-                                            : const Color(0xFF64748B),
-                                      ),
-                                      const SizedBox(width: 6),
-                                      Expanded(
-                                        child: Text(
-                                          user.email,
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 11.5,
-                                            color: _isDarkMode
-                                                ? Colors.grey.shade400
-                                                : const Color(0xFF64748B),
-                                          ),
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
+              // User Name, City Chip & Joined Date
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    InkWell(
+                      onTap: () => _showUserDetails(user),
+                      child: Text(
+                        user.name,
+                        style: GoogleFonts.poppins(
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.bold,
+                          color: _isDarkMode
+                              ? Colors.white
+                              : const Color(0xFF0F172A),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 7, vertical: 1.5),
+                          decoration: BoxDecoration(
+                            color: _isDarkMode
+                                ? const Color(0xFF0F172A)
+                                : const Color(0xFFEFF6FF),
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(
+                              color: _isDarkMode
+                                  ? const Color(0xFF334155)
+                                  : const Color(0xFFDBEAFE),
                             ),
-
-                            // Delete Action Button
-                            InkWell(
-                              onTap: () => _deleteUser(user),
-                              borderRadius: BorderRadius.circular(8),
-                              child: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: _isDarkMode
-                                      ? const Color(0xFF3E1D24)
-                                      : const Color(0xFFFEF2F2),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: _isDarkMode
-                                        ? const Color(0xFF7F1D1D)
-                                        : const Color(0xFFFEE2E2),
-                                  ),
-                                ),
-                                child: const Icon(
-                                  Icons.delete_outline_rounded,
-                                  size: 18,
-                                  color: Color(0xFFDC2626),
-                                ),
-                              ),
+                          ),
+                          child: Text(
+                            user.city,
+                            style: GoogleFonts.poppins(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF2563EB),
                             ),
-                          ],
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          "Joined ${user.registrationDate}",
+                          style: GoogleFonts.poppins(
+                            fontSize: 11,
+                            color: _isDarkMode
+                                ? Colors.grey.shade400
+                                : const Color(0xFF64748B),
+                          ),
                         ),
                       ],
                     ),
-                  );
-                },
+                  ],
+                ),
               ),
 
-            const SizedBox(height: 16),
-          ],
-        ),
+              // Status Badge
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
+                decoration: BoxDecoration(
+                  color: user.status == "Active"
+                      ? const Color(0xFF0F766E)
+                      : const Color(0xFFDC2626),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  user.status,
+                  style: GoogleFonts.poppins(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // Divider
+          Divider(
+            height: 1,
+            thickness: 1,
+            color:
+                _isDarkMode ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
+          ),
+          const SizedBox(height: 10),
+
+          // Row 2: Phone & Email with Icons + Delete Button
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Phone Row
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.phone_outlined,
+                          size: 14,
+                          color: _isDarkMode
+                              ? const Color(0xFF60A5FA)
+                              : const Color(0xFF0284C7),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          user.phone,
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: _isDarkMode
+                                ? Colors.white70
+                                : const Color(0xFF334155),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    // Email Row
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.mail_outline_rounded,
+                          size: 14,
+                          color: _isDarkMode
+                              ? Colors.grey.shade400
+                              : const Color(0xFF64748B),
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            user.email,
+                            style: GoogleFonts.poppins(
+                              fontSize: 11.5,
+                              color: _isDarkMode
+                                  ? Colors.grey.shade400
+                                  : const Color(0xFF64748B),
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              // Delete Action Button
+              InkWell(
+                onTap: () => _deleteUser(user),
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: _isDarkMode
+                        ? const Color(0xFF3E1D24)
+                        : const Color(0xFFFEF2F2),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: _isDarkMode
+                          ? const Color(0xFF7F1D1D)
+                          : const Color(0xFFFEE2E2),
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.delete_outline_rounded,
+                    size: 18,
+                    color: Color(0xFFDC2626),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

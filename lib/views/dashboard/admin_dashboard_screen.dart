@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../viewmodels/admin_dashboard_viewmodel.dart';
+import '../../viewmodels/theme_viewmodel.dart';
 import '../widgets/crm_drawer.dart';
 import '../widgets/admin_profile_avatar.dart';
 import '../widgets/stat_metric_card.dart';
@@ -24,7 +25,7 @@ class AdminDashboardScreen extends StatefulWidget {
 }
 
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
-  bool _isDarkMode = false;
+  bool get _isDarkMode => context.read<ThemeViewModel>().isDarkMode;
   String _selectedTimeFilter = "All Time (Overall)";
   final List<String> _timeFilterOptions = [
     "All Time (Overall)",
@@ -267,6 +268,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    context.watch<ThemeViewModel>();
     final dashVM = context.watch<AdminDashboardViewModel>();
     final stats = dashVM.data;
     final currentDate = DateFormat('EEEE, d MMM y').format(DateTime.now());
@@ -300,9 +302,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               color: _isDarkMode ? const Color(0xFFFBBF24) : Colors.black87,
             ),
             onPressed: () {
-              setState(() {
-                _isDarkMode = !_isDarkMode;
-              });
+              context.read<ThemeViewModel>().toggleTheme();
             },
           ),
           IconButton(

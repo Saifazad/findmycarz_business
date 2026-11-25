@@ -141,13 +141,42 @@ class _OutwardPayoutScreenState extends State<OutwardPayoutScreen> {
                       controller: _searchController,
                       decoration: InputDecoration(
                         hintText: "Customer, Phone, Lead ID...",
-                        hintStyle: GoogleFonts.poppins(fontSize: 12, color: Colors.grey),
-                        prefixIcon: const Icon(Icons.search, size: 18),
-                        isDense: true,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        hintStyle: GoogleFonts.poppins(
+                          fontSize: 13,
+                          color: const Color(0xFF94A3B8),
+                        ),
+                        prefixIcon: const Icon(
+                          Icons.search,
+                          size: 20,
+                          color: Color(0xFF003366),
+                        ),
+                        suffixIcon: _searchController.text.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(Icons.clear, size: 18),
+                                onPressed: () {
+                                  _searchController.clear();
+                                  payoutVM.setSearchQuery("");
+                                },
+                              )
+                            : null,
+                        filled: true,
+                        fillColor: const Color(0xFFF8FAFC),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 10),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
-                          borderSide: BorderSide(color: Colors.grey.shade300),
+                          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF003366),
+                            width: 1.5,
+                          ),
                         ),
                       ),
                       onChanged: (val) => payoutVM.setSearchQuery(val),

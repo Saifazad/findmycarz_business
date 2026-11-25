@@ -1052,7 +1052,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
                 ),
                 label: Text(
                   _currentStep < 6
-                      ? "Next Step (${_currentStep + 2}/7)"
+                      ? "Next Step (${_currentStep + 1}/7)"
                       : (_isEditMode ? "Update Vehicle" : "Save Vehicle"),
                   style: GoogleFonts.poppins(
                     fontSize: 13,

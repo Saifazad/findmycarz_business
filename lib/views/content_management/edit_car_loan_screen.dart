@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../core/theme/app_colors.dart';
 import '../widgets/custom_back_button.dart';
 import '../widgets/admin_profile_avatar.dart';
 import 'car_loans_screen.dart';
@@ -97,7 +98,7 @@ class _EditCarLoanScreenState extends State<EditCarLoanScreen> {
             ),
           ],
         ),
-        backgroundColor: const Color(0xFF0284C7),
+        backgroundColor: AppColors.primary,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         duration: const Duration(seconds: 2),
@@ -143,7 +144,7 @@ class _EditCarLoanScreenState extends State<EditCarLoanScreen> {
 
     return Scaffold(
       backgroundColor:
-          isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+          isDark ? const Color(0xFF0F172A) : AppColors.background,
       appBar: AppBar(
         backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
         elevation: 0.5,
@@ -175,18 +176,15 @@ class _EditCarLoanScreenState extends State<EditCarLoanScreen> {
                 padding: const EdgeInsets.fromLTRB(14, 14, 14, 0),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: isDark
-                          ? const Color(0xFF334155)
-                          : const Color(0xFFE2E8F0),
-                      width: 1.2,
+                    gradient: const LinearGradient(
+                      colors: [AppColors.primary, AppColors.primaryDark],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
+                    borderRadius: BorderRadius.circular(10),
                     boxShadow: [
                       BoxShadow(
-                        color:
-                            Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
+                        color: AppColors.primary.withValues(alpha: 0.25),
                         blurRadius: 6,
                         offset: const Offset(0, 2),
                       ),
@@ -194,7 +192,7 @@ class _EditCarLoanScreenState extends State<EditCarLoanScreen> {
                   ),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 5),
+                        horizontal: 16, vertical: 10),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -203,21 +201,17 @@ class _EditCarLoanScreenState extends State<EditCarLoanScreen> {
                           style: GoogleFonts.poppins(
                             fontSize: 15,
                             fontWeight: FontWeight.bold,
-                            color: isDark
-                                ? Colors.white
-                                : const Color(0xFF0F172A),
+                            color: Colors.white,
                           ),
                         ),
                         OutlinedButton(
                           onPressed: () => Navigator.pop(context),
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: isDark
-                                ? Colors.white70
-                                : const Color(0xFF475569),
-                            side: BorderSide(
-                              color: isDark
-                                  ? const Color(0xFF334155)
-                                  : const Color(0xFFCBD5E1),
+                            backgroundColor: Colors.white,
+                            foregroundColor: AppColors.primary,
+                            side: const BorderSide(
+                              color: AppColors.primary,
+                              width: 1.5,
                             ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(6),
@@ -229,7 +223,8 @@ class _EditCarLoanScreenState extends State<EditCarLoanScreen> {
                             "Back to List",
                             style: GoogleFonts.poppins(
                               fontSize: 12,
-                              fontWeight: FontWeight.w500,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primary,
                             ),
                           ),
                         ),
@@ -273,51 +268,64 @@ class _EditCarLoanScreenState extends State<EditCarLoanScreen> {
                             // 1. Title *
                             _buildLabel("Title", isRequired: true, isDark: isDark),
                             const SizedBox(height: 6),
-                            Container(
-                              decoration: BoxDecoration(
+                            TextField(
+                              controller: _titleCtrl,
+                              style: GoogleFonts.poppins(
+                                fontSize: 13,
                                 color: isDark
+                                    ? Colors.white
+                                    : const Color(0xFF0F172A),
+                              ),
+                              decoration: InputDecoration(
+                                hintText: "Enter title...",
+                                hintStyle: GoogleFonts.poppins(
+                                  fontSize: 12.5,
+                                  color: isDark
+                                      ? Colors.white38
+                                      : Colors.grey.shade400,
+                                ),
+                                prefixIcon: Container(
+                                  width: 36,
+                                  alignment: Alignment.center,
+                                  child: Text(
+                                    "H",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14.5,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.inputIcon,
+                                    ),
+                                  ),
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 12),
+                                filled: true,
+                                fillColor: isDark
                                     ? const Color(0xFF0F172A)
                                     : Colors.white,
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                  color: isDark
-                                      ? const Color(0xFF334155)
-                                      : const Color(0xFFCBD5E1),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: BorderSide(
+                                    color: isDark
+                                        ? const Color(0xFF334155)
+                                        : const Color(0xFFCBD5E1),
+                                  ),
                                 ),
-                              ),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    width: 36,
-                                    height: 42,
-                                    alignment: Alignment.center,
-                                    child: Text(
-                                      "H",
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 14.5,
-                                        fontWeight: FontWeight.bold,
-                                        color: const Color(0xFF0284C7),
-                                      ),
-                                    ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: BorderSide(
+                                    color: isDark
+                                        ? const Color(0xFF334155)
+                                        : const Color(0xFFCBD5E1),
                                   ),
-                                  Expanded(
-                                    child: TextField(
-                                      controller: _titleCtrl,
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 13,
-                                        color: isDark
-                                            ? Colors.white
-                                            : const Color(0xFF0F172A),
-                                      ),
-                                      decoration: const InputDecoration(
-                                        hintText: "Enter title...",
-                                        border: InputBorder.none,
-                                        contentPadding: EdgeInsets.symmetric(
-                                            horizontal: 10, vertical: 12),
-                                      ),
-                                    ),
+                                ),
+                                focusedBorder: const OutlineInputBorder(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(8)),
+                                  borderSide: BorderSide(
+                                    color: AppColors.primary,
+                                    width: 1.5,
                                   ),
-                                ],
+                                ),
                               ),
                             ),
                             const SizedBox(height: 14),
@@ -349,7 +357,7 @@ class _EditCarLoanScreenState extends State<EditCarLoanScreen> {
                                       : Colors.white,
                                   icon: const Icon(
                                     Icons.keyboard_arrow_down_rounded,
-                                    color: Color(0xFF64748B),
+                                    color: AppColors.inputIcon,
                                     size: 20,
                                   ),
                                   style: GoogleFonts.poppins(
@@ -416,8 +424,7 @@ class _EditCarLoanScreenState extends State<EditCarLoanScreen> {
                           style: GoogleFonts.poppins(
                             fontSize: 15,
                             fontWeight: FontWeight.bold,
-                            color:
-                                isDark ? Colors.white : const Color(0xFF0F172A),
+                            color: AppColors.primary,
                           ),
                         ),
                       ),
@@ -476,7 +483,7 @@ class _EditCarLoanScreenState extends State<EditCarLoanScreen> {
                                       style: GoogleFonts.poppins(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w500,
-                                        color: const Color(0xFF0F766E),
+                                        color: AppColors.primary,
                                       ),
                                     ),
                                   ),
@@ -517,7 +524,7 @@ class _EditCarLoanScreenState extends State<EditCarLoanScreen> {
                                             horizontal: 12, vertical: 6),
                                         decoration: BoxDecoration(
                                           color: isSel
-                                              ? const Color(0xFF0F766E)
+                                              ? AppColors.primary
                                               : Colors.transparent,
                                           borderRadius:
                                               BorderRadius.circular(6),
@@ -587,7 +594,7 @@ class _EditCarLoanScreenState extends State<EditCarLoanScreen> {
                                       style: GoogleFonts.poppins(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w500,
-                                        color: const Color(0xFF0F766E),
+                                        color: AppColors.primary,
                                       ),
                                     ),
                                   ),
@@ -628,7 +635,7 @@ class _EditCarLoanScreenState extends State<EditCarLoanScreen> {
                                             horizontal: 12, vertical: 6),
                                         decoration: BoxDecoration(
                                           color: isSel
-                                              ? const Color(0xFF0F766E)
+                                              ? AppColors.primary
                                               : Colors.transparent,
                                           borderRadius:
                                               BorderRadius.circular(6),
@@ -692,7 +699,7 @@ class _EditCarLoanScreenState extends State<EditCarLoanScreen> {
                                       style: GoogleFonts.poppins(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w500,
-                                        color: const Color(0xFF0F766E),
+                                        color: AppColors.primary,
                                       ),
                                     ),
                                   ),
@@ -711,7 +718,7 @@ class _EditCarLoanScreenState extends State<EditCarLoanScreen> {
                 ElevatedButton(
                   onPressed: _saveContent,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0284C7),
+                    backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
                     elevation: 0,
                     padding: const EdgeInsets.symmetric(vertical: 14),
@@ -749,7 +756,7 @@ class _EditCarLoanScreenState extends State<EditCarLoanScreen> {
           style: GoogleFonts.poppins(
             fontSize: 12.5,
             fontWeight: FontWeight.w600,
-            color: isDark ? Colors.white : const Color(0xFF0F172A),
+            color: AppColors.primary,
           ),
         ),
         if (isRequired) ...[

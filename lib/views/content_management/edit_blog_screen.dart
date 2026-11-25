@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../core/theme/app_colors.dart';
 import '../widgets/custom_back_button.dart';
 import '../widgets/admin_profile_avatar.dart';
 import 'blogs_screen.dart';
@@ -186,7 +187,7 @@ class _EditBlogScreenState extends State<EditBlogScreen> {
       },
       child: Scaffold(
         backgroundColor:
-            isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+            isDark ? const Color(0xFF0F172A) : AppColors.background,
         appBar: AppBar(
           backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
           elevation: 0.5,
@@ -241,13 +242,13 @@ class _EditBlogScreenState extends State<EditBlogScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // ================= 1. HEADER BANNER (PURPLE GRADIENT) =================
+                    // ================= 1. HEADER BANNER (ROYAL BLUE GRADIENT) =================
                     Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 18, vertical: 18),
                       decoration: const BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [Color(0xFF4F46E5), Color(0xFF6366F1)],
+                          colors: [AppColors.primary, AppColors.primaryDark],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
@@ -309,28 +310,28 @@ class _EditBlogScreenState extends State<EditBlogScreen> {
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
                                       color: isPassed
-                                          ? const Color(0xFF22C55E)
+                                          ? AppColors.success
                                           : (isCurrent
-                                              ? const Color(0xFF6366F1)
+                                              ? AppColors.primary
                                               : (isDark
                                                   ? const Color(0xFF1E293B)
-                                                  : const Color(0xFFF1F5F9))),
+                                                  : AppColors.stepInactiveBg)),
                                       border: Border.all(
                                         color: isPassed
-                                            ? const Color(0xFF22C55E)
+                                            ? AppColors.success
                                             : (isCurrent
-                                                ? const Color(0xFF4F46E5)
+                                                ? AppColors.primary
                                                 : (isDark
                                                     ? const Color(0xFF334155)
-                                                    : const Color(0xFFCBD5E1))),
+                                                    : AppColors.stepInactiveBorder)),
                                         width: isCurrent ? 2 : 1,
                                       ),
                                       boxShadow: isCurrent
                                           ? [
                                               BoxShadow(
-                                                color: const Color(0xFF6366F1)
-                                                    .withValues(alpha: 0.35),
-                                                blurRadius: 8,
+                                                color: AppColors.primary
+                                                    .withValues(alpha: 0.25),
+                                                blurRadius: 6,
                                                 offset: const Offset(0, 2),
                                               ),
                                             ]
@@ -351,8 +352,8 @@ class _EditBlogScreenState extends State<EditBlogScreen> {
                                                 color: (isCurrent || isPassed)
                                                     ? Colors.white
                                                     : (isDark
-                                                        ? const Color(0xFF94A3B8)
-                                                        : const Color(0xFF64748B)),
+                                                        ? Colors.grey.shade400
+                                                        : AppColors.stepInactiveText),
                                               ),
                                             ),
                                     ),
@@ -363,15 +364,17 @@ class _EditBlogScreenState extends State<EditBlogScreen> {
                                     style: GoogleFonts.poppins(
                                       fontSize: 11,
                                       fontWeight: isCurrent
-                                          ? FontWeight.bold
+                                          ? FontWeight.w600
                                           : FontWeight.w500,
-                                      color: isPassed
-                                          ? const Color(0xFF22C55E)
-                                          : (isCurrent
-                                              ? const Color(0xFF22C55E)
+                                      color: isCurrent
+                                          ? (isDark
+                                              ? Colors.white
+                                              : AppColors.primary)
+                                          : (isPassed
+                                              ? AppColors.success
                                               : (isDark
-                                                  ? const Color(0xFF94A3B8)
-                                                  : const Color(0xFF64748B))),
+                                                  ? Colors.grey.shade400
+                                                  : AppColors.stepInactiveText)),
                                     ),
                                   ),
                                 ],
@@ -422,10 +425,10 @@ class _EditBlogScreenState extends State<EditBlogScreen> {
                                 onPressed: _previousStep,
                                 style: OutlinedButton.styleFrom(
                                   side: const BorderSide(
-                                    color: Color(0xFF22C55E),
-                                    width: 1.2,
+                                    color: AppColors.primary,
+                                    width: 1.5,
                                   ),
-                                  foregroundColor: const Color(0xFF22C55E),
+                                  foregroundColor: AppColors.primary,
                                   backgroundColor: isDark
                                       ? const Color(0xFF1E293B)
                                       : Colors.white,
@@ -440,7 +443,7 @@ class _EditBlogScreenState extends State<EditBlogScreen> {
                                   style: GoogleFonts.poppins(
                                     fontSize: 13.5,
                                     fontWeight: FontWeight.w600,
-                                    color: const Color(0xFF22C55E),
+                                    color: AppColors.primary,
                                   ),
                                 ),
                               ),
@@ -453,7 +456,7 @@ class _EditBlogScreenState extends State<EditBlogScreen> {
                             child: ElevatedButton(
                               onPressed: _nextStep,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF00A3FF),
+                                backgroundColor: AppColors.primary,
                                 foregroundColor: Colors.white,
                                 elevation: 0,
                                 padding:
@@ -1035,14 +1038,14 @@ class _EditBlogScreenState extends State<EditBlogScreen> {
                                 style: GoogleFonts.poppins(fontSize: 12.5)),
                           ],
                         ),
-                        backgroundColor: const Color(0xFF4F46E5),
+                        backgroundColor: AppColors.primary,
                         duration: const Duration(seconds: 2),
                       ),
                     );
                   },
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFF6366F1),
-                    side: const BorderSide(color: Color(0xFF818CF8), width: 1.2),
+                    foregroundColor: AppColors.primary,
+                    side: const BorderSide(color: AppColors.primary, width: 1.2),
                     padding: const EdgeInsets.symmetric(
                         horizontal: 14, vertical: 8),
                     shape: RoundedRectangleBorder(
@@ -1054,7 +1057,7 @@ class _EditBlogScreenState extends State<EditBlogScreen> {
                     style: GoogleFonts.poppins(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w600,
-                      color: const Color(0xFF6366F1),
+                      color: AppColors.primary,
                     ),
                   ),
                 ),
@@ -1100,7 +1103,7 @@ class _EditBlogScreenState extends State<EditBlogScreen> {
                       size: 16,
                       color: isDark
                           ? Colors.white60
-                          : const Color(0xFF64748B),
+                          : AppColors.inputIcon,
                     ),
                     const SizedBox(width: 10),
                     Text.rich(
@@ -1142,7 +1145,7 @@ class _EditBlogScreenState extends State<EditBlogScreen> {
                           style: GoogleFonts.poppins(
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
-                            color: const Color(0xFF10B981),
+                            color: AppColors.primary,
                           ),
                         ),
                       ),
@@ -1181,7 +1184,7 @@ class _EditBlogScreenState extends State<EditBlogScreen> {
                                 horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
                               color: isSel
-                                  ? const Color(0xFF10B981)
+                                  ? AppColors.primary
                                   : Colors.transparent,
                               borderRadius: BorderRadius.circular(6),
                             ),
@@ -1215,7 +1218,7 @@ class _EditBlogScreenState extends State<EditBlogScreen> {
                       size: 16,
                       color: isDark
                           ? Colors.white60
-                          : const Color(0xFF64748B),
+                          : AppColors.inputIcon,
                     ),
                     const SizedBox(width: 10),
                     Text.rich(
@@ -1257,7 +1260,7 @@ class _EditBlogScreenState extends State<EditBlogScreen> {
                           style: GoogleFonts.poppins(
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
-                            color: const Color(0xFF10B981),
+                            color: AppColors.primary,
                           ),
                         ),
                       ),
@@ -1296,7 +1299,7 @@ class _EditBlogScreenState extends State<EditBlogScreen> {
                                 horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
                               color: isSel
-                                  ? const Color(0xFF10B981)
+                                  ? AppColors.primary
                                   : Colors.transparent,
                               borderRadius: BorderRadius.circular(6),
                             ),
@@ -1330,7 +1333,7 @@ class _EditBlogScreenState extends State<EditBlogScreen> {
                       size: 16,
                       color: isDark
                           ? Colors.white60
-                          : const Color(0xFF64748B),
+                          : AppColors.inputIcon,
                     ),
                     const SizedBox(width: 10),
                     Text.rich(
@@ -1367,7 +1370,7 @@ class _EditBlogScreenState extends State<EditBlogScreen> {
                           style: GoogleFonts.poppins(
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
-                            color: const Color(0xFF10B981),
+                            color: AppColors.primary,
                           ),
                         ),
                       ),
@@ -1487,7 +1490,7 @@ class _EditBlogScreenState extends State<EditBlogScreen> {
                 child: ElevatedButton(
                   onPressed: () => Navigator.pop(ctx),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF00A3FF),
+                    backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(6),
@@ -1510,7 +1513,7 @@ class _EditBlogScreenState extends State<EditBlogScreen> {
       style: GoogleFonts.poppins(
         fontSize: 13.5,
         fontWeight: FontWeight.bold,
-        color: const Color(0xFF10B981),
+        color: AppColors.primary,
       ),
     );
   }
@@ -1568,7 +1571,7 @@ class _EditBlogScreenState extends State<EditBlogScreen> {
               color: isDark ? Colors.white38 : Colors.grey.shade400,
             ),
             suffixIcon: suffixIcon != null
-                ? Icon(suffixIcon, size: 18, color: const Color(0xFF64748B))
+                ? Icon(suffixIcon, size: 18, color: AppColors.inputIcon)
                 : null,
             filled: true,
             fillColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
@@ -1589,7 +1592,7 @@ class _EditBlogScreenState extends State<EditBlogScreen> {
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
               borderSide: const BorderSide(
-                color: Color(0xFF00A3FF),
+                color: AppColors.primary,
                 width: 1.5,
               ),
             ),
