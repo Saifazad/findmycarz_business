@@ -103,6 +103,7 @@ class AdministratorItem {
   final String? city;
   final String? state;
   final String? createdAt;
+  final dynamic rawModularAccess;
 
   AdministratorItem({
     required this.id,
@@ -121,6 +122,7 @@ class AdministratorItem {
     this.city,
     this.state,
     this.createdAt,
+    this.rawModularAccess,
   });
 
   factory AdministratorItem.fromJson(Map<String, dynamic> json) {
@@ -145,8 +147,19 @@ class AdministratorItem {
       city: json['city']?.toString(),
       state: json['state']?.toString(),
       createdAt: json['created_at']?.toString(),
+      rawModularAccess: json['modular_access'] ?? json['modules'] ?? json['permissions'] ?? json['access'],
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is AdministratorItem &&
+          runtimeType == other.runtimeType &&
+          id == other.id;
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class AdminRoleBrief {

@@ -41,6 +41,15 @@ class DioClient {
           } catch (_) {}
           return handler.next(options);
         },
+        onError: (DioException e, handler) async {
+          if (e.response?.statusCode == 401) {
+            try {
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.remove('business_auth_token');
+            } catch (_) {}
+          }
+          return handler.next(e);
+        },
       ),
     );
 
@@ -70,6 +79,16 @@ class DioClient {
     }
   }
 
+  static dynamic _sanitizeForJson(dynamic data) {
+    if (data is Map) {
+      return data.map(
+          (key, value) => MapEntry(key.toString(), _sanitizeForJson(value)));
+    } else if (data is List) {
+      return data.map(_sanitizeForJson).toList();
+    }
+    return data;
+  }
+
   // POST Request
   Future<Response> post(
     String path, {
@@ -79,9 +98,10 @@ class DioClient {
     CancelToken? cancelToken,
   }) async {
     try {
+      final sanitizedData = _sanitizeForJson(data);
       final response = await _dio.post(
         path,
-        data: data,
+        data: sanitizedData,
         queryParameters: queryParameters,
         options: options,
         cancelToken: cancelToken,
@@ -101,9 +121,10 @@ class DioClient {
     CancelToken? cancelToken,
   }) async {
     try {
+      final sanitizedData = _sanitizeForJson(data);
       final response = await _dio.put(
         path,
-        data: data,
+        data: sanitizedData,
         queryParameters: queryParameters,
         options: options,
         cancelToken: cancelToken,
@@ -148,7 +169,8 @@ class VMDeveloperLogInterceptor extends Interceptor {
     }
     if (options.data != null) {
       try {
-        final prettyJson = const JsonEncoder.withIndent('  ').convert(options.data);
+        final prettyJson =
+            const JsonEncoder.withIndent('  ').convert(options.data);
         logBuffer.writeln("   Payload:\n$prettyJson");
       } catch (_) {
         logBuffer.writeln("   Payload: ${options.data}");
@@ -167,11 +189,13 @@ class VMDeveloperLogInterceptor extends Interceptor {
     final String requestPath =
         "${response.requestOptions.baseUrl}${response.requestOptions.path}";
     final StringBuffer logBuffer = StringBuffer();
-    logBuffer.writeln("<-- [API RESPONSE] ${response.requestOptions.method} $requestPath");
+    logBuffer.writeln(
+        "<-- [API RESPONSE] ${response.requestOptions.method} $requestPath");
     logBuffer.writeln("   Status Code: ${response.statusCode}");
     if (response.data != null) {
       try {
-        final prettyJson = const JsonEncoder.withIndent('  ').convert(response.data);
+        final prettyJson =
+            const JsonEncoder.withIndent('  ').convert(response.data);
         logBuffer.writeln("   Body:\n$prettyJson");
       } catch (_) {
         logBuffer.writeln("   Body: ${response.data}");
@@ -196,7 +220,8 @@ class VMDeveloperLogInterceptor extends Interceptor {
     logBuffer.writeln("   Message: ${err.message}");
     if (response?.data != null) {
       try {
-        final prettyJson = const JsonEncoder.withIndent('  ').convert(response?.data);
+        final prettyJson =
+            const JsonEncoder.withIndent('  ').convert(response?.data);
         logBuffer.writeln("   Error Body:\n$prettyJson");
       } catch (_) {
         logBuffer.writeln("   Error Body: ${response?.data}");

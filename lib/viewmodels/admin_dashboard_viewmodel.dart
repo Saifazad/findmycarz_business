@@ -57,23 +57,8 @@ class AdminDashboardViewModel extends ChangeNotifier {
         _data = AdminDashboardModel.fromJson(response.data);
       }
     } catch (e) {
-      // Fallback matching realistic backend dataset from API Suite
-      _data = AdminDashboardModel(
-        totalCars: 900,
-        availableCars: 601,
-        soldCars: 299,
-        ownerListedCars: 168,
-        myInventory: 900,
-        totalBrands: 43,
-        totalLeads: 69,
-        totalLogins: 5,
-        totalDisbursed: 10,
-        insuranceLeads: 11,
-        usedCarLoans: LoanCategoryStats(files: 43, inBankLogin: 1, approved: 1, disbursed: 7, totalLeads: 43, name: "Used Car Loan", colorHex: "#2563eb"),
-        newCarLoans: LoanCategoryStats(files: 3, inBankLogin: 0, approved: 0, disbursed: 0, totalLeads: 3, name: "New Car Loan", colorHex: "#059669"),
-        btTopupLoans: LoanCategoryStats(files: 14, inBankLogin: 4, approved: 0, disbursed: 0, totalLeads: 14, name: "BT & Top-Up Loan", colorHex: "#7c3aed"),
-        refinanceLoans: LoanCategoryStats(files: 4, inBankLogin: 0, approved: 0, disbursed: 2, totalLeads: 4, name: "Car Loan Refinance", colorHex: "#d97706"),
-      );
+      _errorMessage = e.toString().replaceFirst("Exception: ", "");
+      _data = AdminDashboardModel();
     } finally {
       _isLoading = false;
       notifyListeners();

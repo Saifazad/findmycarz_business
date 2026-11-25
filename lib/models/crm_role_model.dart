@@ -41,6 +41,7 @@ class CrmRoleItem {
   final int sortOrder;
   final bool isPermanent;
   final int activeUsersCount;
+  final dynamic rawModularAccess;
 
   CrmRoleItem({
     required this.id,
@@ -54,6 +55,7 @@ class CrmRoleItem {
     this.sortOrder = 0,
     this.isPermanent = false,
     this.activeUsersCount = 0,
+    this.rawModularAccess,
   });
 
   factory CrmRoleItem.fromJson(Map<String, dynamic> json) {
@@ -75,6 +77,7 @@ class CrmRoleItem {
       activeUsersCount: json['active_users_count'] is int
           ? json['active_users_count']
           : int.tryParse(json['active_users_count']?.toString() ?? '0') ?? 0,
+      rawModularAccess: json['modular_access'] ?? json['modules'] ?? json['permissions'] ?? json['access'],
     );
   }
 }

@@ -372,16 +372,17 @@ class _AdminProfileScreenState extends State<AdminProfileScreen>
                   backgroundImage: imageUrl != null && imageUrl.startsWith('http')
                       ? NetworkImage(imageUrl)
                       : null,
-                  child: imageUrl == null || !imageUrl.startsWith('http')
-                      ? Text(
-                          initial,
-                          style: GoogleFonts.poppins(
-                            fontSize: 30,
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFF003366),
-                          ),
-                        )
+                  onBackgroundImageError: imageUrl != null && imageUrl.startsWith('http')
+                      ? (_, __) {}
                       : null,
+                  child: Text(
+                    initial,
+                    style: GoogleFonts.poppins(
+                      fontSize: 30,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF003366),
+                    ),
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -452,7 +453,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen>
             child: Column(
               children: [
                 _buildInfoTile(
-                    Icons.badge_outlined, "Username", profile?.username ?? "awsdemoco"),
+                    Icons.badge_outlined, "Username", profile?.username ?? "N/A"),
                 const Divider(height: 1, indent: 56),
                 _buildInfoTile(
                     Icons.email_outlined, "Email Address", email),

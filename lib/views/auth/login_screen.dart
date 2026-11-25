@@ -14,8 +14,8 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _loginController = TextEditingController(text: 'awsdemoco');
-  final TextEditingController _passwordController = TextEditingController(text: 'admin123');
+  final TextEditingController _loginController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
   bool _obscurePassword = true;
   String _selectedRole = 'super_admin'; // 'super_admin' or 'partner'
 

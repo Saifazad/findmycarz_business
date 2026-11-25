@@ -57,7 +57,8 @@ class _OutwardPayoutScreenState extends State<OutwardPayoutScreen> {
             children: [
               // Breadcrumb tag
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: const Color(0xFFE8F5E9),
                   borderRadius: BorderRadius.circular(6),
@@ -142,27 +143,11 @@ class _OutwardPayoutScreenState extends State<OutwardPayoutScreen> {
                       decoration: InputDecoration(
                         hintText: "Customer, Phone, Lead ID...",
                         hintStyle: GoogleFonts.poppins(
-                          fontSize: 13,
-                          color: const Color(0xFF94A3B8),
-                        ),
-                        prefixIcon: const Icon(
-                          Icons.search,
-                          size: 20,
-                          color: Color(0xFF003366),
-                        ),
-                        suffixIcon: _searchController.text.isNotEmpty
-                            ? IconButton(
-                                icon: const Icon(Icons.clear, size: 18),
-                                onPressed: () {
-                                  _searchController.clear();
-                                  payoutVM.setSearchQuery("");
-                                },
-                              )
-                            : null,
-                        filled: true,
-                        fillColor: const Color(0xFFF8FAFC),
+                            fontSize: 12, color: Colors.grey),
+                        prefixIcon: const Icon(Icons.search, size: 18),
+                        isDense: true,
                         contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 10),
+                            horizontal: 12, vertical: 10),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
                           borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
@@ -185,10 +170,11 @@ class _OutwardPayoutScreenState extends State<OutwardPayoutScreen> {
 
                     // Product / Loan Type Dropdown
                     DropdownButtonFormField<String>(
-                      value: payoutVM.selectedLoanType,
+                      initialValue: payoutVM.selectedLoanType,
                       decoration: InputDecoration(
                         isDense: true,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 10),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
                           borderSide: BorderSide(color: Colors.grey.shade300),
@@ -197,7 +183,8 @@ class _OutwardPayoutScreenState extends State<OutwardPayoutScreen> {
                       items: payoutVM.loanTypes.map((type) {
                         return DropdownMenuItem(
                           value: type,
-                          child: Text(type, style: GoogleFonts.poppins(fontSize: 12)),
+                          child: Text(type,
+                              style: GoogleFonts.poppins(fontSize: 12)),
                         );
                       }).toList(),
                       onChanged: (val) {
@@ -208,10 +195,11 @@ class _OutwardPayoutScreenState extends State<OutwardPayoutScreen> {
 
                     // Bank Dropdown
                     DropdownButtonFormField<String>(
-                      value: payoutVM.selectedBank,
+                      initialValue: payoutVM.selectedBank,
                       decoration: InputDecoration(
                         isDense: true,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 10),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
                           borderSide: BorderSide(color: Colors.grey.shade300),
@@ -220,7 +208,8 @@ class _OutwardPayoutScreenState extends State<OutwardPayoutScreen> {
                       items: payoutVM.banks.map((bank) {
                         return DropdownMenuItem(
                           value: bank,
-                          child: Text(bank, style: GoogleFonts.poppins(fontSize: 12)),
+                          child: Text(bank,
+                              style: GoogleFonts.poppins(fontSize: 12)),
                         );
                       }).toList(),
                       onChanged: (val) {
@@ -238,11 +227,15 @@ class _OutwardPayoutScreenState extends State<OutwardPayoutScreen> {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF0284C7),
                               foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10)),
                               padding: const EdgeInsets.symmetric(vertical: 10),
                             ),
-                            icon: const Icon(Icons.filter_alt_outlined, size: 16),
-                            label: Text("Filter", style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600)),
+                            icon:
+                                const Icon(Icons.filter_alt_outlined, size: 16),
+                            label: Text("Filter",
+                                style: GoogleFonts.poppins(
+                                    fontSize: 12, fontWeight: FontWeight.w600)),
                           ),
                         ),
                         const SizedBox(width: 10),
@@ -254,8 +247,10 @@ class _OutwardPayoutScreenState extends State<OutwardPayoutScreen> {
                           style: OutlinedButton.styleFrom(
                             foregroundColor: Colors.grey.shade700,
                             side: BorderSide(color: Colors.grey.shade300),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10)),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 14, vertical: 10),
                           ),
                           child: const Icon(Icons.refresh, size: 16),
                         ),
@@ -270,7 +265,8 @@ class _OutwardPayoutScreenState extends State<OutwardPayoutScreen> {
               if (summary.items.isEmpty)
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(14),
@@ -278,7 +274,8 @@ class _OutwardPayoutScreenState extends State<OutwardPayoutScreen> {
                   ),
                   child: Column(
                     children: [
-                      Icon(Icons.inbox_outlined, size: 48, color: Colors.grey.shade300),
+                      Icon(Icons.inbox_outlined,
+                          size: 48, color: Colors.grey.shade300),
                       const SizedBox(height: 12),
                       Text(
                         "No Outward Payout Records",
@@ -321,16 +318,31 @@ class _OutwardPayoutScreenState extends State<OutwardPayoutScreen> {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(item.customerName, style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 13)),
-                              Text("Dealer: ${item.dealerName}", style: GoogleFonts.poppins(fontSize: 11, color: Colors.grey.shade600)),
-                              Text(item.loanType, style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF003366))),
+                              Text(item.customerName,
+                                  style: GoogleFonts.poppins(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13)),
+                              Text("Dealer: ${item.dealerName}",
+                                  style: GoogleFonts.poppins(
+                                      fontSize: 11,
+                                      color: Colors.grey.shade600)),
+                              Text(item.loanType,
+                                  style: GoogleFonts.poppins(
+                                      fontSize: 11,
+                                      color: const Color(0xFF003366))),
                             ],
                           ),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              Text("₹${item.payoutAmount.toStringAsFixed(2)}", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 14, color: const Color(0xFF16A34A))),
-                              Text(item.status, style: GoogleFonts.poppins(fontSize: 11, color: Colors.orange)),
+                              Text("₹${item.payoutAmount.toStringAsFixed(2)}",
+                                  style: GoogleFonts.poppins(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                      color: const Color(0xFF16A34A))),
+                              Text(item.status,
+                                  style: GoogleFonts.poppins(
+                                      fontSize: 11, color: Colors.orange)),
                             ],
                           ),
                         ],
