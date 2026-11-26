@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import '../../core/theme/app_colors.dart';
 import '../../models/crm_lead_model.dart';
 import '../widgets/custom_back_button.dart';
 import '../widgets/admin_profile_avatar.dart';
@@ -298,7 +299,7 @@ class _CreateLoanLeadScreenState extends State<CreateLoanLeadScreen> {
       },
       child: Scaffold(
         backgroundColor:
-            isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+            isDark ? const Color(0xFF0F172A) : AppColors.background,
         appBar: AppBar(
           backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
           elevation: 0.5,
@@ -338,7 +339,7 @@ class _CreateLoanLeadScreenState extends State<CreateLoanLeadScreen> {
                   border: Border.all(
                     color: isDark
                         ? const Color(0xFF334155)
-                        : const Color(0xFFE2E8F0),
+                        : AppColors.cardBorder,
                     width: 1.2,
                   ),
                   boxShadow: [
@@ -352,13 +353,13 @@ class _CreateLoanLeadScreenState extends State<CreateLoanLeadScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // ================= 1. HEADER BANNER (IMAGE 2 COLOR PALETTE) =================
+                    // ================= 1. HEADER BANNER (NAVY GRADIENT) =================
                     Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 20, vertical: 18),
                       decoration: const BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [Color(0xFF4F46E5), Color(0xFF6366F1)],
+                          colors: [AppColors.navyStart, AppColors.navyEnd],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
@@ -383,16 +384,16 @@ class _CreateLoanLeadScreenState extends State<CreateLoanLeadScreen> {
                             style: GoogleFonts.poppins(
                               fontSize: 12.5,
                               fontWeight: FontWeight.w400,
-                              color: Colors.white.withValues(alpha: 0.85),
+                              color: Colors.white.withValues(alpha: 0.8),
                             ),
                           ),
                         ],
                       ),
                     ),
 
-                    // ================= 2. STEPPER ROW (IMAGE 1 DESIGN) =================
+                    // ================= 2. STEPPER ROW =================
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 18, 16, 14),
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: List.generate(4, (index) {
@@ -407,39 +408,39 @@ class _CreateLoanLeadScreenState extends State<CreateLoanLeadScreen> {
                             borderRadius: BorderRadius.circular(24),
                             child: Padding(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 4),
+                                  horizontal: 8, vertical: 2),
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   AnimatedContainer(
                                     duration: const Duration(milliseconds: 250),
-                                    width: 38,
-                                    height: 38,
+                                    width: 30,
+                                    height: 30,
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
                                       color: isPassed
-                                          ? const Color(0xFF22C55E)
+                                          ? AppColors.success
                                           : (isCurrent
-                                              ? const Color(0xFF6366F1)
+                                              ? AppColors.navyStart
                                               : (isDark
                                                   ? const Color(0xFF1E293B)
-                                                  : const Color(0xFFF1F5F9))),
+                                                  : AppColors.iconSurface)),
                                       border: Border.all(
                                         color: isPassed
-                                            ? const Color(0xFF22C55E)
+                                            ? AppColors.success
                                             : (isCurrent
-                                                ? const Color(0xFF4F46E5)
+                                                ? AppColors.navyStart
                                                 : (isDark
                                                     ? const Color(0xFF334155)
-                                                    : const Color(0xFFCBD5E1))),
+                                                    : AppColors.stepInactiveBorder)),
                                         width: isCurrent ? 2 : 1,
                                       ),
                                       boxShadow: isCurrent
                                           ? [
                                               BoxShadow(
-                                                color: const Color(0xFF6366F1)
-                                                    .withValues(alpha: 0.35),
-                                                blurRadius: 8,
+                                                color: AppColors.navyStart
+                                                    .withValues(alpha: 0.25),
+                                                blurRadius: 6,
                                                 offset: const Offset(0, 2),
                                               ),
                                             ]
@@ -449,38 +450,40 @@ class _CreateLoanLeadScreenState extends State<CreateLoanLeadScreen> {
                                       child: isPassed
                                           ? const Icon(
                                               Icons.check_rounded,
-                                              size: 18,
+                                              size: 15,
                                               color: Colors.white,
                                             )
                                           : Text(
                                               "${index + 1}",
                                               style: GoogleFonts.poppins(
-                                                fontSize: 13,
+                                                fontSize: 11.5,
                                                 fontWeight: FontWeight.bold,
                                                 color: (isCurrent || isPassed)
                                                     ? Colors.white
                                                     : (isDark
                                                         ? const Color(0xFF94A3B8)
-                                                        : const Color(0xFF64748B)),
+                                                        : AppColors.stepInactiveText),
                                               ),
                                             ),
                                     ),
                                   ),
-                                  const SizedBox(height: 6),
+                                  const SizedBox(height: 4),
                                   Text(
                                     "Step ${index + 1}",
                                     style: GoogleFonts.poppins(
-                                      fontSize: 11,
+                                      fontSize: 10,
                                       fontWeight: isCurrent
                                           ? FontWeight.bold
                                           : FontWeight.w500,
                                       color: isPassed
-                                          ? const Color(0xFF22C55E)
+                                          ? AppColors.success
                                           : (isCurrent
-                                              ? const Color(0xFF22C55E)
+                                              ? (isDark
+                                                  ? Colors.white
+                                                  : AppColors.navyStart)
                                               : (isDark
                                                   ? const Color(0xFF94A3B8)
-                                                  : const Color(0xFF64748B))),
+                                                  : AppColors.stepInactiveText)),
                                     ),
                                   ),
                                 ],
@@ -529,11 +532,15 @@ class _CreateLoanLeadScreenState extends State<CreateLoanLeadScreen> {
                             child: OutlinedButton(
                               onPressed: _previousStep,
                               style: OutlinedButton.styleFrom(
-                                side: const BorderSide(
-                                  color: Color(0xFF22C55E),
-                                  width: 1.2,
+                                side: BorderSide(
+                                  color: isDark
+                                      ? const Color(0xFF60A5FA)
+                                      : AppColors.navyStart,
+                                  width: 1.5,
                                 ),
-                                foregroundColor: const Color(0xFF22C55E),
+                                foregroundColor: isDark
+                                    ? const Color(0xFF60A5FA)
+                                    : AppColors.navyStart,
                                 backgroundColor: isDark
                                     ? const Color(0xFF1E293B)
                                     : Colors.white,
@@ -548,7 +555,9 @@ class _CreateLoanLeadScreenState extends State<CreateLoanLeadScreen> {
                                 style: GoogleFonts.poppins(
                                   fontSize: 13.5,
                                   fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF22C55E),
+                                  color: isDark
+                                      ? const Color(0xFF60A5FA)
+                                      : AppColors.navyStart,
                                 ),
                               ),
                             ),
@@ -561,8 +570,14 @@ class _CreateLoanLeadScreenState extends State<CreateLoanLeadScreen> {
                               onPressed:
                                   _currentStep < 3 ? _nextStep : _submitForm,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF00A3FF),
+                                backgroundColor: AppColors.navyStart,
                                 foregroundColor: Colors.white,
+                                disabledBackgroundColor: isDark
+                                    ? const Color(0xFF334155)
+                                    : AppColors.iconSurface,
+                                disabledForegroundColor: isDark
+                                    ? const Color(0xFF94A3B8)
+                                    : AppColors.neutralMuted,
                                 elevation: 0,
                                 padding:
                                     const EdgeInsets.symmetric(vertical: 13),
@@ -894,7 +909,9 @@ class _CreateLoanLeadScreenState extends State<CreateLoanLeadScreen> {
                     style: GoogleFonts.poppins(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w600,
-                      color: const Color(0xFF10B981),
+                      color: isDark
+                          ? const Color(0xFF60A5FA)
+                          : AppColors.navyStart,
                     ),
                   ),
                 ),
@@ -936,17 +953,17 @@ class _CreateLoanLeadScreenState extends State<CreateLoanLeadScreen> {
                               height: 78,
                               decoration: BoxDecoration(
                                 color: isUploaded
-                                    ? const Color(0xFF22C55E).withValues(alpha: 0.1)
+                                    ? AppColors.success.withValues(alpha: 0.1)
                                     : (isDark
                                         ? const Color(0xFF0B1120)
-                                        : const Color(0xFFF8FAFC)),
+                                        : AppColors.formFieldBg),
                                 borderRadius: BorderRadius.circular(10),
                                 border: Border.all(
                                   color: isUploaded
-                                      ? const Color(0xFF22C55E)
+                                      ? AppColors.success
                                       : (isDark
                                           ? const Color(0xFF334155)
-                                          : const Color(0xFFCBD5E1)),
+                                          : AppColors.cardBorder),
                                   width: 1.2,
                                 ),
                               ),
@@ -959,10 +976,10 @@ class _CreateLoanLeadScreenState extends State<CreateLoanLeadScreen> {
                                         : Icons.cloud_upload_rounded,
                                     size: 24,
                                     color: isUploaded
-                                        ? const Color(0xFF22C55E)
+                                        ? AppColors.success
                                         : (isDark
-                                            ? const Color(0xFF818CF8)
-                                            : const Color(0xFF6366F1)),
+                                            ? const Color(0xFF60A5FA)
+                                            : AppColors.navyStart),
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
@@ -971,10 +988,10 @@ class _CreateLoanLeadScreenState extends State<CreateLoanLeadScreen> {
                                       fontSize: 11,
                                       fontWeight: FontWeight.w500,
                                       color: isUploaded
-                                          ? const Color(0xFF22C55E)
+                                          ? AppColors.success
                                           : (isDark
                                               ? const Color(0xFF94A3B8)
-                                              : const Color(0xFF64748B)),
+                                              : AppColors.neutralMuted),
                                     ),
                                   ),
                                 ],
@@ -1032,17 +1049,17 @@ class _CreateLoanLeadScreenState extends State<CreateLoanLeadScreen> {
                               height: 78,
                               decoration: BoxDecoration(
                                 color: isUploaded
-                                    ? const Color(0xFF22C55E).withValues(alpha: 0.1)
+                                    ? AppColors.success.withValues(alpha: 0.1)
                                     : (isDark
                                         ? const Color(0xFF0B1120)
-                                        : const Color(0xFFF8FAFC)),
+                                        : AppColors.formFieldBg),
                                 borderRadius: BorderRadius.circular(10),
                                 border: Border.all(
                                   color: isUploaded
-                                      ? const Color(0xFF22C55E)
+                                      ? AppColors.success
                                       : (isDark
                                           ? const Color(0xFF334155)
-                                          : const Color(0xFFBAE6FD)),
+                                          : AppColors.cardBorder),
                                   width: 1.2,
                                 ),
                               ),
@@ -1058,8 +1075,10 @@ class _CreateLoanLeadScreenState extends State<CreateLoanLeadScreen> {
                                               : Icons.cloud_upload_outlined,
                                           size: 26,
                                           color: isUploaded
-                                              ? const Color(0xFF22C55E)
-                                              : const Color(0xFF38BDF8),
+                                              ? AppColors.success
+                                              : (isDark
+                                                  ? const Color(0xFF60A5FA)
+                                                  : AppColors.navyStart),
                                         ),
                                         const SizedBox(height: 3),
                                         Text(
@@ -1068,8 +1087,10 @@ class _CreateLoanLeadScreenState extends State<CreateLoanLeadScreen> {
                                             fontSize: 10.5,
                                             fontWeight: FontWeight.bold,
                                             color: isUploaded
-                                                ? const Color(0xFF22C55E)
-                                                : const Color(0xFF64748B),
+                                                ? AppColors.success
+                                                : (isDark
+                                                    ? const Color(0xFF94A3B8)
+                                                    : AppColors.neutralMuted),
                                             letterSpacing: 0.5,
                                           ),
                                         ),
@@ -1091,7 +1112,7 @@ class _CreateLoanLeadScreenState extends State<CreateLoanLeadScreen> {
                                         width: 20,
                                         height: 20,
                                         decoration: const BoxDecoration(
-                                          color: Color(0xFFEF4444),
+                                          color: AppColors.paletteRed,
                                           shape: BoxShape.circle,
                                         ),
                                         child: const Icon(
@@ -1115,7 +1136,7 @@ class _CreateLoanLeadScreenState extends State<CreateLoanLeadScreen> {
                               border: Border.all(
                                 color: isDark
                                     ? const Color(0xFF334155)
-                                    : const Color(0xFFCBD5E1),
+                                    : AppColors.formFieldBorder,
                               ),
                             ),
                             child: TextField(
@@ -1131,7 +1152,7 @@ class _CreateLoanLeadScreenState extends State<CreateLoanLeadScreen> {
                                   fontSize: 11,
                                   color: isDark
                                       ? const Color(0xFF64748B)
-                                      : const Color(0xFF94A3B8),
+                                      : AppColors.formPlaceholder,
                                 ),
                                 border: InputBorder.none,
                                 contentPadding: const EdgeInsets.symmetric(
@@ -1212,14 +1233,15 @@ class _CreateLoanLeadScreenState extends State<CreateLoanLeadScreen> {
     );
   }
 
-  // Section Header matching Image 2 "INCOMING LEADS (7)" Green Color
+  // Section Header matching Add Blog Navy Color
   Widget _buildSectionHeader(String title) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Text(
       title,
       style: GoogleFonts.poppins(
         fontSize: 13.5,
         fontWeight: FontWeight.bold,
-        color: const Color(0xFF10B981), // Green matching Image 1 & Image 2
+        color: isDark ? const Color(0xFF60A5FA) : AppColors.navyStart,
       ),
     );
   }
@@ -1249,14 +1271,14 @@ class _CreateLoanLeadScreenState extends State<CreateLoanLeadScreen> {
                   fontWeight: FontWeight.w600,
                   color: isDark
                       ? const Color(0xFFE2E8F0)
-                      : const Color(0xFF334155),
+                      : AppColors.formLabel,
                 ),
               ),
               if (isRequired)
                 const TextSpan(
                   text: " *",
                   style: TextStyle(
-                    color: Color(0xFFEF4444),
+                    color: AppColors.paletteRed,
                     fontWeight: FontWeight.bold,
                     fontSize: 12,
                   ),
@@ -1279,19 +1301,19 @@ class _CreateLoanLeadScreenState extends State<CreateLoanLeadScreen> {
             hintText: hintText,
             hintStyle: GoogleFonts.poppins(
               fontSize: 12.5,
-              color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+              color: isDark ? const Color(0xFF64748B) : AppColors.formPlaceholder,
             ),
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
             filled: true,
             fillColor:
-                isDark ? const Color(0xFF0B1120) : const Color(0xFFF8FAFC),
+                isDark ? const Color(0xFF0B1120) : AppColors.formFieldBg,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: BorderSide(
                 color: isDark
                     ? const Color(0xFF334155)
-                    : const Color(0xFFCBD5E1),
+                    : AppColors.formFieldBorder,
               ),
             ),
             enabledBorder: OutlineInputBorder(
@@ -1299,27 +1321,27 @@ class _CreateLoanLeadScreenState extends State<CreateLoanLeadScreen> {
               borderSide: BorderSide(
                 color: isDark
                     ? const Color(0xFF334155)
-                    : const Color(0xFFCBD5E1),
+                    : AppColors.formFieldBorder,
               ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(
-                color: Color(0xFF00A3FF),
+              borderSide: BorderSide(
+                color: isDark ? const Color(0xFF60A5FA) : AppColors.navyStart,
                 width: 1.5,
               ),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: const BorderSide(
-                color: Color(0xFFEF4444),
+                color: AppColors.paletteRed,
                 width: 1,
               ),
             ),
             focusedErrorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: const BorderSide(
-                color: Color(0xFFEF4444),
+                color: AppColors.paletteRed,
                 width: 1.5,
               ),
             ),
@@ -1351,14 +1373,14 @@ class _CreateLoanLeadScreenState extends State<CreateLoanLeadScreen> {
                   fontWeight: FontWeight.w600,
                   color: isDark
                       ? const Color(0xFFE2E8F0)
-                      : const Color(0xFF334155),
+                      : AppColors.formLabel,
                 ),
               ),
               if (isRequired)
                 const TextSpan(
                   text: " *",
                   style: TextStyle(
-                    color: Color(0xFFEF4444),
+                    color: AppColors.paletteRed,
                     fontWeight: FontWeight.bold,
                     fontSize: 12,
                   ),
@@ -1370,11 +1392,11 @@ class _CreateLoanLeadScreenState extends State<CreateLoanLeadScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 14),
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF0B1120) : const Color(0xFFF8FAFC),
+            color: isDark ? const Color(0xFF0B1120) : AppColors.formFieldBg,
             border: Border.all(
               color: isDark
                   ? const Color(0xFF334155)
-                  : const Color(0xFFCBD5E1),
+                  : AppColors.formFieldBorder,
             ),
             borderRadius: BorderRadius.circular(8),
           ),

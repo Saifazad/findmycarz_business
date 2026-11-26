@@ -9,6 +9,32 @@ class AppColors {
   /// Deep Royal Navy - Primary Dark
   static const Color primaryDark = Color(0xFF003C8F);
 
+  /// Add Blog / Create Loan Lead Navy Gradient & Form Surfaces
+  static const Color navyStart = Color(0xFF0B4DA2);
+  static const Color navyEnd = Color(0xFF003B8E);
+  static const Color formFieldBg = Color(0xFFF5F7FB);
+  static const Color formFieldBorder = Color(0xFFD9E0EC);
+  static const Color formPlaceholder = Color(0xFF9CA3AF);
+  static const Color formLabel = Color(0xFF111827);
+
+  /// Dashboard Hero Navy Gradient & Neutral Surfaces
+  static const Color heroNavyStart = Color(0xFF0B3C8C);
+  static const Color heroNavyEnd = Color(0xFF082A66);
+  static const Color sectionHeading = Color(0xFF374151);
+  static const Color cardBorder = Color(0xFFE5E7EB);
+  static const Color iconSurface = Color(0xFFEEF2F7);
+  static const Color neutralText = Color(0xFF4B5563);
+  static const Color neutralMuted = Color(0xFF6B7280);
+  static const Color neutralBadgeBg = Color(0xFFF3F4F6);
+
+  /// Car Management & Pipeline Card Accent Palette
+  static const Color paletteBlue = Color(0xFF3B82F6);
+  static const Color paletteGreen = Color(0xFF10B981);
+  static const Color paletteOrange = Color(0xFFF97316);
+  static const Color paletteCyan = Color(0xFF06B6D4);
+  static const Color palettePurple = Color(0xFF8B5CF6);
+  static const Color paletteRed = Color(0xFFEF4444);
+
   /// Success Green
   static const Color success = Color(0xFF16A34A);
 

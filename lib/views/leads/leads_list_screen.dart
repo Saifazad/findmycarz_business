@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../core/theme/app_colors.dart';
 import '../widgets/crm_drawer.dart';
 import '../widgets/custom_back_button.dart';
 import '../widgets/admin_profile_avatar.dart';
@@ -54,7 +55,7 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text("Leads live sync completed"),
-        backgroundColor: Color(0xFF22C55E),
+        backgroundColor: AppColors.heroNavyStart,
         duration: Duration(milliseconds: 900),
       ),
     );
@@ -99,40 +100,40 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
       count: 0,
       todayCount: 0,
       icon: Icons.person_outline,
-      iconColor: const Color(0xFF6366F1),
-      iconBg: const Color(0xFFEEF2FF),
+      iconColor: AppColors.paletteBlue,
+      iconBg: AppColors.paletteBlue,
     ),
     PipelineStage(
       title: "Follow Up",
       count: 0,
       todayCount: 0,
       icon: Icons.phone_callback_outlined,
-      iconColor: const Color(0xFFF59E0B),
-      iconBg: const Color(0xFFFEF3C7),
+      iconColor: AppColors.paletteGreen,
+      iconBg: AppColors.paletteGreen,
     ),
     PipelineStage(
       title: "Pick Up",
       count: 1,
       todayCount: 0,
       icon: Icons.directions_car_outlined,
-      iconColor: const Color(0xFFEAB308),
-      iconBg: const Color(0xFFFEF9C3),
+      iconColor: AppColors.paletteOrange,
+      iconBg: AppColors.paletteOrange,
     ),
     PipelineStage(
       title: "Doc Pending",
       count: 3,
       todayCount: 0,
       icon: Icons.description_outlined,
-      iconColor: const Color(0xFFEF4444),
-      iconBg: const Color(0xFFFEE2E2),
+      iconColor: AppColors.paletteCyan,
+      iconBg: AppColors.paletteCyan,
     ),
     PipelineStage(
       title: "Doc Received",
       count: 0,
       todayCount: 0,
       icon: Icons.task_outlined,
-      iconColor: const Color(0xFF8B5CF6),
-      iconBg: const Color(0xFFF5F3FF),
+      iconColor: AppColors.palettePurple,
+      iconBg: AppColors.palettePurple,
     ),
     PipelineStage(
       title: "Sent to Bank",
@@ -140,8 +141,8 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
       todayCount: 0,
       newBadge: "+2 New",
       icon: Icons.account_balance_outlined,
-      iconColor: const Color(0xFF0EA5E9),
-      iconBg: const Color(0xFFE0F2FE),
+      iconColor: AppColors.paletteBlue,
+      iconBg: AppColors.paletteBlue,
     ),
     PipelineStage(
       title: "Login",
@@ -149,24 +150,24 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
       todayCount: 0,
       newBadge: "+1 New",
       icon: Icons.login_outlined,
-      iconColor: const Color(0xFF3B82F6),
-      iconBg: const Color(0xFFEFF6FF),
+      iconColor: AppColors.paletteCyan,
+      iconBg: AppColors.paletteCyan,
     ),
     PipelineStage(
       title: "Rejected",
       count: 3,
       todayCount: 0,
       icon: Icons.cancel_outlined,
-      iconColor: const Color(0xFFEF4444),
-      iconBg: const Color(0xFFFEE2E2),
+      iconColor: AppColors.paletteRed,
+      iconBg: AppColors.paletteRed,
     ),
     PipelineStage(
       title: "Approved",
       count: 1,
       todayCount: 0,
       icon: Icons.check_circle_outline,
-      iconColor: const Color(0xFF10B981),
-      iconBg: const Color(0xFFD1FAE5),
+      iconColor: AppColors.paletteGreen,
+      iconBg: AppColors.paletteGreen,
     ),
     PipelineStage(
       title: "Disbursed",
@@ -174,8 +175,8 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
       todayCount: 0,
       newBadge: "+2 New",
       icon: Icons.verified_outlined,
-      iconColor: const Color(0xFF059669),
-      iconBg: const Color(0xFFD1FAE5),
+      iconColor: AppColors.paletteGreen,
+      iconBg: AppColors.paletteGreen,
     ),
     PipelineStage(
       title: "RTO Process (RTO Person)",
@@ -183,80 +184,80 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
       todayCount: 0,
       newBadge: "+2 New",
       icon: Icons.commute_outlined,
-      iconColor: const Color(0xFF2563EB),
-      iconBg: const Color(0xFFDBEAFE),
+      iconColor: AppColors.paletteBlue,
+      iconBg: AppColors.paletteBlue,
     ),
     PipelineStage(
       title: "RTO Done",
       count: 11,
       todayCount: 0,
       icon: Icons.assignment_turned_in_outlined,
-      iconColor: const Color(0xFF10B981),
-      iconBg: const Color(0xFFD1FAE5),
+      iconColor: AppColors.paletteGreen,
+      iconBg: AppColors.paletteGreen,
     ),
     PipelineStage(
       title: "Payment Requested",
       count: 1,
       todayCount: 0,
       icon: Icons.payments_outlined,
-      iconColor: const Color(0xFFD97706),
-      iconBg: const Color(0xFFFEF3C7),
+      iconColor: AppColors.paletteOrange,
+      iconBg: AppColors.paletteOrange,
     ),
     PipelineStage(
       title: "Payment In Process",
       count: 1,
       todayCount: 0,
       icon: Icons.hourglass_top_outlined,
-      iconColor: const Color(0xFF0284C7),
-      iconBg: const Color(0xFFE0F2FE),
+      iconColor: AppColors.paletteCyan,
+      iconBg: AppColors.paletteCyan,
     ),
     PipelineStage(
       title: "Payment Done (Accounts)",
       count: 0,
       todayCount: 0,
       icon: Icons.price_check_outlined,
-      iconColor: const Color(0xFF10B981),
-      iconBg: const Color(0xFFD1FAE5),
+      iconColor: AppColors.paletteGreen,
+      iconBg: AppColors.paletteGreen,
     ),
     PipelineStage(
       title: "Vehicle Handover",
       count: 1,
       todayCount: 0,
       icon: Icons.key_outlined,
-      iconColor: const Color(0xFF7C3AED),
-      iconBg: const Color(0xFFEDE9FE),
+      iconColor: AppColors.palettePurple,
+      iconBg: AppColors.palettePurple,
     ),
     PipelineStage(
       title: "PDD Pending",
       count: 1,
       todayCount: 0,
       icon: Icons.pending_actions_outlined,
-      iconColor: const Color(0xFFF97316),
-      iconBg: const Color(0xFFFFEDD5),
+      iconColor: AppColors.paletteOrange,
+      iconBg: AppColors.paletteOrange,
     ),
     PipelineStage(
       title: "PDD Submitted",
       count: 2,
       todayCount: 0,
       icon: Icons.cloud_done_outlined,
-      iconColor: const Color(0xFF0284C7),
-      iconBg: const Color(0xFFE0F2FE),
+      iconColor: AppColors.paletteCyan,
+      iconBg: AppColors.paletteCyan,
     ),
     PipelineStage(
       title: "Case Completed",
       count: 1,
       todayCount: 0,
       icon: Icons.done_all_outlined,
-      iconColor: const Color(0xFF16A34A),
-      iconBg: const Color(0xFFDCFCE7),
+      iconColor: AppColors.paletteGreen,
+      iconBg: AppColors.paletteGreen,
     ),
     PipelineStage(
       title: "Case Cancellation",
       count: 3,
       todayCount: 0,
       icon: Icons.remove_circle_outline,
-      iconColor: const Color(0xFF64748B),
-      iconBg: const Color(0xFFF1F5F9),
+      iconColor: AppColors.neutralMuted,
+      iconBg: AppColors.neutralMuted,
     ),
     PipelineStage(
       title: "Case Cancelled",
@@ -264,8 +265,8 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
       todayCount: 0,
       newBadge: "+7 New",
       icon: Icons.block_outlined,
-      iconColor: const Color(0xFFDC2626),
-      iconBg: const Color(0xFFFEE2E2),
+      iconColor: AppColors.paletteRed,
+      iconBg: AppColors.paletteRed,
     ),
   ];
 
@@ -282,7 +283,7 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text("Viewing ${stage.title} (${stage.count} leads)"),
-        backgroundColor: const Color(0xFF00A3FF),
+        backgroundColor: AppColors.heroNavyStart,
         duration: const Duration(seconds: 1),
       ),
     );
@@ -297,17 +298,17 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           color: isActive
-              ? const Color(0xFF1E293B)
+              ? AppColors.heroNavyStart
               : (_isDarkMode
                   ? const Color(0xFF1E293B)
-                  : const Color(0xFFF1F5F9)),
+                  : AppColors.neutralBadgeBg),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isActive
-                ? const Color(0xFF1E293B)
+                ? AppColors.heroNavyStart
                 : (_isDarkMode
                     ? const Color(0xFF334155)
-                    : const Color(0xFFE2E8F0)),
+                    : AppColors.cardBorder),
           ),
         ),
         child: Row(
@@ -322,7 +323,7 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
                     ? Colors.white
                     : (_isDarkMode
                         ? Colors.grey.shade300
-                        : const Color(0xFF334155)),
+                        : AppColors.neutralText),
               ),
             ),
             const SizedBox(width: 6),
@@ -333,7 +334,7 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
                     ? Colors.white.withValues(alpha: 0.2)
                     : (_isDarkMode
                         ? const Color(0xFF334155)
-                        : const Color(0xFFE2E8F0)),
+                        : AppColors.cardBorder),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
@@ -345,7 +346,7 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
                       ? Colors.white
                       : (_isDarkMode
                           ? Colors.white70
-                          : const Color(0xFF475569)),
+                          : AppColors.neutralMuted),
                 ),
               ),
             ),
@@ -359,7 +360,7 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor:
-          _isDarkMode ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+          _isDarkMode ? const Color(0xFF0F172A) : AppColors.background,
       drawer: const CrmDrawer(),
       appBar: AppBar(
         backgroundColor: _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
@@ -407,7 +408,7 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
           // Fixed Top Section (Live Sync, Create Lead, and Filters)
           Container(
             color:
-                _isDarkMode ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                _isDarkMode ? const Color(0xFF0F172A) : AppColors.background,
             padding:
                 const EdgeInsets.only(left: 14, right: 14, top: 14, bottom: 8),
             child: Column(
@@ -422,30 +423,43 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
                       OutlinedButton.icon(
                         onPressed: _handleLiveSync,
                         icon: _isSyncing
-                            ? const SizedBox(
+                            ? SizedBox(
                                 width: 14,
                                 height: 14,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  color: Color(0xFF22C55E),
+                                  color: _isDarkMode
+                                      ? const Color(0xFF60A5FA)
+                                      : AppColors.heroNavyStart,
                                 ),
                               )
-                            : const Icon(Icons.sync,
-                                size: 16, color: Color(0xFF22C55E)),
+                            : Icon(
+                                Icons.sync,
+                                size: 16,
+                                color: _isDarkMode
+                                    ? const Color(0xFF60A5FA)
+                                    : AppColors.heroNavyStart,
+                              ),
                         label: Text(
                           "Live Sync",
                           style: GoogleFonts.poppins(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
-                            color: const Color(0xFF22C55E),
+                            color: _isDarkMode
+                                ? const Color(0xFF60A5FA)
+                                : AppColors.heroNavyStart,
                           ),
                         ),
                         style: OutlinedButton.styleFrom(
                           backgroundColor: _isDarkMode
                               ? const Color(0xFF1E293B)
                               : Colors.white,
-                          side: const BorderSide(
-                              color: Color(0xFF22C55E), width: 1.2),
+                          side: BorderSide(
+                            color: _isDarkMode
+                                ? const Color(0xFF60A5FA)
+                                : AppColors.heroNavyStart,
+                            width: 1.2,
+                          ),
                           elevation: 0,
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 8),
@@ -467,7 +481,7 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
                           ),
                         ),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF00A3FF),
+                          backgroundColor: AppColors.heroNavyStart,
                           elevation: 0,
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 8),
@@ -570,25 +584,27 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
                   style: GoogleFonts.poppins(
                     fontSize: 11.5,
                     fontWeight: FontWeight.bold,
-                    color: const Color(0xFF0D9488),
+                    color: _isDarkMode
+                        ? Colors.white70
+                        : AppColors.sectionHeading,
                     letterSpacing: 0.5,
                   ),
                 ),
                 const SizedBox(height: 8),
 
-                // Total New Leads Big Purple Banner
+                // Total New Leads Big Navy Banner
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [Color(0xFF4F46E5), Color(0xFF6366F1)],
+                      colors: [AppColors.heroNavyStart, AppColors.heroNavyEnd],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                     borderRadius: BorderRadius.circular(14),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF4F46E5).withValues(alpha: 0.3),
+                        color: AppColors.heroNavyStart.withValues(alpha: 0.25),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
@@ -685,36 +701,42 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
                       Expanded(
                         child: _buildIncomingSubCard(
                           title: "WEB ENQUIRY",
-                          titleColor: const Color(0xFF10B981),
+                          titleColor: _isDarkMode
+                              ? Colors.grey.shade300
+                              : AppColors.sectionHeading,
                           count: 1,
                           pillText: "+1 New",
                           todayCount: 0,
                           newCount: 1,
-                          newColor: const Color(0xFF10B981),
+                          newColor: AppColors.paletteGreen,
                         ),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: _buildIncomingSubCard(
                           title: "CALLBACK",
-                          titleColor: const Color(0xFFD97706),
+                          titleColor: _isDarkMode
+                              ? Colors.grey.shade300
+                              : AppColors.sectionHeading,
                           count: 3,
                           pillText: "+3 New",
                           todayCount: 0,
                           newCount: 3,
-                          newColor: const Color(0xFFD97706),
+                          newColor: AppColors.paletteOrange,
                         ),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: _buildIncomingSubCard(
                           title: "MANUAL",
-                          titleColor: const Color(0xFF00A3FF),
+                          titleColor: _isDarkMode
+                              ? Colors.grey.shade300
+                              : AppColors.sectionHeading,
                           count: 3,
                           pillText: "+3 New",
                           todayCount: 0,
                           newCount: 3,
-                          newColor: const Color(0xFF00A3FF),
+                          newColor: AppColors.paletteBlue,
                         ),
                       ),
                     ],
@@ -729,7 +751,7 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
                       fontWeight: FontWeight.bold,
                       color: _isDarkMode
                           ? Colors.white70
-                          : const Color(0xFF334155),
+                          : AppColors.sectionHeading,
                       letterSpacing: 0.5,
                     ),
                   ),
@@ -788,15 +810,15 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color:
-              _isDarkMode ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+              _isDarkMode ? const Color(0xFF334155) : AppColors.cardBorder,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: _isDarkMode ? 0.2 : 0.02),
-            blurRadius: 4,
+            color: Colors.black.withValues(alpha: _isDarkMode ? 0.2 : 0.03),
+            blurRadius: 6,
             offset: const Offset(0, 2),
           ),
         ],
@@ -823,16 +845,14 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
                 style: GoogleFonts.poppins(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: _isDarkMode ? Colors.white : const Color(0xFF0F172A),
+                  color: newColor,
                 ),
               ),
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
                 decoration: BoxDecoration(
-                  color: _isDarkMode
-                      ? const Color(0xFF334155)
-                      : const Color(0xFFF1F5F9),
+                  color: newColor.withValues(alpha: _isDarkMode ? 0.2 : 0.12),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
@@ -840,8 +860,7 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
                   style: GoogleFonts.poppins(
                     fontSize: 8.5,
                     fontWeight: FontWeight.w600,
-                    color:
-                        _isDarkMode ? Colors.white70 : const Color(0xFF64748B),
+                    color: newColor,
                   ),
                 ),
               ),
@@ -886,21 +905,21 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
   Widget _buildStageCard(PipelineStage stage) {
     return InkWell(
       onTap: () => _onStageTap(stage),
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
         decoration: BoxDecoration(
           color: _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color:
-                _isDarkMode ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                _isDarkMode ? const Color(0xFF334155) : AppColors.cardBorder,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: _isDarkMode ? 0.2 : 0.02),
-              blurRadius: 4,
-              offset: const Offset(0, 1),
+              color: Colors.black.withValues(alpha: _isDarkMode ? 0.2 : 0.03),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
@@ -914,13 +933,16 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
                   width: 24,
                   height: 24,
                   decoration: BoxDecoration(
-                    color: _isDarkMode
-                        ? stage.iconColor.withValues(alpha: 0.2)
-                        : stage.iconBg,
+                    color: stage.iconColor
+                        .withValues(alpha: _isDarkMode ? 0.2 : 0.12),
                     borderRadius: BorderRadius.circular(5),
                   ),
                   alignment: Alignment.center,
-                  child: Icon(stage.icon, size: 13, color: stage.iconColor),
+                  child: Icon(
+                    stage.icon,
+                    size: 13,
+                    color: stage.iconColor,
+                  ),
                 ),
                 const SizedBox(width: 6),
                 Expanded(
@@ -941,7 +963,7 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
                   style: GoogleFonts.poppins(
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
-                    color: _isDarkMode ? Colors.white : const Color(0xFF0F172A),
+                    color: stage.iconColor,
                   ),
                 ),
               ],
@@ -973,7 +995,8 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFDC2626), // Red pill
+                      color: stage.iconColor
+                          .withValues(alpha: _isDarkMode ? 0.2 : 0.12),
                       borderRadius: BorderRadius.circular(3),
                     ),
                     child: Text(
@@ -981,7 +1004,7 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
                       style: GoogleFonts.poppins(
                         fontSize: 8,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: stage.iconColor,
                       ),
                     ),
                   ),
