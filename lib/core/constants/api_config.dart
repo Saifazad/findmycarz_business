@@ -18,10 +18,15 @@ class ApiConfig {
   static const String administratorsMeta = "/administrators/meta/options";
   static const String roles = "/roles";
   static const String crmLeads = "/leads";
+  static const String insuranceLeads = "/leads/insurance";
+  static const String contactLeads = "/leads/contact";
   static const String updateLeadStatus = "/leads/update-status";
 
   // Legacy / Master Fallbacks
   static const String cars = "/cars";
+  static const String carsStats = "/cars/stats";
+  static const String carsMyInventory = "/cars/my-inventory";
+  static const String carsOwnerListed = "/cars/owner-listed";
   static const String outwardPayouts = "/payout/outward-list";
   static const String masterBrands = "/master/brands";
   static const String masterModels = "/master/models";

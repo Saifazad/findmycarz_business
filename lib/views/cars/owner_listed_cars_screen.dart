@@ -1,39 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
+import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
+import '../../models/inventory_vehicle_model.dart';
+import '../../viewmodels/inventory_viewmodel.dart';
 import '../widgets/crm_drawer.dart';
 import '../widgets/custom_back_button.dart';
 import '../widgets/admin_profile_avatar.dart';
+import '../widgets/car_image_preview_dialog.dart';
 import 'add_car_screen.dart';
-
-class OwnerListedCar {
-  final String id;
-  final String title;
-  final String yearModel;
-  final String image;
-  final String status; // "Active", "Inactive"
-  final String ownerName;
-  final String ownerPhone;
-  final String price;
-  final String kms;
-  final String location;
-  final String listedDate;
-
-  OwnerListedCar({
-    required this.id,
-    required this.title,
-    required this.yearModel,
-    required this.image,
-    required this.status,
-    required this.ownerName,
-    required this.ownerPhone,
-    required this.price,
-    required this.kms,
-    required this.location,
-    required this.listedDate,
-  });
-}
 
 class OwnerListedCarsScreen extends StatefulWidget {
   const OwnerListedCarsScreen({super.key});
@@ -57,69 +33,14 @@ class _OwnerListedCarsScreenState extends State<OwnerListedCarsScreen> {
       return (state.keys!.last) + 1;
     },
     fetchPage: (pageKey) async {
-      final allFiltered = _filteredCars;
-      final startIndex = (pageKey - 1) * _entriesPerPage;
-      if (startIndex >= allFiltered.length) return [];
-      final endIndex =
-          (startIndex + _entriesPerPage).clamp(0, allFiltered.length);
-      return allFiltered.sublist(startIndex, endIndex);
+      final vm = Provider.of<InventoryViewModel>(context, listen: false);
+      return await vm.fetchOwnerListedCarsPage(
+        pageKey: pageKey,
+        pageSize: _entriesPerPage,
+        searchQuery: _searchQuery,
+      );
     },
   );
-
-  final List<OwnerListedCar> _cars = [
-    OwnerListedCar(
-      id: "OLC001",
-      title: "HYUNDAI XCENT",
-      yearModel: "2015 Model",
-      image: "assets/images/car.webp",
-      status: "Active",
-      ownerName: "JUBIN ALI BHUTTA",
-      ownerPhone: "0000000000",
-      price: "₹200,000",
-      kms: "90,000 kms",
-      location: "Alwar",
-      listedDate: "16 Nov, 2026",
-    ),
-    OwnerListedCar(
-      id: "OLC002",
-      title: "TATA MOTORS PASSENGER VEHICLES LTD TATA PUNCH ACC 1.2P BS6 MT",
-      yearModel: "2022 Model",
-      image: "assets/images/car1.webp",
-      status: "Inactive",
-      ownerName: "NILESH SARKAR",
-      ownerPhone: "9368512186",
-      price: "₹525,000",
-      kms: "72,000 kms",
-      location: "Saharanpur",
-      listedDate: "28 Oct, 2026",
-    ),
-    OwnerListedCar(
-      id: "OLC003",
-      title: "MARUTI SUZUKI INDIA LTD SWIFT ZXI",
-      yearModel: "2022 Model",
-      image: "assets/images/car.webp",
-      status: "Active",
-      ownerName: "DEEPA SHARMA",
-      ownerPhone: "9368512186",
-      price: "₹560,000",
-      kms: "55,000 kms",
-      location: "Saharanpur",
-      listedDate: "24 Oct, 2026",
-    ),
-    OwnerListedCar(
-      id: "OLC004",
-      title: "MAHINDRA SCORPIO-N Z8 DIESEL 4WD",
-      yearModel: "2023 Model",
-      image: "assets/images/car1.webp",
-      status: "Active",
-      ownerName: "VIKRAM SINGH",
-      ownerPhone: "9811122334",
-      price: "₹1,850,000",
-      kms: "24,000 kms",
-      location: "Dehradun",
-      listedDate: "15 Oct, 2026",
-    ),
-  ];
 
   @override
   void dispose() {
@@ -128,22 +49,8 @@ class _OwnerListedCarsScreenState extends State<OwnerListedCarsScreen> {
     super.dispose();
   }
 
-  List<OwnerListedCar> get _filteredCars {
-    if (_searchQuery.trim().isEmpty) return _cars;
-    final q = _searchQuery.toLowerCase();
-    return _cars.where((car) {
-      return car.title.toLowerCase().contains(q) ||
-          car.ownerName.toLowerCase().contains(q) ||
-          car.ownerPhone.contains(q) ||
-          car.location.toLowerCase().contains(q) ||
-          car.yearModel.toLowerCase().contains(q);
-    }).toList();
-  }
-
   @override
   Widget build(BuildContext context) {
-    final filtered = _filteredCars;
-
     return Scaffold(
       backgroundColor:
           _isDarkMode ? const Color(0xFF0F172A) : AppColors.background,
@@ -261,17 +168,24 @@ class _OwnerListedCarsScreenState extends State<OwnerListedCarsScreen> {
                 const SizedBox(height: 12),
 
                 // 2. Dynamic Filtered Count (Without Add button)
-                Text(
-                  filtered.isEmpty
-                      ? "No Cars"
-                      : filtered.length == 1
-                          ? "1 Car"
-                          : "${filtered.length} Cars",
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: _isDarkMode ? Colors.white : AppColors.text,
-                  ),
+                Consumer<InventoryViewModel>(
+                  builder: (context, vm, _) {
+                    final count = vm.ownerListedTotal > 0
+                        ? vm.ownerListedTotal
+                        : vm.ownerListedCars.length;
+                    return Text(
+                      count == 0
+                          ? "No Cars"
+                          : count == 1
+                              ? "1 Car"
+                              : "$count Cars",
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: _isDarkMode ? Colors.white : AppColors.text,
+                      ),
+                    );
+                  },
                 ),
               ],
             ),
@@ -340,6 +254,10 @@ class _OwnerListedCarsScreenState extends State<OwnerListedCarsScreen> {
                               ),
                             ),
                           ),
+                          firstPageErrorIndicatorBuilder: (ctx) =>
+                              _buildErrorIndicator(state.error),
+                          newPageErrorIndicatorBuilder: (ctx) =>
+                              _buildErrorIndicator(state.error),
                         ),
                       ),
                     ),
@@ -349,6 +267,49 @@ class _OwnerListedCarsScreenState extends State<OwnerListedCarsScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildErrorIndicator(Object? error) {
+    final msg = error?.toString().replaceFirst("Exception: ", "") ??
+        "Failed to load owner listed cars";
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
+      child: Center(
+        child: Column(
+          children: [
+            const Icon(
+              Icons.error_outline_rounded,
+              size: 40,
+              color: Color(0xFFEF4444),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              msg,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                fontSize: 12.5,
+                color: _isDarkMode ? Colors.white70 : const Color(0xFF475569),
+              ),
+            ),
+            const SizedBox(height: 10),
+            OutlinedButton(
+              onPressed: () => _pagingController.refresh(),
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: AppColors.primary),
+                foregroundColor: AppColors.primary,
+              ),
+              child: Text(
+                "Retry",
+                style: GoogleFonts.poppins(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -382,22 +343,61 @@ class _OwnerListedCarsScreenState extends State<OwnerListedCarsScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Car Image with border
-              Container(
-                width: 80,
-                height: 60,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  color: _isDarkMode
-                      ? const Color(0xFF0F172A)
-                      : const Color(0xFFF1F5F9),
-                  border: Border.all(
+              GestureDetector(
+                onTap: car.image.isNotEmpty
+                    ? () => showCarImagePreviewDialog(
+                          context,
+                          car.images.isNotEmpty ? car.images : [car.image],
+                        )
+                    : null,
+                child: Container(
+                  width: 94,
+                  height: 68,
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
                     color: _isDarkMode
-                        ? const Color(0xFF334155)
-                        : const Color(0xFFE2E8F0),
+                        ? const Color(0xFF0F172A)
+                        : Colors.white,
+                    border: Border.all(
+                      color: _isDarkMode
+                          ? const Color(0xFF334155)
+                          : const Color(0xFFE2E8F0),
+                    ),
                   ),
-                  image: DecorationImage(
-                    image: AssetImage(car.image),
-                    fit: BoxFit.cover,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(7),
+                    child: car.image.startsWith('http')
+                        ? Image.network(
+                            car.image,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Icon(
+                              Icons.directions_car_rounded,
+                              size: 26,
+                              color: _isDarkMode
+                                  ? Colors.white60
+                                  : const Color(0xFF546E7A),
+                            ),
+                          )
+                        : (car.image.isNotEmpty
+                            ? Image.asset(
+                                car.image,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => Icon(
+                                  Icons.directions_car_rounded,
+                                  size: 26,
+                                  color: _isDarkMode
+                                      ? Colors.white60
+                                      : const Color(0xFF546E7A),
+                                ),
+                              )
+                            : Icon(
+                                Icons.directions_car_rounded,
+                                size: 26,
+                                color: _isDarkMode
+                                    ? Colors.white60
+                                    : const Color(0xFF546E7A),
+                              )),
                   ),
                 ),
               ),
@@ -556,6 +556,13 @@ class _OwnerListedCarsScreenState extends State<OwnerListedCarsScreen> {
                 ],
               ),
             ],
+          ),
+          const SizedBox(height: 10),
+          Divider(
+            height: 1,
+            thickness: 1,
+            color:
+                _isDarkMode ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
           ),
           const SizedBox(height: 10),
 
@@ -720,9 +727,9 @@ class _OwnerListedCarsScreenState extends State<OwnerListedCarsScreen> {
                       ),
                     ),
                     onPressed: () {
-                      setState(() {
-                        _cars.remove(car);
-                      });
+                      context
+                          .read<InventoryViewModel>()
+                          .deleteOwnerListedCar(car.id);
                       _pagingController.refresh();
                       Navigator.pop(ctx);
                       ScaffoldMessenger.of(context).showSnackBar(

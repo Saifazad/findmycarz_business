@@ -17,6 +17,7 @@ class CrmLeadModel {
   final String? disbursedDate;
   final String status; // e.g. "In Bank Login", "Disbursed", "New"
   final String rawStatus; // e.g. "SENT_TO_BANK", "DISBURSED"
+  final String leadSource; // e.g. "manual", "enquiry", "callback"
   final String? assignedTo;
   final String? sourcingManager;
   final String? remarks;
@@ -41,6 +42,7 @@ class CrmLeadModel {
     this.disbursedDate,
     required this.status,
     this.rawStatus = '',
+    this.leadSource = '',
     this.assignedTo,
     this.sourcingManager,
     this.remarks,
@@ -50,36 +52,55 @@ class CrmLeadModel {
   factory CrmLeadModel.fromJson(Map<String, dynamic> json) {
     // 1. Extract Customer Info
     final customer = json['customer'] is Map ? json['customer'] as Map<String, dynamic> : null;
-    final name = customer?['full_name'] ?? json['name'] ?? json['customer_name'] ?? 'Customer';
-    final phone = customer?['phone_number'] ?? json['phone'] ?? json['mobile'] ?? '';
+    final name = customer?['full_name'] ??
+        json['applicant_name'] ??
+        json['name'] ??
+        json['customer_name'] ??
+        'Customer';
+    final phone = customer?['phone_number'] ??
+        json['phone_number'] ??
+        json['phone'] ??
+        json['mobile'] ??
+        '';
     final email = customer?['email'] ?? json['email'];
     final pan = customer?['pan_number'] ?? json['pan_number'];
 
     // 2. Extract Financials
     final financials = json['financials'] is Map ? json['financials'] as Map<String, dynamic> : null;
     final amountVal = financials?['required_loan_amount'] ??
+        json['required_loan_amount'] ??
         financials?['disbursed_amount'] ??
         json['amount'] ??
         json['loan_amount'];
     final amount = double.tryParse(amountVal?.toString() ?? '0');
-    final monthlyIncome = double.tryParse(financials?['monthly_income']?.toString() ?? '0');
-    final disbursedAmount = double.tryParse(financials?['disbursed_amount']?.toString() ?? '0');
+    final monthlyIncome = double.tryParse(
+        (financials?['monthly_income'] ?? json['monthly_income'])?.toString() ?? '0');
+    final disbursedAmount = double.tryParse(
+        (financials?['disbursed_amount'] ??
+                json['disbursal_loan_amount'] ??
+                json['disbursed_amount'])
+            ?.toString() ??
+            '0');
     final disbursedDate = financials?['disbursed_date']?.toString();
 
     // 3. Extract Car Info
-    final car = json['car'] is Map ? json['car'] as Map<String, dynamic> : null;
+    final car = json['car'] is Map
+        ? json['car'] as Map<String, dynamic>
+        : (json['vehicle'] is Map ? json['vehicle'] as Map<String, dynamic> : null);
     final carName = car?['car_name'] ?? json['car_name'] ?? json['model_name'];
     final regNo = car?['registration_number'] ?? json['reg_no'] ?? json['registration_number'];
     final carBrand = car?['brand']?.toString();
 
     // 4. Extract Staff / Agents
     String? assignedTo;
-    if (json['assigned_to'] is Map) {
+    if (json['assigned_officer'] is Map) {
+      assignedTo = json['assigned_officer']['full_name'] ?? json['assigned_officer']['username'];
+    } else if (json['assigned_to'] is Map) {
       assignedTo = json['assigned_to']['full_name'] ?? json['assigned_to']['username'];
     } else if (json['assigned_to'] != null) {
       assignedTo = json['assigned_to'].toString();
     } else {
-      assignedTo = json['partner_name'];
+      assignedTo = json['partner_name']?.toString();
     }
 
     String? sourcingManager;
@@ -91,11 +112,16 @@ class CrmLeadModel {
 
     // 5. Followup / Remarks
     final followup = json['latest_followup'] is Map ? json['latest_followup'] as Map<String, dynamic> : null;
-    final remarks = followup?['remarks'] ?? json['remarks'] ?? json['note'];
+    final remarks = followup?['remark'] ?? followup?['remarks'] ?? json['remarks'] ?? json['note'];
 
     // 6. Types & Statuses
     final rawLoanType = (json['loan_type'] ?? json['type'] ?? 'USED_CAR_LOAN').toString();
-    final rawStatus = (json['lead_status'] ?? json['status'] ?? 'NEW').toString();
+    final rawStatus = (json['lead_status'] ?? json['status'] ?? 'NEW_LEAD').toString();
+    final statusLabel = json['status_label']?.toString().trim() ?? '';
+    final leadSource = (json['lead_sourse'] ?? json['lead_source'] ?? json['source'] ?? '')
+        .toString()
+        .trim()
+        .toLowerCase();
 
     return CrmLeadModel(
       id: json['id']?.toString() ?? '',
@@ -105,7 +131,9 @@ class CrmLeadModel {
       email: email?.toString(),
       panNumber: pan?.toString(),
       city: json['city'] ?? json['state'],
-      type: _beautifyLoanType(rawLoanType),
+      type: json['loan_type_label']?.toString().trim().isNotEmpty == true
+          ? json['loan_type_label'].toString().trim()
+          : _beautifyLoanType(rawLoanType),
       rawLoanType: rawLoanType,
       carName: carName?.toString(),
       regNo: regNo?.toString(),
@@ -114,8 +142,9 @@ class CrmLeadModel {
       monthlyIncome: monthlyIncome,
       disbursedAmount: disbursedAmount,
       disbursedDate: disbursedDate,
-      status: _beautifyStatus(rawStatus),
+      status: statusLabel.isNotEmpty ? statusLabel : _beautifyStatus(rawStatus),
       rawStatus: rawStatus,
+      leadSource: leadSource,
       assignedTo: assignedTo,
       sourcingManager: sourcingManager,
       remarks: remarks?.toString(),
