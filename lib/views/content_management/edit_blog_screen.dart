@@ -284,7 +284,7 @@ class _EditBlogScreenState extends State<EditBlogScreen> {
 
                     // ================= 2. STEPPER ROW (3 STEPS: Details, Media, Publish) =================
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 18, 16, 14),
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: List.generate(3, (index) {
@@ -299,14 +299,14 @@ class _EditBlogScreenState extends State<EditBlogScreen> {
                             borderRadius: BorderRadius.circular(24),
                             child: Padding(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 4),
+                                  horizontal: 10, vertical: 2),
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   AnimatedContainer(
                                     duration: const Duration(milliseconds: 250),
-                                    width: 38,
-                                    height: 38,
+                                    width: 30,
+                                    height: 30,
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
                                       color: isPassed
@@ -341,13 +341,13 @@ class _EditBlogScreenState extends State<EditBlogScreen> {
                                       child: isPassed
                                           ? const Icon(
                                               Icons.check_rounded,
-                                              size: 18,
+                                              size: 15,
                                               color: Colors.white,
                                             )
                                           : Text(
                                               "${index + 1}",
                                               style: GoogleFonts.poppins(
-                                                fontSize: 13,
+                                                fontSize: 11.5,
                                                 fontWeight: FontWeight.bold,
                                                 color: (isCurrent || isPassed)
                                                     ? Colors.white
@@ -358,11 +358,11 @@ class _EditBlogScreenState extends State<EditBlogScreen> {
                                             ),
                                     ),
                                   ),
-                                  const SizedBox(height: 6),
+                                  const SizedBox(height: 4),
                                   Text(
                                     _stepTitles[index],
                                     style: GoogleFonts.poppins(
-                                      fontSize: 11,
+                                      fontSize: 10,
                                       fontWeight: isCurrent
                                           ? FontWeight.w600
                                           : FontWeight.w500,

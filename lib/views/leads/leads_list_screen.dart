@@ -376,21 +376,6 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
         ),
         actions: [
           IconButton(
-            tooltip:
-                _isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode",
-            icon: Icon(
-              _isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_outlined,
-              color: _isDarkMode
-                  ? const Color(0xFFFBBF24)
-                  : const Color(0xFF334155),
-            ),
-            onPressed: () {
-              setState(() {
-                _isDarkMode = !_isDarkMode;
-              });
-            },
-          ),
-          IconButton(
             icon: Icon(
               Icons.notifications_none_rounded,
               color: _isDarkMode ? Colors.white : const Color(0xFF334155),
@@ -415,12 +400,10 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // 1. Header: "Live Sync" (Left) & "+ Create Lead" (Right)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      OutlinedButton.icon(
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
                         onPressed: _handleLiveSync,
                         icon: _isSyncing
                             ? SizedBox(
@@ -443,7 +426,7 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
                         label: Text(
                           "Live Sync",
                           style: GoogleFonts.poppins(
-                            fontSize: 12,
+                            fontSize: 12.5,
                             fontWeight: FontWeight.w600,
                             color: _isDarkMode
                                 ? const Color(0xFF60A5FA)
@@ -462,20 +445,23 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
                           ),
                           elevation: 0,
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 8),
+                              horizontal: 12, vertical: 10),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(10),
                           ),
                         ),
                       ),
-                      ElevatedButton.icon(
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: ElevatedButton.icon(
                         onPressed: _showCreateLeadModal,
                         icon: const Icon(Icons.add,
                             size: 16, color: Colors.white),
                         label: Text(
                           "Create Lead",
                           style: GoogleFonts.poppins(
-                            fontSize: 12,
+                            fontSize: 12.5,
                             fontWeight: FontWeight.w600,
                             color: Colors.white,
                           ),
@@ -484,14 +470,14 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
                           backgroundColor: AppColors.heroNavyStart,
                           elevation: 0,
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 8),
+                              horizontal: 12, vertical: 10),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(10),
                           ),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 12),
 
@@ -594,14 +580,15 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
 
                 // Total New Leads Big Navy Banner
                 Container(
-                  padding: const EdgeInsets.all(16),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
                       colors: [AppColors.heroNavyStart, AppColors.heroNavyEnd],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(
                         color: AppColors.heroNavyStart.withValues(alpha: 0.25),
@@ -619,7 +606,7 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
                           Text(
                             "TOTAL NEW LEADS",
                             style: GoogleFonts.poppins(
-                              fontSize: 11,
+                              fontSize: 10.5,
                               fontWeight: FontWeight.bold,
                               color: Colors.white.withValues(alpha: 0.9),
                               letterSpacing: 0.5,
@@ -627,7 +614,7 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
                           ),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 2),
+                                horizontal: 7, vertical: 1.5),
                             decoration: BoxDecoration(
                               color: Colors.white.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(12),
@@ -635,7 +622,7 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
                             child: Text(
                               "+7 New",
                               style: GoogleFonts.poppins(
-                                fontSize: 10,
+                                fontSize: 9.5,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
                               ),
@@ -643,37 +630,37 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 4),
                       Text(
                         "7",
                         style: GoogleFonts.poppins(
-                          fontSize: 34,
+                          fontSize: 26,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                           height: 1.1,
                         ),
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 6),
                       Divider(
                         height: 1,
                         thickness: 1,
                         color: Colors.white.withValues(alpha: 0.2),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
                             "Today",
                             style: GoogleFonts.poppins(
-                              fontSize: 11.5,
+                              fontSize: 11,
                               color: Colors.white.withValues(alpha: 0.85),
                             ),
                           ),
                           Text(
                             "0",
                             style: GoogleFonts.poppins(
-                              fontSize: 13,
+                              fontSize: 12,
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
                             ),

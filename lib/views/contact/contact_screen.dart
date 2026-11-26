@@ -365,21 +365,6 @@ class _ContactScreenState extends State<ContactScreen> {
         ),
         actions: [
           IconButton(
-            tooltip:
-                _isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode",
-            icon: Icon(
-              _isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_outlined,
-              color: _isDarkMode
-                  ? const Color(0xFFFBBF24)
-                  : const Color(0xFF334155),
-            ),
-            onPressed: () {
-              setState(() {
-                _isDarkMode = !_isDarkMode;
-              });
-            },
-          ),
-          IconButton(
             icon: Icon(
               Icons.notifications_none_rounded,
               color: _isDarkMode ? Colors.white : const Color(0xFF334155),

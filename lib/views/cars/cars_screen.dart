@@ -490,21 +490,6 @@ class _CarsScreenState extends State<CarsScreen> {
         ),
         actions: [
           IconButton(
-            tooltip:
-                _isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode",
-            icon: Icon(
-              _isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_outlined,
-              color: _isDarkMode
-                  ? const Color(0xFFFBBF24)
-                  : const Color(0xFF334155),
-            ),
-            onPressed: () {
-              setState(() {
-                _isDarkMode = !_isDarkMode;
-              });
-            },
-          ),
-          IconButton(
             icon: Icon(
               Icons.notifications_none_rounded,
               color: _isDarkMode ? Colors.white : const Color(0xFF334155),
@@ -518,216 +503,220 @@ class _CarsScreenState extends State<CarsScreen> {
       ),
       body: PagingListener<int, InventoryVehicle>(
         controller: _pagingController,
-        builder: (context, state, fetchNextPage) => RefreshIndicator(
-          color: AppColors.primary,
-          onRefresh: () => Future.sync(() => _pagingController.refresh()),
-          child: CustomScrollView(
-            slivers: [
-              SliverPadding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                sliver: SliverToBoxAdapter(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+        builder: (context, state, fetchNextPage) => Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 12, 14, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 1. Top Buttons Row: "+ Add Vehicle" (Royal Blue) & "Export to Excel" (White with Blue Border)
+                  Row(
                     children: [
-                      // 1. Top Buttons Row: "+ Add Vehicle" (Royal Blue) & "Export to Excel" (White with Blue Border)
-                      Row(
-                        children: [
-                          const SizedBox(width: 16),
-                          SizedBox(
-                            width: 135,
-                            height: 42,
-                            child: ElevatedButton.icon(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (_) => const AddCarScreen()),
-                                );
-                              },
-                              icon: const Icon(Icons.add,
-                                  size: 16, color: Colors.white),
-                              label: FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Text(
-                                  "Add Vehicle",
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.primary,
-                                elevation: 0,
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 10),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
+                      const SizedBox(width: 16),
+                      SizedBox(
+                        width: 135,
+                        height: 42,
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => const AddCarScreen()),
+                            );
+                          },
+                          icon: const Icon(Icons.add,
+                              size: 16, color: Colors.white),
+                          label: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              "Add Vehicle",
+                              style: GoogleFonts.poppins(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
                               ),
                             ),
                           ),
-                          const SizedBox(width: 24),
-                          SizedBox(
-                            width: 135,
-                            height: 42,
-                            child: ElevatedButton.icon(
-                              onPressed: _exportToExcel,
-                              icon: const Icon(
-                                Icons.file_download_outlined,
-                                size: 16,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            elevation: 0,
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 10),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 24),
+                      SizedBox(
+                        width: 135,
+                        height: 42,
+                        child: ElevatedButton.icon(
+                          onPressed: _exportToExcel,
+                          icon: const Icon(
+                            Icons.file_download_outlined,
+                            size: 16,
+                            color: AppColors.primary,
+                          ),
+                          label: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              "Export to Excel",
+                              style: GoogleFonts.poppins(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w600,
                                 color: AppColors.primary,
                               ),
-                              label: FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Text(
-                                  "Export to Excel",
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 12.5,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.primary,
-                                  ),
-                                ),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.white,
-                                foregroundColor: AppColors.primary,
-                                side: const BorderSide(
-                                  color: AppColors.primary,
-                                  width: 1.5,
-                                ),
-                                elevation: 0,
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 10),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
                             ),
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 14),
-
-                      // 2. Tabs: All Cars | New Cars | Used Cars
-                      Row(
-                        children: [
-                          _buildTab("All Cars"),
-                          const SizedBox(width: 22),
-                          _buildTab("New Cars"),
-                          const SizedBox(width: 22),
-                          _buildTab("Used Cars"),
-                        ],
-                      ),
-                      Divider(
-                        height: 1,
-                        thickness: 1,
-                        color: _isDarkMode
-                            ? const Color(0xFF334155)
-                            : const Color(0xFFE2E8F0),
-                      ),
-                      const SizedBox(height: 12),
-
-                      // 3. Search Field (Full Width)
-                      TextField(
-                        controller: _searchController,
-                        onChanged: (val) {
-                          setState(() {
-                            _searchQuery = val;
-                          });
-                          _pagingController.refresh();
-                        },
-                        style: GoogleFonts.poppins(
-                          fontSize: 13,
-                          color: _isDarkMode ? Colors.white : Colors.black87,
-                        ),
-                        decoration: InputDecoration(
-                          hintText: "Search..",
-                          hintStyle: GoogleFonts.poppins(
-                            fontSize: 13,
-                            color: const Color(0xFF94A3B8),
-                          ),
-                          prefixIcon: Icon(
-                            Icons.search,
-                            size: 20,
-                            color: _isDarkMode
-                                ? Colors.grey.shade400
-                                : const Color(0xFF003366),
-                          ),
-                          suffixIcon: _searchController.text.isNotEmpty
-                              ? IconButton(
-                                  icon: const Icon(Icons.clear, size: 18),
-                                  onPressed: () {
-                                    _searchController.clear();
-                                    setState(() {
-                                      _searchQuery = "";
-                                    });
-                                    _pagingController.refresh();
-                                  },
-                                )
-                              : null,
-                          filled: true,
-                          fillColor: _isDarkMode
-                              ? const Color(0xFF1E293B)
-                              : const Color(0xFFF8FAFC),
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 14, vertical: 10),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: BorderSide(
-                              color: _isDarkMode
-                                  ? const Color(0xFF334155)
-                                  : const Color(0xFFE2E8F0),
-                            ),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: BorderSide(
-                              color: _isDarkMode
-                                  ? const Color(0xFF334155)
-                                  : const Color(0xFFE2E8F0),
-                            ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: BorderSide(
-                              color: _isDarkMode
-                                  ? const Color(0xFF00A3FF)
-                                  : const Color(0xFF003366),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: AppColors.primary,
+                            side: const BorderSide(
+                              color: AppColors.primary,
                               width: 1.5,
                             ),
+                            elevation: 0,
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 10),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                           ),
                         ),
                       ),
-                      const SizedBox(height: 14),
                     ],
                   ),
-                ),
-              ),
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 14),
-                sliver: PagedSliverList<int, InventoryVehicle>(
-                  state: state,
-                  fetchNextPage: fetchNextPage,
-                  builderDelegate: PagedChildBuilderDelegate<InventoryVehicle>(
-                    itemBuilder: (context, vehicle, index) =>
-                        _buildVehicleCard(vehicle, index),
-                    noItemsFoundIndicatorBuilder: (context) =>
-                        _buildNoItemsFound(),
-                    firstPageProgressIndicatorBuilder: (context) =>
-                        _buildLoadingIndicator(),
-                    newPageProgressIndicatorBuilder: (context) =>
-                        _buildLoadingIndicator(),
+                  const SizedBox(height: 14),
+
+                  // 2. Tabs: All Cars | New Cars | Used Cars
+                  Row(
+                    children: [
+                      _buildTab("All Cars"),
+                      const SizedBox(width: 22),
+                      _buildTab("New Cars"),
+                      const SizedBox(width: 22),
+                      _buildTab("Used Cars"),
+                    ],
                   ),
+                  Divider(
+                    height: 1,
+                    thickness: 1,
+                    color: _isDarkMode
+                        ? const Color(0xFF334155)
+                        : const Color(0xFFE2E8F0),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // 3. Search Field (Full Width)
+                  TextField(
+                    controller: _searchController,
+                    onChanged: (val) {
+                      setState(() {
+                        _searchQuery = val;
+                      });
+                      _pagingController.refresh();
+                    },
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      color: _isDarkMode ? Colors.white : Colors.black87,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: "Search..",
+                      hintStyle: GoogleFonts.poppins(
+                        fontSize: 13,
+                        color: const Color(0xFF94A3B8),
+                      ),
+                      prefixIcon: Icon(
+                        Icons.search,
+                        size: 20,
+                        color: _isDarkMode
+                            ? Colors.grey.shade400
+                            : const Color(0xFF003366),
+                      ),
+                      suffixIcon: _searchController.text.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear, size: 18),
+                              onPressed: () {
+                                _searchController.clear();
+                                setState(() {
+                                  _searchQuery = "";
+                                });
+                                _pagingController.refresh();
+                              },
+                            )
+                          : null,
+                      filled: true,
+                      fillColor: _isDarkMode
+                          ? const Color(0xFF1E293B)
+                          : const Color(0xFFF8FAFC),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 10),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(
+                          color: _isDarkMode
+                              ? const Color(0xFF334155)
+                              : const Color(0xFFE2E8F0),
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(
+                          color: _isDarkMode
+                              ? const Color(0xFF334155)
+                              : const Color(0xFFE2E8F0),
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(
+                          color: _isDarkMode
+                              ? const Color(0xFF00A3FF)
+                              : const Color(0xFF003366),
+                          width: 1.5,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                ],
+              ),
+            ),
+            Expanded(
+              child: RefreshIndicator(
+                color: AppColors.primary,
+                onRefresh: () => Future.sync(() => _pagingController.refresh()),
+                child: CustomScrollView(
+                  slivers: [
+                    SliverPadding(
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      sliver: PagedSliverList<int, InventoryVehicle>(
+                        state: state,
+                        fetchNextPage: fetchNextPage,
+                        builderDelegate:
+                            PagedChildBuilderDelegate<InventoryVehicle>(
+                          itemBuilder: (context, vehicle, index) =>
+                              _buildVehicleCard(vehicle, index),
+                          noItemsFoundIndicatorBuilder: (context) =>
+                              _buildNoItemsFound(),
+                          firstPageProgressIndicatorBuilder: (context) =>
+                              _buildLoadingIndicator(),
+                          newPageProgressIndicatorBuilder: (context) =>
+                              _buildLoadingIndicator(),
+                        ),
+                      ),
+                    ),
+                    const SliverToBoxAdapter(
+                      child: SizedBox(height: 20),
+                    ),
+                  ],
                 ),
               ),
-              const SliverToBoxAdapter(
-                child: SizedBox(height: 20),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
