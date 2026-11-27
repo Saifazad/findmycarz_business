@@ -17,6 +17,7 @@ class ApiConfig {
   static const String administrators = "/administrators";
   static const String administratorsMeta = "/administrators/meta/options";
   static const String roles = "/roles";
+  static const String users = "/users";
   static const String crmLeads = "/leads";
   static const String insuranceLeads = "/leads/insurance";
   static const String contactLeads = "/leads/contact";
@@ -28,6 +29,10 @@ class ApiConfig {
   static const String carsMyInventory = "/cars/my-inventory";
   static const String carsOwnerListed = "/cars/owner-listed";
   static const String outwardPayouts = "/payout/outward-list";
+  static const String cmsBlogs = "/cms/blogs";
+  static const String cmsTestimonials = "/cms/testimonials";
+  static const String cmsFlashNews = "/cms/flash-news";
+  static const String cmsCarLoans = "/cms/car-loans";
   static const String masterBrands = "/master/brands";
   static const String masterModels = "/master/models";
   static const String masterCities = "/master/cities";

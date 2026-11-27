@@ -11,6 +11,8 @@ import 'viewmodels/payout_viewmodel.dart';
 import 'viewmodels/leads_viewmodel.dart';
 import 'viewmodels/inventory_viewmodel.dart';
 import 'viewmodels/theme_viewmodel.dart';
+import 'viewmodels/users_viewmodel.dart';
+import 'viewmodels/cms_viewmodel.dart';
 import 'views/splash/splash_screen.dart';
 
 void main() async {
@@ -42,6 +44,8 @@ void main() async {
         ChangeNotifierProvider(create: (_) => PayoutViewModel()),
         ChangeNotifierProvider(create: (_) => LeadsViewModel()),
         ChangeNotifierProvider(create: (_) => InventoryViewModel()),
+        ChangeNotifierProvider(create: (_) => UsersViewModel()),
+        ChangeNotifierProvider(create: (_) => CmsViewModel()),
         ChangeNotifierProvider(create: (_) => ThemeViewModel()),
       ],
       child: const FindMyCarzBusinessApp(),
