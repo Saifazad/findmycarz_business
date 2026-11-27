@@ -1,30 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
+import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
+import '../../models/registered_user_model.dart';
+import '../../viewmodels/users_viewmodel.dart';
 import '../widgets/crm_drawer.dart';
 import '../widgets/custom_back_button.dart';
 import '../widgets/admin_profile_avatar.dart';
-
-class RegisteredUser {
-  final String id;
-  String name;
-  String email;
-  String phone;
-  String city;
-  String registrationDate;
-  String status;
-
-  RegisteredUser({
-    required this.id,
-    required this.name,
-    required this.email,
-    required this.phone,
-    required this.city,
-    required this.registrationDate,
-    this.status = "Active",
-  });
-}
 
 class UsersScreen extends StatefulWidget {
   const UsersScreen({super.key});
@@ -35,10 +18,11 @@ class UsersScreen extends StatefulWidget {
 
 class _UsersScreenState extends State<UsersScreen> {
   bool _isDarkMode = false;
-  final int _entriesPerPage = 10;
+  final int _entriesPerPage = 20;
   String _searchQuery = "";
 
   final TextEditingController _searchController = TextEditingController();
+  final List<RegisteredUser> _users = [];
 
   late final PagingController<int, RegisteredUser> _pagingController =
       PagingController(
@@ -49,81 +33,27 @@ class _UsersScreenState extends State<UsersScreen> {
       return (state.keys!.last) + 1;
     },
     fetchPage: (pageKey) async {
-      final allFiltered = _filteredUsers;
-      final startIndex = (pageKey - 1) * _entriesPerPage;
-      if (startIndex >= allFiltered.length) return [];
-      final endIndex =
-          (startIndex + _entriesPerPage).clamp(0, allFiltered.length);
-      return allFiltered.sublist(startIndex, endIndex);
+      final vm = context.read<UsersViewModel>();
+      final items = await vm.fetchUsersPage(
+        pageKey: pageKey,
+        pageSize: _entriesPerPage,
+        searchQuery: _searchQuery,
+      );
+      if (mounted) {
+        setState(() {
+          if (pageKey == 1) _users.clear();
+          _users.addAll(items);
+        });
+      }
+      return items;
     },
   );
-
-  final List<RegisteredUser> _users = [
-    RegisteredUser(
-      id: "USR-001",
-      name: "test",
-      email: "testt2@gmail.com",
-      phone: "7079622295",
-      city: "HYD",
-      registrationDate: "12 Nov, 2026",
-      status: "Active",
-    ),
-    RegisteredUser(
-      id: "USR-002",
-      name: "Rahul Verma",
-      email: "rahul.verma@gmail.com",
-      phone: "9876543210",
-      city: "DEL",
-      registrationDate: "10 Nov, 2026",
-      status: "Active",
-    ),
-    RegisteredUser(
-      id: "USR-003",
-      name: "Sameer Khan",
-      email: "sameer.khan@yahoo.com",
-      phone: "9812345678",
-      city: "MUM",
-      registrationDate: "08 Nov, 2026",
-      status: "Active",
-    ),
-    RegisteredUser(
-      id: "USR-004",
-      name: "Pooja Sharma",
-      email: "pooja.sharma@outlook.com",
-      phone: "9765432109",
-      city: "BLR",
-      registrationDate: "05 Nov, 2026",
-      status: "Active",
-    ),
-    RegisteredUser(
-      id: "USR-005",
-      name: "Amit Patel",
-      email: "amit.patel@gmail.com",
-      phone: "9654321098",
-      city: "AHM",
-      registrationDate: "01 Nov, 2026",
-      status: "Active",
-    ),
-  ];
 
   @override
   void dispose() {
     _pagingController.dispose();
     _searchController.dispose();
     super.dispose();
-  }
-
-  List<RegisteredUser> get _filteredUsers {
-    if (_searchQuery.trim().isEmpty) return _users;
-    final q = _searchQuery.toLowerCase();
-    return _users.where((u) {
-      return u.id.toLowerCase().contains(q) ||
-          u.name.toLowerCase().contains(q) ||
-          u.email.toLowerCase().contains(q) ||
-          u.phone.contains(q) ||
-          u.city.toLowerCase().contains(q) ||
-          u.status.toLowerCase().contains(q);
-    }).toList();
   }
 
   void _deleteUser(RegisteredUser user) {
@@ -367,14 +297,6 @@ class _UsersScreenState extends State<UsersScreen> {
           ),
         ),
         actions: [
-          IconButton(
-            icon: Icon(
-              Icons.notifications_none_rounded,
-              color: _isDarkMode ? Colors.white : const Color(0xFF334155),
-            ),
-            onPressed: () {},
-          ),
-          const SizedBox(width: 4),
           const AdminProfileAvatar(),
           const SizedBox(width: 14),
         ],
@@ -528,6 +450,10 @@ class _UsersScreenState extends State<UsersScreen> {
                               ),
                             ),
                           ),
+                          firstPageErrorIndicatorBuilder: (ctx) =>
+                              _buildErrorIndicator(state.error),
+                          newPageErrorIndicatorBuilder: (ctx) =>
+                              _buildErrorIndicator(state.error),
                           newPageProgressIndicatorBuilder: (ctx) =>
                               const Padding(
                             padding: EdgeInsets.symmetric(vertical: 16),
@@ -546,6 +472,41 @@ class _UsersScreenState extends State<UsersScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildErrorIndicator(Object? error) {
+    final msg = error?.toString().replaceFirst("Exception: ", "") ??
+        "Failed to load registered users";
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.error_outline, size: 40, color: Color(0xFFDC2626)),
+            const SizedBox(height: 10),
+            Text(
+              msg,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                fontSize: 13,
+                color: _isDarkMode ? Colors.white70 : const Color(0xFF334155),
+              ),
+            ),
+            const SizedBox(height: 12),
+            ElevatedButton.icon(
+              onPressed: _pagingController.refresh,
+              icon: const Icon(Icons.refresh, size: 16),
+              label: const Text("Retry"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -591,62 +552,31 @@ class _UsersScreenState extends State<UsersScreen> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Circular Avatar with S.N. Badge
-              Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Container(
-                    width: 42,
-                    height: 42,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: _isDarkMode
-                          ? const Color(0xFF0F2B48)
-                          : const Color(0xFFEFF6FF),
-                      border: Border.all(
-                        color: _isDarkMode
-                            ? const Color(0xFF1D4ED8)
-                            : const Color(0xFFBFDBFE),
-                        width: 1.2,
-                      ),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      initials,
-                      style: GoogleFonts.poppins(
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF00A3FF),
-                      ),
-                    ),
+              // Circular Avatar
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: _isDarkMode
+                      ? const Color(0xFF0F2B48)
+                      : const Color(0xFFEFF6FF),
+                  border: Border.all(
+                    color: _isDarkMode
+                        ? const Color(0xFF1D4ED8)
+                        : const Color(0xFFBFDBFE),
+                    width: 1.2,
                   ),
-                  Positioned(
-                    top: -4,
-                    left: -4,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 5, vertical: 1),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF0F172A),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: _isDarkMode
-                              ? const Color(0xFF1E293B)
-                              : Colors.white,
-                          width: 1.2,
-                        ),
-                      ),
-                      child: Text(
-                        "#$sn",
-                        style: GoogleFonts.poppins(
-                          fontSize: 9,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  initials,
+                  style: GoogleFonts.poppins(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF00A3FF),
                   ),
-                ],
+                ),
               ),
               const SizedBox(width: 12),
 
@@ -669,7 +599,10 @@ class _UsersScreenState extends State<UsersScreen> {
                       ),
                     ),
                     const SizedBox(height: 3),
-                    Row(
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 4,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         Container(
                           padding: const EdgeInsets.symmetric(
@@ -694,7 +627,6 @@ class _UsersScreenState extends State<UsersScreen> {
                             ),
                           ),
                         ),
-                        const SizedBox(width: 8),
                         Text(
                           "Joined ${user.registrationDate}",
                           style: GoogleFonts.poppins(
@@ -710,24 +642,40 @@ class _UsersScreenState extends State<UsersScreen> {
                 ),
               ),
 
-              // Status Badge
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
-                decoration: BoxDecoration(
-                  color: user.status == "Active"
-                      ? const Color(0xFF0F766E)
-                      : const Color(0xFFDC2626),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  user.status,
-                  style: GoogleFonts.poppins(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+              // Serial Number & Status Badge
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    "No. $sn",
+                    style: GoogleFonts.poppins(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: _isDarkMode
+                          ? Colors.grey.shade400
+                          : const Color(0xFF64748B),
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 9, vertical: 3.5),
+                    decoration: BoxDecoration(
+                      color: user.status == "Active"
+                          ? const Color(0xFF0F766E)
+                          : const Color(0xFFDC2626),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      user.status,
+                      style: GoogleFonts.poppins(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -760,14 +708,18 @@ class _UsersScreenState extends State<UsersScreen> {
                               : const Color(0xFF0284C7),
                         ),
                         const SizedBox(width: 6),
-                        Text(
-                          user.phone,
-                          style: GoogleFonts.poppins(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: _isDarkMode
-                                ? Colors.white70
-                                : const Color(0xFF334155),
+                        Expanded(
+                          child: Text(
+                            user.phone,
+                            style: GoogleFonts.poppins(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: _isDarkMode
+                                  ? Colors.white70
+                                  : const Color(0xFF334155),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],
