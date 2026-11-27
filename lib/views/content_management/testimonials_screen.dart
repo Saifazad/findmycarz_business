@@ -1,30 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
+import '../../models/testimonial_item_model.dart';
+import '../../viewmodels/cms_viewmodel.dart';
 import '../widgets/crm_drawer.dart';
 import '../widgets/custom_back_button.dart';
 import '../widgets/admin_profile_avatar.dart';
 import 'edit_testimonial_screen.dart';
 
-class TestimonialItem {
-  final String id;
-  String name;
-  int rating;
-  bool isActive;
-  String feedback;
-  String? designation;
-  String? photoPath;
-
-  TestimonialItem({
-    required this.id,
-    required this.name,
-    required this.rating,
-    required this.isActive,
-    this.feedback = "",
-    this.designation,
-    this.photoPath,
-  });
-}
+export '../../models/testimonial_item_model.dart';
 
 class TestimonialsScreen extends StatefulWidget {
   const TestimonialsScreen({super.key});
@@ -39,22 +24,15 @@ class _TestimonialsScreenState extends State<TestimonialsScreen> {
 
   final TextEditingController _searchController = TextEditingController();
 
-  final List<TestimonialItem> _testimonials = [
-    TestimonialItem(
-      id: "TEST-001",
-      name: "Sameer Chaudhary",
-      rating: 5,
-      isActive: true,
-      feedback: "Great service and seamless car purchase experience!",
-    ),
-    TestimonialItem(
-      id: "TEST-002",
-      name: "Saurabh",
-      rating: 5,
-      isActive: true,
-      feedback: "Quick loan approval and very helpful staff.",
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<CmsViewModel>().fetchTestimonials();
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -62,10 +40,10 @@ class _TestimonialsScreenState extends State<TestimonialsScreen> {
     super.dispose();
   }
 
-  List<TestimonialItem> get _filteredList {
-    if (_searchQuery.trim().isEmpty) return _testimonials;
+  List<TestimonialItem> _filterList(List<TestimonialItem> items) {
+    if (_searchQuery.trim().isEmpty) return items;
     final q = _searchQuery.toLowerCase();
-    return _testimonials.where((item) {
+    return items.where((item) {
       return item.name.toLowerCase().contains(q) ||
           item.feedback.toLowerCase().contains(q);
     }).toList();
@@ -88,10 +66,8 @@ class _TestimonialsScreenState extends State<TestimonialsScreen> {
         ),
       ),
     );
-    if (result == true) {
-      setState(() {
-        _testimonials.insert(0, newItem);
-      });
+    if (result == true && mounted) {
+      context.read<CmsViewModel>().addTestimonialLocal(newItem);
     }
   }
 
@@ -122,9 +98,7 @@ class _TestimonialsScreenState extends State<TestimonialsScreen> {
             style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFDC2626)),
             onPressed: () {
-              setState(() {
-                _testimonials.removeWhere((t) => t.id == item.id);
-              });
+              context.read<CmsViewModel>().removeTestimonialLocal(item.id);
               Navigator.pop(ctx);
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
@@ -142,8 +116,8 @@ class _TestimonialsScreenState extends State<TestimonialsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final filtered = _filteredList;
-    final displayedList = filtered;
+    final vm = context.watch<CmsViewModel>();
+    final displayedList = _filterList(vm.testimonials);
 
     return Scaffold(
       backgroundColor:
@@ -162,14 +136,6 @@ class _TestimonialsScreenState extends State<TestimonialsScreen> {
           ),
         ),
         actions: [
-          IconButton(
-            icon: Icon(
-              Icons.notifications_none_rounded,
-              color: _isDarkMode ? Colors.white : const Color(0xFF334155),
-            ),
-            onPressed: () {},
-          ),
-          const SizedBox(width: 4),
           const AdminProfileAvatar(),
           const SizedBox(width: 14),
         ],
@@ -307,38 +273,83 @@ class _TestimonialsScreenState extends State<TestimonialsScreen> {
 
           // 3. Testimonial Cards List
           Expanded(
-            child: displayedList.isEmpty
-                ? Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 40),
-                    child: Center(
-                      child: Column(
-                        children: [
-                          Icon(
-                            Icons.chat_bubble_outline_rounded,
-                            size: 44,
-                            color: _isDarkMode
-                                ? Colors.grey.shade600
-                                : Colors.grey.shade400,
-                          ),
-                          const SizedBox(height: 10),
-                          Text(
-                            "No Testimonials Found",
-                            style: GoogleFonts.poppins(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: _isDarkMode
-                                  ? Colors.grey.shade400
-                                  : Colors.grey.shade600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+            child: vm.isTestimonialsLoading && vm.testimonials.isEmpty
+                ? const Center(
+                    child: CircularProgressIndicator(color: AppColors.primary),
                   )
-                : ListView.builder(
-                    padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
-                    itemCount: displayedList.length,
-                    itemBuilder: (ctx, index) {
+                : vm.testimonialsError != null && vm.testimonials.isEmpty
+                    ? Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.error_outline,
+                                size: 42,
+                                color: Color(0xFFDC2626),
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                vm.testimonialsError!,
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 13,
+                                  color: _isDarkMode
+                                      ? Colors.white70
+                                      : const Color(0xFF334155),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              ElevatedButton.icon(
+                                onPressed: vm.fetchTestimonials,
+                                icon: const Icon(Icons.refresh, size: 16),
+                                label: const Text("Retry"),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primary,
+                                  foregroundColor: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    : displayedList.isEmpty
+                        ? Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 40),
+                            child: Center(
+                              child: Column(
+                                children: [
+                                  Icon(
+                                    Icons.chat_bubble_outline_rounded,
+                                    size: 44,
+                                    color: _isDarkMode
+                                        ? Colors.grey.shade600
+                                        : Colors.grey.shade400,
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    "No Testimonials Found",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: _isDarkMode
+                                          ? Colors.grey.shade400
+                                          : Colors.grey.shade600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          )
+                        : RefreshIndicator(
+                            color: AppColors.primary,
+                            onRefresh: vm.fetchTestimonials,
+                            child: ListView.builder(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+                              itemCount: displayedList.length,
+                              itemBuilder: (ctx, index) {
                       final item = displayedList[index];
 
                       return Container(
@@ -555,8 +566,9 @@ class _TestimonialsScreenState extends State<TestimonialsScreen> {
                           ],
                         ),
                       );
-                    },
-                  ),
+                              },
+                            ),
+                          ),
           ),
         ],
       ),
