@@ -913,7 +913,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       onTap: () => _navigateToLeads("All"),
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 7),
+                            horizontal: 9, vertical: 7),
                         decoration: BoxDecoration(
                           color: const Color(0xFF0284C7),
                           borderRadius: BorderRadius.circular(8),
@@ -922,12 +922,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             const Icon(Icons.format_list_bulleted_rounded,
-                                size: 14, color: Colors.white),
-                            const SizedBox(width: 5),
+                                size: 13, color: Colors.white),
+                            const SizedBox(width: 4),
                             Text(
                               "All Loan Leads",
                               style: GoogleFonts.poppins(
-                                fontSize: 11,
+                                fontSize: 10.5,
                                 fontWeight: FontWeight.w600,
                                 color: Colors.white,
                               ),
@@ -936,7 +936,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 6),
 
                     // Insurance (10) Button
                     GestureDetector(
@@ -944,7 +944,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       onTap: _navigateToInsurance,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 7),
+                            horizontal: 9, vertical: 7),
                         decoration: BoxDecoration(
                           color: _isDarkMode
                               ? const Color(0xFF083344)
@@ -956,12 +956,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             const Icon(Icons.shield_outlined,
-                                size: 14, color: Color(0xFF06B6D4)),
-                            const SizedBox(width: 5),
+                                size: 13, color: Color(0xFF06B6D4)),
+                            const SizedBox(width: 4),
                             Text(
                               "Insurance (10)",
                               style: GoogleFonts.poppins(
-                                fontSize: 11,
+                                fontSize: 10.5,
                                 fontWeight: FontWeight.w600,
                                 color: const Color(0xFF06B6D4),
                               ),
@@ -970,7 +970,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 6),
 
                     // Contacts (5) Button
                     GestureDetector(
@@ -978,7 +978,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       onTap: _navigateToContacts,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 7),
+                            horizontal: 9, vertical: 7),
                         decoration: BoxDecoration(
                           color: _isDarkMode
                               ? const Color(0xFF2E1065)
@@ -990,12 +990,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             const Icon(Icons.mail_outline_rounded,
-                                size: 14, color: Color(0xFF8B5CF6)),
-                            const SizedBox(width: 5),
+                                size: 13, color: Color(0xFF8B5CF6)),
+                            const SizedBox(width: 4),
                             Text(
                               "Contacts (5)",
                               style: GoogleFonts.poppins(
-                                fontSize: 11,
+                                fontSize: 10.5,
                                 fontWeight: FontWeight.w600,
                                 color: const Color(0xFF8B5CF6),
                               ),

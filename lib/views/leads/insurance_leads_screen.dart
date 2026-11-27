@@ -1,38 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
+import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
+import '../../models/insurance_lead_model.dart';
+import '../../viewmodels/leads_viewmodel.dart';
 import '../widgets/crm_drawer.dart';
 import '../widgets/custom_back_button.dart';
 import '../widgets/admin_profile_avatar.dart';
-
-class InsuranceLead {
-  final String id;
-  final String ownerName;
-  final String regNumber;
-  final String phone;
-  final String email;
-  final String date;
-  final String status;
-  final Color statusColor;
-  final String vehicleModel;
-  final String policyType;
-  bool isSelected;
-
-  InsuranceLead({
-    required this.id,
-    required this.ownerName,
-    required this.regNumber,
-    required this.phone,
-    required this.email,
-    required this.date,
-    required this.status,
-    required this.statusColor,
-    required this.vehicleModel,
-    required this.policyType,
-    this.isSelected = false,
-  });
-}
 
 class InsuranceLeadsScreen extends StatefulWidget {
   const InsuranceLeadsScreen({super.key});
@@ -43,11 +18,12 @@ class InsuranceLeadsScreen extends StatefulWidget {
 
 class _InsuranceLeadsScreenState extends State<InsuranceLeadsScreen> {
   bool _isDarkMode = false;
-  final int _entriesPerPage = 10;
+  final int _entriesPerPage = 20;
   String _searchQuery = "";
   bool _selectAll = false;
 
   final TextEditingController _searchController = TextEditingController();
+  final List<InsuranceLead> _leads = [];
 
   late final PagingController<int, InsuranceLead> _pagingController =
       PagingController(
@@ -58,84 +34,30 @@ class _InsuranceLeadsScreenState extends State<InsuranceLeadsScreen> {
       return (state.keys!.last) + 1;
     },
     fetchPage: (pageKey) async {
-      final allFiltered = _filteredLeads;
-      final startIndex = (pageKey - 1) * _entriesPerPage;
-      if (startIndex >= allFiltered.length) return [];
-      final endIndex =
-          (startIndex + _entriesPerPage).clamp(0, allFiltered.length);
-      return allFiltered.sublist(startIndex, endIndex);
+      final vm = context.read<LeadsViewModel>();
+      final items = await vm.fetchInsuranceLeadsPage(
+        pageKey: pageKey,
+        pageSize: _entriesPerPage,
+        searchQuery: _searchQuery,
+      );
+      if (mounted) {
+        setState(() {
+          if (pageKey == 1) {
+            _leads.clear();
+            _selectAll = false;
+          }
+          _leads.addAll(items);
+        });
+      }
+      return items;
     },
   );
-
-  final List<InsuranceLead> _leads = [
-    InsuranceLead(
-      id: "INS-2026-0981",
-      ownerName: "RAJESH SHARMA",
-      regNumber: "UK-07-AL-4455",
-      phone: "+91 98971 23456",
-      email: "rajesh.sharma@gmail.com",
-      date: "18 Nov, 2026",
-      status: "Pending",
-      statusColor: const Color(0xFFB45309), // Amber/Brown matching screenshot
-      vehicleModel: "Toyota Fortuner 2021",
-      policyType: "Comprehensive Zero Dep",
-    ),
-    InsuranceLead(
-      id: "INS-2026-0980",
-      ownerName: "MOHD SAJID",
-      regNumber: "UP-14-BT-8899",
-      phone: "+91 98112 34567",
-      email: "sajid.autocare@gmail.com",
-      date: "17 Nov, 2026",
-      status: "Follow Up",
-      statusColor: const Color(0xFFC2410C), // Orange/Rust
-      vehicleModel: "Hyundai Creta 2022",
-      policyType: "Third Party + Own Damage",
-    ),
-    InsuranceLead(
-      id: "INS-2026-0979",
-      ownerName: "ANITA RANI",
-      regNumber: "DL-03-CC-1234",
-      phone: "+91 97123 45678",
-      email: "anita.rani92@gmail.com",
-      date: "15 Nov, 2026",
-      status: "Quoted",
-      statusColor: const Color(0xFF0F766E), // Teal
-      vehicleModel: "Maruti Suzuki Brezza 2020",
-      policyType: "Comprehensive Renewal",
-    ),
-    InsuranceLead(
-      id: "INS-2026-0978",
-      ownerName: "VIKRAM JEET SINGH",
-      regNumber: "RJ-14-CV-9012",
-      phone: "+91 99887 65432",
-      email: "vikram.singh@gmail.com",
-      date: "14 Nov, 2026",
-      status: "Pending",
-      statusColor: const Color(0xFFB45309),
-      vehicleModel: "Mahindra Thar 2023",
-      policyType: "Zero Depreciation Insurance",
-    ),
-  ];
 
   @override
   void dispose() {
     _pagingController.dispose();
     _searchController.dispose();
     super.dispose();
-  }
-
-  List<InsuranceLead> get _filteredLeads {
-    if (_searchQuery.trim().isEmpty) return _leads;
-    final q = _searchQuery.toLowerCase();
-    return _leads.where((lead) {
-      return lead.id.toLowerCase().contains(q) ||
-          lead.ownerName.toLowerCase().contains(q) ||
-          lead.regNumber.toLowerCase().contains(q) ||
-          lead.phone.contains(q) ||
-          lead.email.toLowerCase().contains(q) ||
-          lead.status.toLowerCase().contains(q);
-    }).toList();
   }
 
   int get _selectedCount => _leads.where((l) => l.isSelected).length;
@@ -291,8 +213,12 @@ class _InsuranceLeadsScreenState extends State<InsuranceLeadsScreen> {
               _buildDetailRow("Registration No.", lead.regNumber),
               _buildDetailRow("Phone", lead.phone),
               _buildDetailRow("Email", lead.email),
-              _buildDetailRow("Vehicle", lead.vehicleModel),
-              _buildDetailRow("Policy Type", lead.policyType),
+              _buildDetailRow("City", lead.city),
+              _buildDetailRow("Previous Claim", lead.previousClaim),
+              _buildDetailRow("Current Insurance", lead.currentInsurance),
+              _buildDetailRow(
+                  "Prev. Company", lead.previousInsuranceCompany),
+              _buildDetailRow("Description", lead.description),
               _buildDetailRow("Submitted Date", lead.date),
               const SizedBox(height: 16),
               SizedBox(
@@ -380,21 +306,6 @@ class _InsuranceLeadsScreenState extends State<InsuranceLeadsScreen> {
           ),
         ),
         actions: [
-          IconButton(
-            tooltip:
-                _isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode",
-            icon: Icon(
-              _isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_outlined,
-              color: _isDarkMode
-                  ? const Color(0xFFFBBF24)
-                  : const Color(0xFF334155),
-            ),
-            onPressed: () {
-              setState(() {
-                _isDarkMode = !_isDarkMode;
-              });
-            },
-          ),
           IconButton(
             icon: Icon(
               Icons.notifications_none_rounded,
@@ -645,6 +556,10 @@ class _InsuranceLeadsScreenState extends State<InsuranceLeadsScreen> {
                               ),
                             ),
                           ),
+                          firstPageErrorIndicatorBuilder: (ctx) =>
+                              _buildErrorIndicator(state.error),
+                          newPageErrorIndicatorBuilder: (ctx) =>
+                              _buildErrorIndicator(state.error),
                           newPageProgressIndicatorBuilder: (ctx) =>
                               const Padding(
                             padding: EdgeInsets.symmetric(vertical: 16),
@@ -667,17 +582,57 @@ class _InsuranceLeadsScreenState extends State<InsuranceLeadsScreen> {
     );
   }
 
+  Widget _buildErrorIndicator(Object? error) {
+    final msg = error?.toString().replaceFirst("Exception: ", "") ??
+        "Failed to load insurance leads";
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.error_outline,
+                size: 40, color: Color(0xFFDC2626)),
+            const SizedBox(height: 10),
+            Text(
+              msg,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                fontSize: 13,
+                color: _isDarkMode ? Colors.white70 : const Color(0xFF334155),
+              ),
+            ),
+            const SizedBox(height: 12),
+            ElevatedButton.icon(
+              onPressed: _pagingController.refresh,
+              icon: const Icon(Icons.refresh, size: 16),
+              label: const Text("Retry"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildLeadCard(InsuranceLead lead, int index) {
+    final softCardBg =
+        _isDarkMode ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC);
+    final softBorder =
+        _isDarkMode ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+    final regBg =
+        _isDarkMode ? const Color(0xFF1E293B) : const Color(0xFFEEF2FF);
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color:
-              _isDarkMode ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
-        ),
+        border: Border.all(color: softBorder),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: _isDarkMode ? 0.2 : 0.03),
@@ -689,24 +644,28 @@ class _InsuranceLeadsScreenState extends State<InsuranceLeadsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Row 1: Checkbox + #S.N. + [LEAD ID] (Left) + [Status] Badge (Right)
+          // Row 1: Checkbox + #S.N. (Left) + Status Pill (Right)
           Row(
             children: [
-              // Checkbox
-              SizedBox(
-                width: 20,
-                height: 20,
+              Container(
+                width: 22,
+                height: 22,
+                decoration: BoxDecoration(
+                  color: regBg,
+                  borderRadius: BorderRadius.circular(5),
+                ),
                 child: Checkbox(
                   value: lead.isSelected,
-                  activeColor: const Color(0xFF00A3FF),
+                  activeColor: const Color(0xFF0A2463),
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: BorderRadius.circular(5),
                   ),
                   side: BorderSide(
                     color: _isDarkMode
                         ? const Color(0xFF64748B)
-                        : const Color(0xFF94A3B8),
-                    width: 1.5,
+                        : const Color(0xFFD5DDF0),
+                    width: 1.2,
                   ),
                   onChanged: (val) {
                     setState(() {
@@ -720,12 +679,10 @@ class _InsuranceLeadsScreenState extends State<InsuranceLeadsScreen> {
 
               // #S.N. Badge
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: _isDarkMode
-                      ? const Color(0xFF334155)
-                      : const Color(0xFFF1F5F9),
-                  borderRadius: BorderRadius.circular(4),
+                  color: regBg,
+                  borderRadius: BorderRadius.circular(5),
                 ),
                 child: Text(
                   "#${index + 1}",
@@ -733,228 +690,307 @@ class _InsuranceLeadsScreenState extends State<InsuranceLeadsScreen> {
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
                     color:
-                        _isDarkMode ? Colors.white70 : const Color(0xFF334155),
+                        _isDarkMode ? Colors.white70 : const Color(0xFF1E3A8A),
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
+              const Spacer(),
 
-              // [LEAD ID]
-              Expanded(
-                child: Text(
-                  lead.id,
-                  style: GoogleFonts.poppins(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    color: _isDarkMode ? Colors.white : const Color(0xFF0F172A),
-                  ),
-                ),
-              ),
-
-              // [Status] Badge
+              // Status Pill with Dot
               Container(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 3.5),
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: lead.statusColor,
-                  borderRadius: BorderRadius.circular(5),
+                  color: lead.statusColor.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(14),
                 ),
-                child: Text(
-                  lead.status,
-                  style: GoogleFonts.poppins(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: lead.statusColor,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      lead.status.toUpperCase(),
+                      style: GoogleFonts.poppins(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: lead.statusColor,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
           const SizedBox(height: 10),
 
-          // Row 2: Owner [OWNER NAME]
-          Row(
-            children: [
-              SizedBox(
-                width: 90,
-                child: Text(
-                  "Owner",
-                  style: GoogleFonts.poppins(
-                    fontSize: 11.5,
-                    color: _isDarkMode
-                        ? Colors.grey.shade400
-                        : const Color(0xFF64748B),
-                  ),
+          // Row 2: CUSTOMER INQUIRY Box
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: softCardBg,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.chat_outlined,
+                      size: 13.5,
+                      color: Color(0xFF0F766E),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      "CUSTOMER INQUIRY",
+                      style: GoogleFonts.poppins(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF0F766E),
+                        letterSpacing: 0.4,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              Expanded(
-                child: Text(
+                const SizedBox(height: 6),
+                Text(
                   lead.ownerName,
                   style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
                     color: _isDarkMode ? Colors.white : const Color(0xFF0F172A),
                   ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-
-          // Row 3: Reg Number [REG NUMBER]
-          Row(
-            children: [
-              SizedBox(
-                width: 90,
-                child: Text(
-                  "Reg Number",
-                  style: GoogleFonts.poppins(
-                    fontSize: 11.5,
-                    color: _isDarkMode
-                        ? Colors.grey.shade400
-                        : const Color(0xFF64748B),
-                  ),
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: _isDarkMode
-                      ? const Color(0xFF0F172A)
-                      : const Color(0xFFEFF6FF),
-                  borderRadius: BorderRadius.circular(4),
-                  border: Border.all(
-                    color: _isDarkMode
-                        ? const Color(0xFF334155)
-                        : const Color(0xFFDBEAFE),
-                  ),
-                ),
-                child: Text(
-                  lead.regNumber,
-                  style: GoogleFonts.poppins(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF2563EB),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-
-          // Row 4: Phone / Email
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(
-                width: 90,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Phone /",
-                      style: GoogleFonts.poppins(
-                        fontSize: 11,
-                        color: _isDarkMode
-                            ? Colors.grey.shade400
-                            : const Color(0xFF64748B),
-                      ),
+                if (lead.id.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Container(
+                    width: double.infinity,
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color:
+                          _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: softBorder),
                     ),
-                    Text(
-                      "Email",
-                      style: GoogleFonts.poppins(
-                        fontSize: 11,
-                        color: _isDarkMode
-                            ? Colors.grey.shade400
-                            : const Color(0xFF64748B),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      lead.phone,
+                    child: Text(
+                      lead.id,
                       style: GoogleFonts.poppins(
                         fontSize: 11.5,
-                        fontWeight: FontWeight.w600,
                         color: _isDarkMode
-                            ? Colors.white70
-                            : const Color(0xFF334155),
+                            ? Colors.grey.shade300
+                            : const Color(0xFF475569),
                       ),
-                    ),
-                    Text(
-                      lead.email,
-                      style: GoogleFonts.poppins(
-                        fontSize: 11,
-                        color: _isDarkMode
-                            ? Colors.grey.shade400
-                            : const Color(0xFF64748B),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-
-          // Dotted Divider
-          Divider(
-            height: 1,
-            thickness: 1,
-            color:
-                _isDarkMode ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
-          ),
-          const SizedBox(height: 8),
-
-          // Row 5: Submitted on [DATE] (Left) + Eye & Delete Icons (Right)
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                "Submitted on ${lead.date}",
-                style: GoogleFonts.poppins(
-                  fontSize: 11,
-                  color: _isDarkMode
-                      ? Colors.grey.shade400
-                      : const Color(0xFF64748B),
-                ),
-              ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  InkWell(
-                    onTap: () => _viewLeadDetails(lead),
-                    borderRadius: BorderRadius.circular(4),
-                    child: Padding(
-                      padding: const EdgeInsets.all(4),
-                      child: Icon(
-                        Icons.visibility_outlined,
-                        size: 18,
-                        color: _isDarkMode
-                            ? Colors.grey.shade400
-                            : const Color(0xFF64748B),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  InkWell(
-                    onTap: () => _deleteLead(lead),
-                    borderRadius: BorderRadius.circular(4),
-                    child: const Padding(
-                      padding: EdgeInsets.all(4),
-                      child: Icon(
-                        Icons.delete_outline,
-                        size: 18,
-                        color: Color(0xFFDC2626),
-                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+
+          // Row 3: Reg Number Box
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            decoration: BoxDecoration(
+              color: regBg,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF0A2463),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  alignment: Alignment.center,
+                  child: const Icon(
+                    Icons.directions_car_filled_rounded,
+                    size: 16,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  "Reg: ",
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    color: _isDarkMode
+                        ? Colors.grey.shade400
+                        : const Color(0xFF64748B),
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    lead.regNumber,
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color:
+                          _isDarkMode ? Colors.white : const Color(0xFF0F172A),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+
+          // Row 4: Phone Box
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+            decoration: BoxDecoration(
+              color: softCardBg,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.phone_outlined,
+                  size: 16,
+                  color: _isDarkMode
+                      ? Colors.grey.shade400
+                      : const Color(0xFF475569),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    lead.phone.isNotEmpty ? lead.phone : '--',
+                    style: GoogleFonts.poppins(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w600,
+                      color:
+                          _isDarkMode ? Colors.white : const Color(0xFF0F172A),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+
+          // Row 5: Email Box
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+            decoration: BoxDecoration(
+              color: softCardBg,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.mail_outline,
+                  size: 16,
+                  color: _isDarkMode
+                      ? Colors.grey.shade400
+                      : const Color(0xFF475569),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    lead.email,
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      color: _isDarkMode
+                          ? Colors.grey.shade300
+                          : const Color(0xFF334155),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          // Row 6: Submitted Date (Left) + Eye & Delete Buttons (Right)
+          Row(
+            children: [
+              Icon(
+                Icons.access_time,
+                size: 15,
+                color: _isDarkMode
+                    ? Colors.grey.shade400
+                    : const Color(0xFF64748B),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  "Submitted on ${lead.date}",
+                  style: GoogleFonts.poppins(
+                    fontSize: 11.5,
+                    color: _isDarkMode
+                        ? Colors.grey.shade400
+                        : const Color(0xFF475569),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              InkWell(
+                onTap: () => _viewLeadDetails(lead),
+                borderRadius: BorderRadius.circular(7),
+                child: Container(
+                  width: 30,
+                  height: 30,
+                  decoration: BoxDecoration(
+                    color: regBg,
+                    borderRadius: BorderRadius.circular(7),
+                  ),
+                  alignment: Alignment.center,
+                  child: Icon(
+                    Icons.visibility_outlined,
+                    size: 16,
+                    color: _isDarkMode
+                        ? Colors.white70
+                        : const Color(0xFF1E3A8A),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
+              InkWell(
+                onTap: () => _deleteLead(lead),
+                borderRadius: BorderRadius.circular(7),
+                child: Container(
+                  width: 30,
+                  height: 30,
+                  decoration: BoxDecoration(
+                    color: _isDarkMode
+                        ? const Color(0xFF451A1A)
+                        : const Color(0xFFFEF2F2),
+                    borderRadius: BorderRadius.circular(7),
+                  ),
+                  alignment: Alignment.center,
+                  child: const Icon(
+                    Icons.delete_outline,
+                    size: 16,
+                    color: Color(0xFFDC2626),
+                  ),
+                ),
               ),
             ],
           ),

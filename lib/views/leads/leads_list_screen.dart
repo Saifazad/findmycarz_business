@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../../core/theme/app_colors.dart';
+import '../../models/crm_lead_model.dart';
+import '../../viewmodels/leads_viewmodel.dart';
 import '../widgets/crm_drawer.dart';
 import '../widgets/custom_back_button.dart';
 import '../widgets/admin_profile_avatar.dart';
@@ -32,6 +36,32 @@ class PipelineStage {
   });
 }
 
+class _CategoryDashboardData {
+  final int incomingTotal;
+  final int incomingNew;
+  final int webEnquiry;
+  final int webEnquiryNew;
+  final int callback;
+  final int callbackNew;
+  final int manual;
+  final int manualNew;
+  final int pipelineTotal;
+  final Map<String, int> stageCounts;
+
+  const _CategoryDashboardData({
+    required this.incomingTotal,
+    required this.incomingNew,
+    required this.webEnquiry,
+    required this.webEnquiryNew,
+    required this.callback,
+    required this.callbackNew,
+    required this.manual,
+    required this.manualNew,
+    required this.pipelineTotal,
+    this.stageCounts = const {},
+  });
+}
+
 class LeadsListScreen extends StatefulWidget {
   final String? initialType;
   const LeadsListScreen({super.key, this.initialType});
@@ -46,24 +76,30 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
   bool _isSyncing = false;
   bool _isFiltersExpanded = false;
 
-  void _handleLiveSync() async {
+  Future<void> _handleLiveSync() async {
     if (_isSyncing) return;
     setState(() {
       _isSyncing = true;
     });
+    final vm = context.read<LeadsViewModel>();
+    await vm.fetchLeads();
+    if (!mounted) return;
+    setState(() {
+      _isSyncing = false;
+    });
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Leads live sync completed"),
-        backgroundColor: Color(0xFF22C55E),
-        duration: Duration(milliseconds: 900),
+      SnackBar(
+        content: Text(
+          vm.errorMessage == null
+              ? "Leads live sync completed"
+              : vm.errorMessage!,
+        ),
+        backgroundColor: vm.errorMessage == null
+            ? AppColors.heroNavyStart
+            : AppColors.paletteRed,
+        duration: const Duration(milliseconds: 1200),
       ),
     );
-    await Future.delayed(const Duration(milliseconds: 600));
-    if (mounted) {
-      setState(() {
-        _isSyncing = false;
-      });
-    }
   }
 
   @override
@@ -71,27 +107,169 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
     super.initState();
     if (widget.initialType != null && widget.initialType!.isNotEmpty) {
       final initial = widget.initialType!.toLowerCase();
-      for (final cat in _categories) {
-        if (cat.label.toLowerCase().contains(initial) ||
-            initial.contains(cat.label.toLowerCase())) {
-          _activeCategory = cat.label;
+      for (final label in _categoryLabels) {
+        if (label.toLowerCase().contains(initial) ||
+            initial.contains(label.toLowerCase())) {
+          _activeCategory = label;
           break;
         }
       }
     }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<LeadsViewModel>().fetchLeads();
+      }
+    });
   }
 
-  final List<LoanCategoryFilter> _categories = const [
-    LoanCategoryFilter(label: "All", count: 68),
-    LoanCategoryFilter(label: "Used Car - Sale Purchase", count: 43),
-    LoanCategoryFilter(label: "New Car Loan", count: 2),
-    LoanCategoryFilter(label: "Bt Topup Loan", count: 14),
-    LoanCategoryFilter(label: "Car Loan Refinance", count: 4),
-    LoanCategoryFilter(label: "Business Loan", count: 1),
-    LoanCategoryFilter(label: "Home Loan", count: 1),
-    LoanCategoryFilter(label: "Loan Against Property", count: 1),
-    LoanCategoryFilter(label: "Personal Loan", count: 2),
+  static const List<String> _categoryLabels = [
+    "All",
+    "Used Car - Sale Purchase",
+    "New Car Loan",
+    "Bt Topup Loan",
+    "Car Loan Refinance",
+    "Business Loan",
+    "Home Loan",
+    "Loan Against Property",
+    "Personal Loan",
   ];
+
+  static String _categoryForLead(CrmLeadModel lead) {
+    switch (lead.rawLoanType.toUpperCase()) {
+      case 'USED_CAR_LOAN':
+        return "Used Car - Sale Purchase";
+      case 'NEW_CAR_LOAN':
+        return "New Car Loan";
+      case 'BT_TOPUP_LOAN':
+        return "Bt Topup Loan";
+      case 'CAR_LOAN_REFINANCE':
+        return "Car Loan Refinance";
+      case 'BUSINESS_LOAN':
+        return "Business Loan";
+      case 'HOME_LOAN':
+        return "Home Loan";
+      case 'LOAN_AGAINST_PROPERTIES':
+      case 'LOAN_AGAINST_PROPERTY':
+        return "Loan Against Property";
+      case 'PERSONAL_LOAN':
+        return "Personal Loan";
+      default:
+        return lead.type;
+    }
+  }
+
+  static bool _isIncomingLead(CrmLeadModel lead) {
+    final rs = lead.rawStatus.toUpperCase();
+    final s = lead.status.toLowerCase();
+    return rs == 'NEW_LEAD' || rs == 'NEW' || s == 'new lead' || s == 'new';
+  }
+
+  String _stageTitleForLead(CrmLeadModel lead) {
+    final rs = lead.rawStatus.toUpperCase();
+    switch (rs) {
+      case 'CONTACT_EST':
+      case 'CONTACT_ESTABLISHED':
+        return "Contact Est.";
+      case 'FOLLOW_UP':
+        return "Follow Up";
+      case 'PICK_UP':
+      case 'PICKUP':
+        return "Pick Up";
+      case 'DOC_PENDING':
+        return "Doc Pending";
+      case 'DOC_RECEIVED':
+        return "Doc Received";
+      case 'SENT_TO_BANK':
+        return "Sent to Bank";
+      case 'UNDER_PROCESS':
+      case 'LOGIN':
+        return "Login";
+      case 'REJECTED':
+        return "Rejected";
+      case 'APPROVED':
+        return "Approved";
+      case 'DISBURSED':
+        return "Disbursed";
+      case 'RTO_PROCESS':
+        return "RTO Process (RTO Person)";
+      case 'RTO_DONE':
+        return "RTO Done";
+      case 'PAYMENT_REQUESTED':
+        return "Payment Requested";
+      case 'PAYMENT_IN_PROCESS':
+        return "Payment In Process";
+      case 'PAYMENT_DONE':
+        return "Payment Done (Accounts)";
+      case 'VEHICLE_HANDOVER':
+        return "Vehicle Handover";
+      case 'PDD_PENDING':
+        return "PDD Pending";
+      case 'PDD_SUBMITTED':
+        return "PDD Submitted";
+      case 'CASE_COMPLETED':
+      case 'COMPLETED':
+        return "Case Completed";
+      case 'CASE_CANCELLATION':
+        return "Case Cancellation";
+      case 'CANCEL':
+      case 'CASE_CANCELLED':
+      case 'CANCELLED':
+        return "Case Cancelled";
+    }
+
+    final label = lead.status.trim().toLowerCase();
+    for (final stage in _stages) {
+      final st = stage.title.toLowerCase().replaceAll(' ', '');
+      if (st == label.replaceAll(' ', '')) {
+        return stage.title;
+      }
+    }
+    return lead.status;
+  }
+
+  _CategoryDashboardData _computeDashboardData(List<CrmLeadModel> leads) {
+    final filtered = _activeCategory == "All"
+        ? leads
+        : leads.where((l) => _categoryForLead(l) == _activeCategory).toList();
+
+    int webEnquiry = 0;
+    int callback = 0;
+    int manual = 0;
+    int incomingTotal = 0;
+    int pipelineTotal = 0;
+    final stageCounts = <String, int>{};
+
+    for (final lead in filtered) {
+      if (_isIncomingLead(lead)) {
+        incomingTotal++;
+        final src = lead.leadSource;
+        if (src == 'callback') {
+          callback++;
+        } else if (src == 'manual') {
+          manual++;
+        } else {
+          webEnquiry++;
+        }
+      } else {
+        pipelineTotal++;
+        final stage = _stageTitleForLead(lead);
+        stageCounts[stage] = (stageCounts[stage] ?? 0) + 1;
+      }
+    }
+
+    return _CategoryDashboardData(
+      incomingTotal: incomingTotal,
+      incomingNew: incomingTotal,
+      webEnquiry: webEnquiry,
+      webEnquiryNew: webEnquiry,
+      callback: callback,
+      callbackNew: callback,
+      manual: manual,
+      manualNew: manual,
+      pipelineTotal: pipelineTotal,
+      stageCounts: stageCounts,
+    );
+  }
 
   final List<PipelineStage> _stages = [
     PipelineStage(
@@ -99,40 +277,40 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
       count: 0,
       todayCount: 0,
       icon: Icons.person_outline,
-      iconColor: const Color(0xFF6366F1),
-      iconBg: const Color(0xFFEEF2FF),
+      iconColor: AppColors.paletteBlue,
+      iconBg: AppColors.paletteBlue,
     ),
     PipelineStage(
       title: "Follow Up",
       count: 0,
       todayCount: 0,
       icon: Icons.phone_callback_outlined,
-      iconColor: const Color(0xFFF59E0B),
-      iconBg: const Color(0xFFFEF3C7),
+      iconColor: AppColors.paletteGreen,
+      iconBg: AppColors.paletteGreen,
     ),
     PipelineStage(
       title: "Pick Up",
       count: 1,
       todayCount: 0,
       icon: Icons.directions_car_outlined,
-      iconColor: const Color(0xFFEAB308),
-      iconBg: const Color(0xFFFEF9C3),
+      iconColor: AppColors.paletteOrange,
+      iconBg: AppColors.paletteOrange,
     ),
     PipelineStage(
       title: "Doc Pending",
       count: 3,
       todayCount: 0,
       icon: Icons.description_outlined,
-      iconColor: const Color(0xFFEF4444),
-      iconBg: const Color(0xFFFEE2E2),
+      iconColor: AppColors.paletteCyan,
+      iconBg: AppColors.paletteCyan,
     ),
     PipelineStage(
       title: "Doc Received",
       count: 0,
       todayCount: 0,
       icon: Icons.task_outlined,
-      iconColor: const Color(0xFF8B5CF6),
-      iconBg: const Color(0xFFF5F3FF),
+      iconColor: AppColors.palettePurple,
+      iconBg: AppColors.palettePurple,
     ),
     PipelineStage(
       title: "Sent to Bank",
@@ -140,8 +318,8 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
       todayCount: 0,
       newBadge: "+2 New",
       icon: Icons.account_balance_outlined,
-      iconColor: const Color(0xFF0EA5E9),
-      iconBg: const Color(0xFFE0F2FE),
+      iconColor: AppColors.paletteBlue,
+      iconBg: AppColors.paletteBlue,
     ),
     PipelineStage(
       title: "Login",
@@ -149,24 +327,24 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
       todayCount: 0,
       newBadge: "+1 New",
       icon: Icons.login_outlined,
-      iconColor: const Color(0xFF3B82F6),
-      iconBg: const Color(0xFFEFF6FF),
+      iconColor: AppColors.paletteCyan,
+      iconBg: AppColors.paletteCyan,
     ),
     PipelineStage(
       title: "Rejected",
       count: 3,
       todayCount: 0,
       icon: Icons.cancel_outlined,
-      iconColor: const Color(0xFFEF4444),
-      iconBg: const Color(0xFFFEE2E2),
+      iconColor: AppColors.paletteRed,
+      iconBg: AppColors.paletteRed,
     ),
     PipelineStage(
       title: "Approved",
       count: 1,
       todayCount: 0,
       icon: Icons.check_circle_outline,
-      iconColor: const Color(0xFF10B981),
-      iconBg: const Color(0xFFD1FAE5),
+      iconColor: AppColors.paletteGreen,
+      iconBg: AppColors.paletteGreen,
     ),
     PipelineStage(
       title: "Disbursed",
@@ -174,8 +352,8 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
       todayCount: 0,
       newBadge: "+2 New",
       icon: Icons.verified_outlined,
-      iconColor: const Color(0xFF059669),
-      iconBg: const Color(0xFFD1FAE5),
+      iconColor: AppColors.paletteGreen,
+      iconBg: AppColors.paletteGreen,
     ),
     PipelineStage(
       title: "RTO Process (RTO Person)",
@@ -183,80 +361,80 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
       todayCount: 0,
       newBadge: "+2 New",
       icon: Icons.commute_outlined,
-      iconColor: const Color(0xFF2563EB),
-      iconBg: const Color(0xFFDBEAFE),
+      iconColor: AppColors.paletteBlue,
+      iconBg: AppColors.paletteBlue,
     ),
     PipelineStage(
       title: "RTO Done",
       count: 11,
       todayCount: 0,
       icon: Icons.assignment_turned_in_outlined,
-      iconColor: const Color(0xFF10B981),
-      iconBg: const Color(0xFFD1FAE5),
+      iconColor: AppColors.paletteGreen,
+      iconBg: AppColors.paletteGreen,
     ),
     PipelineStage(
       title: "Payment Requested",
       count: 1,
       todayCount: 0,
       icon: Icons.payments_outlined,
-      iconColor: const Color(0xFFD97706),
-      iconBg: const Color(0xFFFEF3C7),
+      iconColor: AppColors.paletteOrange,
+      iconBg: AppColors.paletteOrange,
     ),
     PipelineStage(
       title: "Payment In Process",
       count: 1,
       todayCount: 0,
       icon: Icons.hourglass_top_outlined,
-      iconColor: const Color(0xFF0284C7),
-      iconBg: const Color(0xFFE0F2FE),
+      iconColor: AppColors.paletteCyan,
+      iconBg: AppColors.paletteCyan,
     ),
     PipelineStage(
       title: "Payment Done (Accounts)",
       count: 0,
       todayCount: 0,
       icon: Icons.price_check_outlined,
-      iconColor: const Color(0xFF10B981),
-      iconBg: const Color(0xFFD1FAE5),
+      iconColor: AppColors.paletteGreen,
+      iconBg: AppColors.paletteGreen,
     ),
     PipelineStage(
       title: "Vehicle Handover",
       count: 1,
       todayCount: 0,
       icon: Icons.key_outlined,
-      iconColor: const Color(0xFF7C3AED),
-      iconBg: const Color(0xFFEDE9FE),
+      iconColor: AppColors.palettePurple,
+      iconBg: AppColors.palettePurple,
     ),
     PipelineStage(
       title: "PDD Pending",
       count: 1,
       todayCount: 0,
       icon: Icons.pending_actions_outlined,
-      iconColor: const Color(0xFFF97316),
-      iconBg: const Color(0xFFFFEDD5),
+      iconColor: AppColors.paletteOrange,
+      iconBg: AppColors.paletteOrange,
     ),
     PipelineStage(
       title: "PDD Submitted",
       count: 2,
       todayCount: 0,
       icon: Icons.cloud_done_outlined,
-      iconColor: const Color(0xFF0284C7),
-      iconBg: const Color(0xFFE0F2FE),
+      iconColor: AppColors.paletteCyan,
+      iconBg: AppColors.paletteCyan,
     ),
     PipelineStage(
       title: "Case Completed",
       count: 1,
       todayCount: 0,
       icon: Icons.done_all_outlined,
-      iconColor: const Color(0xFF16A34A),
-      iconBg: const Color(0xFFDCFCE7),
+      iconColor: AppColors.paletteGreen,
+      iconBg: AppColors.paletteGreen,
     ),
     PipelineStage(
       title: "Case Cancellation",
       count: 3,
       todayCount: 0,
       icon: Icons.remove_circle_outline,
-      iconColor: const Color(0xFF64748B),
-      iconBg: const Color(0xFFF1F5F9),
+      iconColor: AppColors.neutralMuted,
+      iconBg: AppColors.neutralMuted,
     ),
     PipelineStage(
       title: "Case Cancelled",
@@ -264,8 +442,8 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
       todayCount: 0,
       newBadge: "+7 New",
       icon: Icons.block_outlined,
-      iconColor: const Color(0xFFDC2626),
-      iconBg: const Color(0xFFFEE2E2),
+      iconColor: AppColors.paletteRed,
+      iconBg: AppColors.paletteRed,
     ),
   ];
 
@@ -282,7 +460,7 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text("Viewing ${stage.title} (${stage.count} leads)"),
-        backgroundColor: const Color(0xFF00A3FF),
+        backgroundColor: AppColors.heroNavyStart,
         duration: const Duration(seconds: 1),
       ),
     );
@@ -297,17 +475,17 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           color: isActive
-              ? const Color(0xFF1E293B)
+              ? AppColors.heroNavyStart
               : (_isDarkMode
                   ? const Color(0xFF1E293B)
-                  : const Color(0xFFF1F5F9)),
+                  : AppColors.neutralBadgeBg),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isActive
-                ? const Color(0xFF1E293B)
+                ? AppColors.heroNavyStart
                 : (_isDarkMode
                     ? const Color(0xFF334155)
-                    : const Color(0xFFE2E8F0)),
+                    : AppColors.cardBorder),
           ),
         ),
         child: Row(
@@ -322,7 +500,7 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
                     ? Colors.white
                     : (_isDarkMode
                         ? Colors.grey.shade300
-                        : const Color(0xFF334155)),
+                        : AppColors.neutralText),
               ),
             ),
             const SizedBox(width: 6),
@@ -333,7 +511,7 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
                     ? Colors.white.withValues(alpha: 0.2)
                     : (_isDarkMode
                         ? const Color(0xFF334155)
-                        : const Color(0xFFE2E8F0)),
+                        : AppColors.cardBorder),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
@@ -343,9 +521,7 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
                   fontWeight: FontWeight.bold,
                   color: isActive
                       ? Colors.white
-                      : (_isDarkMode
-                          ? Colors.white70
-                          : const Color(0xFF475569)),
+                      : (_isDarkMode ? Colors.white70 : AppColors.neutralMuted),
                 ),
               ),
             ),
@@ -357,420 +533,596 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor:
-          _isDarkMode ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-      drawer: const CrmDrawer(),
-      appBar: AppBar(
-        backgroundColor: _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-        elevation: 0.5,
-        leading: CustomBackButton(isDarkMode: _isDarkMode),
-        title: Text(
-          "Loan Leads",
-          style: GoogleFonts.poppins(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: _isDarkMode ? Colors.white : const Color(0xFF0F172A),
-          ),
-        ),
-        actions: [
-          IconButton(
-            tooltip:
-                _isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode",
-            icon: Icon(
-              _isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_outlined,
-              color: _isDarkMode
-                  ? const Color(0xFFFBBF24)
-                  : const Color(0xFF334155),
-            ),
-            onPressed: () {
-              setState(() {
-                _isDarkMode = !_isDarkMode;
-              });
-            },
-          ),
-          IconButton(
-            icon: Icon(
-              Icons.notifications_none_rounded,
-              color: _isDarkMode ? Colors.white : const Color(0xFF334155),
-            ),
-            onPressed: () {},
-          ),
-          const SizedBox(width: 4),
-          const AdminProfileAvatar(),
-          const SizedBox(width: 14),
-        ],
-      ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Fixed Top Section (Live Sync, Create Lead, and Filters)
-          Container(
-            color:
-                _isDarkMode ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-            padding:
-                const EdgeInsets.only(left: 14, right: 14, top: 14, bottom: 8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // 1. Header: "Live Sync" (Left) & "+ Create Lead" (Right)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      OutlinedButton.icon(
-                        onPressed: _handleLiveSync,
-                        icon: _isSyncing
-                            ? const SizedBox(
-                                width: 14,
-                                height: 14,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Color(0xFF22C55E),
-                                ),
-                              )
-                            : const Icon(Icons.sync,
-                                size: 16, color: Color(0xFF22C55E)),
-                        label: Text(
-                          "Live Sync",
-                          style: GoogleFonts.poppins(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF22C55E),
-                          ),
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          backgroundColor: _isDarkMode
-                              ? const Color(0xFF1E293B)
-                              : Colors.white,
-                          side: const BorderSide(
-                              color: Color(0xFF22C55E), width: 1.2),
-                          elevation: 0,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 8),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                      ),
-                      ElevatedButton.icon(
-                        onPressed: _showCreateLeadModal,
-                        icon: const Icon(Icons.add,
-                            size: 16, color: Colors.white),
-                        label: Text(
-                          "Create Lead",
-                          style: GoogleFonts.poppins(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF00A3FF),
-                          elevation: 0,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 8),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12),
+    return Consumer<LeadsViewModel>(
+      builder: (context, vm, _) {
+        final categories = _categoryLabels.map((label) {
+          final count = label == "All"
+              ? vm.leads.length
+              : vm.leads.where((l) => _categoryForLead(l) == label).length;
+          return LoanCategoryFilter(label: label, count: count);
+        }).toList();
 
-                // 2. Filters Section (Expandable on tap)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        InkWell(
-                          onTap: () {
-                            setState(() {
-                              _isFiltersExpanded = !_isFiltersExpanded;
-                            });
-                          },
-                          borderRadius: BorderRadius.circular(6),
+        final activeData = _computeDashboardData(vm.leads);
+        final activeStages = _stages.map((stage) {
+          return PipelineStage(
+            title: stage.title,
+            count: activeData.stageCounts[stage.title] ?? 0,
+            todayCount: 0,
+            icon: stage.icon,
+            iconColor: stage.iconColor,
+            iconBg: stage.iconBg,
+          );
+        }).toList();
+
+        return Scaffold(
+          backgroundColor:
+              _isDarkMode ? const Color(0xFF0F172A) : AppColors.background,
+          drawer: const CrmDrawer(),
+          appBar: AppBar(
+            backgroundColor:
+                _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
+            elevation: 0.5,
+            leading: CustomBackButton(isDarkMode: _isDarkMode),
+            title: Text(
+              "Loan Leads",
+              style: GoogleFonts.poppins(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: _isDarkMode ? Colors.white : const Color(0xFF0F172A),
+              ),
+            ),
+            actions: [
+              IconButton(
+                icon: Icon(
+                  Icons.notifications_none_rounded,
+                  color: _isDarkMode ? Colors.white : const Color(0xFF334155),
+                ),
+                onPressed: () {},
+              ),
+              const SizedBox(width: 4),
+              const AdminProfileAvatar(),
+              const SizedBox(width: 14),
+            ],
+          ),
+          body: vm.isLoading && vm.leads.isEmpty
+              ? const Center(
+                  child: CircularProgressIndicator(color: AppColors.primary),
+                )
+              : vm.errorMessage != null && vm.leads.isEmpty
+                  ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.error_outline,
+                              size: 44,
+                              color: AppColors.paletteRed,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              vm.errorMessage!,
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.poppins(
+                                fontSize: 13,
+                                color: _isDarkMode
+                                    ? Colors.white70
+                                    : const Color(0xFF334155),
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+                            ElevatedButton.icon(
+                              onPressed: vm.fetchLeads,
+                              icon: const Icon(Icons.refresh, size: 16),
+                              label: const Text("Retry"),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.heroNavyStart,
+                                foregroundColor: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  : vm.leads.isEmpty
+                      ? Center(
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 4, horizontal: 2),
-                            child: Row(
+                            padding: const EdgeInsets.all(24),
+                            child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Icon(
-                                  Icons.filter_alt_outlined,
-                                  size: 16,
+                                  Icons.people_outline,
+                                  size: 44,
                                   color: _isDarkMode
-                                      ? Colors.grey.shade400
-                                      : const Color(0xFF64748B),
+                                      ? Colors.grey.shade600
+                                      : Colors.grey.shade400,
                                 ),
-                                const SizedBox(width: 4),
+                                const SizedBox(height: 10),
                                 Text(
-                                  "Filters:",
+                                  "No Loan Leads Found",
                                   style: GoogleFonts.poppins(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
                                     color: _isDarkMode
                                         ? Colors.grey.shade400
-                                        : const Color(0xFF64748B),
+                                        : Colors.grey.shade600,
                                   ),
                                 ),
-                                const SizedBox(width: 2),
-                                Icon(
-                                  _isFiltersExpanded
-                                      ? Icons.keyboard_arrow_up_rounded
-                                      : Icons.keyboard_arrow_down_rounded,
-                                  size: 18,
-                                  color: _isDarkMode
-                                      ? Colors.grey.shade400
-                                      : const Color(0xFF64748B),
+                                const SizedBox(height: 12),
+                                ElevatedButton.icon(
+                                  onPressed: vm.fetchLeads,
+                                  icon: const Icon(Icons.refresh, size: 16),
+                                  label: const Text("Refresh"),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.heroNavyStart,
+                                    foregroundColor: Colors.white,
+                                  ),
                                 ),
                               ],
                             ),
                           ),
-                        ),
-                        if (!_isFiltersExpanded) ...[
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              child: Row(
-                                children: _categories.map((cat) {
-                                  return Padding(
-                                    padding: const EdgeInsets.only(right: 8),
-                                    child: _buildCategoryChip(cat),
-                                  );
-                                }).toList(),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                    if (_isFiltersExpanded) ...[
-                      const SizedBox(height: 10),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: _categories.map((cat) {
-                          return _buildCategoryChip(cat);
-                        }).toList(),
-                      ),
-                    ],
-                  ],
-                ),
-                const SizedBox(height: 14),
-
-                // 3. INCOMING LEADS Section Title
-                Text(
-                  "INCOMING LEADS (7)",
-                  style: GoogleFonts.poppins(
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFF0D9488),
-                    letterSpacing: 0.5,
-                  ),
-                ),
-                const SizedBox(height: 8),
-
-                // Total New Leads Big Purple Banner
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF4F46E5), Color(0xFF6366F1)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(14),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF4F46E5).withValues(alpha: 0.3),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            "TOTAL NEW LEADS",
-                            style: GoogleFonts.poppins(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white.withValues(alpha: 0.9),
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              "+7 New",
-                              style: GoogleFonts.poppins(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        "7",
-                        style: GoogleFonts.poppins(
-                          fontSize: 34,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          height: 1.1,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Divider(
-                        height: 1,
-                        thickness: 1,
-                        color: Colors.white.withValues(alpha: 0.2),
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            "Today",
-                            style: GoogleFonts.poppins(
-                              fontSize: 11.5,
-                              color: Colors.white.withValues(alpha: 0.85),
-                            ),
-                          ),
-                          Text(
-                            "0",
-                            style: GoogleFonts.poppins(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Scrollable Content Below
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.only(
-                  left: 14, right: 14, top: 4, bottom: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // 3 Incoming Sub-Cards Row: WEB ENQUIRY, CALLBACK, MANUAL
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildIncomingSubCard(
-                          title: "WEB ENQUIRY",
-                          titleColor: const Color(0xFF10B981),
-                          count: 1,
-                          pillText: "+1 New",
-                          todayCount: 0,
-                          newCount: 1,
-                          newColor: const Color(0xFF10B981),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _buildIncomingSubCard(
-                          title: "CALLBACK",
-                          titleColor: const Color(0xFFD97706),
-                          count: 3,
-                          pillText: "+3 New",
-                          todayCount: 0,
-                          newCount: 3,
-                          newColor: const Color(0xFFD97706),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _buildIncomingSubCard(
-                          title: "MANUAL",
-                          titleColor: const Color(0xFF00A3FF),
-                          count: 3,
-                          pillText: "+3 New",
-                          todayCount: 0,
-                          newCount: 3,
-                          newColor: const Color(0xFF00A3FF),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-
-                  // 4. PROCESSING PIPELINE (61) Section
-                  Text(
-                    "PROCESSING PIPELINE (61)",
-                    style: GoogleFonts.poppins(
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.bold,
-                      color: _isDarkMode
-                          ? Colors.white70
-                          : const Color(0xFF334155),
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-
-                  // 2-Column Grid of Pipeline Stages
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: (_stages.length / 2).ceil(),
-                    itemBuilder: (ctx, rowIndex) {
-                      final leftIndex = rowIndex * 2;
-                      final rightIndex = leftIndex + 1;
-
-                      final leftStage = _stages[leftIndex];
-                      final rightStage = rightIndex < _stages.length
-                          ? _stages[rightIndex]
-                          : null;
-
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: Row(
+                        )
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Expanded(child: _buildStageCard(leftStage)),
-                            const SizedBox(width: 8),
+                            // Fixed Top Section (Live Sync, Create Lead, and Filters)
+                            Container(
+                              color: _isDarkMode
+                                  ? const Color(0xFF0F172A)
+                                  : AppColors.background,
+                              padding: const EdgeInsets.only(
+                                  left: 14, right: 14, top: 14, bottom: 8),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // 1. Header: "Live Sync" (Left) & "+ Create Lead" (Right)
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: OutlinedButton.icon(
+                                          onPressed: _handleLiveSync,
+                                          icon: _isSyncing
+                                              ? SizedBox(
+                                                  width: 14,
+                                                  height: 14,
+                                                  child:
+                                                      CircularProgressIndicator(
+                                                    strokeWidth: 2,
+                                                    color: _isDarkMode
+                                                        ? const Color(
+                                                            0xFF60A5FA)
+                                                        : AppColors
+                                                            .heroNavyStart,
+                                                  ),
+                                                )
+                                              : Icon(
+                                                  Icons.sync,
+                                                  size: 16,
+                                                  color: _isDarkMode
+                                                      ? const Color(0xFF60A5FA)
+                                                      : AppColors.heroNavyStart,
+                                                ),
+                                          label: Text(
+                                            "Live Sync",
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 12.5,
+                                              fontWeight: FontWeight.w600,
+                                              color: _isDarkMode
+                                                  ? const Color(0xFF60A5FA)
+                                                  : AppColors.heroNavyStart,
+                                            ),
+                                          ),
+                                          style: OutlinedButton.styleFrom(
+                                            backgroundColor: _isDarkMode
+                                                ? const Color(0xFF1E293B)
+                                                : Colors.white,
+                                            side: BorderSide(
+                                              color: _isDarkMode
+                                                  ? const Color(0xFF60A5FA)
+                                                  : AppColors.heroNavyStart,
+                                              width: 1.2,
+                                            ),
+                                            elevation: 0,
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 12, vertical: 10),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: ElevatedButton.icon(
+                                          onPressed: _showCreateLeadModal,
+                                          icon: const Icon(Icons.add,
+                                              size: 16, color: Colors.white),
+                                          label: Text(
+                                            "Create Lead",
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 12.5,
+                                              fontWeight: FontWeight.w600,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor:
+                                                AppColors.heroNavyStart,
+                                            elevation: 0,
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 12, vertical: 10),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+
+                                  // 2. Filters Section (Expandable on tap)
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          InkWell(
+                                            onTap: () {
+                                              setState(() {
+                                                _isFiltersExpanded =
+                                                    !_isFiltersExpanded;
+                                              });
+                                            },
+                                            borderRadius:
+                                                BorderRadius.circular(6),
+                                            child: Padding(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      vertical: 4,
+                                                      horizontal: 2),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Icon(
+                                                    Icons.filter_alt_outlined,
+                                                    size: 16,
+                                                    color: _isDarkMode
+                                                        ? Colors.grey.shade400
+                                                        : const Color(
+                                                            0xFF64748B),
+                                                  ),
+                                                  const SizedBox(width: 4),
+                                                  Text(
+                                                    "Filters:",
+                                                    style: GoogleFonts.poppins(
+                                                      fontSize: 12,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color: _isDarkMode
+                                                          ? Colors.grey.shade400
+                                                          : const Color(
+                                                              0xFF64748B),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 2),
+                                                  Icon(
+                                                    _isFiltersExpanded
+                                                        ? Icons
+                                                            .keyboard_arrow_up_rounded
+                                                        : Icons
+                                                            .keyboard_arrow_down_rounded,
+                                                    size: 18,
+                                                    color: _isDarkMode
+                                                        ? Colors.grey.shade400
+                                                        : const Color(
+                                                            0xFF64748B),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                          if (!_isFiltersExpanded) ...[
+                                            const SizedBox(width: 6),
+                                            Expanded(
+                                              child: SingleChildScrollView(
+                                                scrollDirection:
+                                                    Axis.horizontal,
+                                                child: Row(
+                                                  children:
+                                                      categories.map((cat) {
+                                                    return Padding(
+                                                      padding:
+                                                          const EdgeInsets.only(
+                                                              right: 8),
+                                                      child: _buildCategoryChip(
+                                                          cat),
+                                                    );
+                                                  }).toList(),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ],
+                                      ),
+                                      if (_isFiltersExpanded) ...[
+                                        const SizedBox(height: 10),
+                                        Wrap(
+                                          spacing: 8,
+                                          runSpacing: 8,
+                                          children: categories.map((cat) {
+                                            return _buildCategoryChip(cat);
+                                          }).toList(),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                  const SizedBox(height: 14),
+
+                                  // 3. INCOMING LEADS Section Title
+                                  Text(
+                                    "INCOMING LEADS (${activeData.incomingTotal})",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.bold,
+                                      color: _isDarkMode
+                                          ? Colors.white70
+                                          : AppColors.sectionHeading,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+
+                                  // Total New Leads Big Navy Banner
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 14, vertical: 11),
+                                    decoration: BoxDecoration(
+                                      gradient: const LinearGradient(
+                                        colors: [
+                                          AppColors.heroNavyStart,
+                                          AppColors.heroNavyEnd
+                                        ],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      ),
+                                      borderRadius: BorderRadius.circular(12),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: AppColors.heroNavyStart
+                                              .withValues(alpha: 0.25),
+                                          blurRadius: 10,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(
+                                              "TOTAL NEW LEADS",
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 10.5,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.white
+                                                    .withValues(alpha: 0.9),
+                                                letterSpacing: 0.5,
+                                              ),
+                                            ),
+                                            Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 7,
+                                                      vertical: 1.5),
+                                              decoration: BoxDecoration(
+                                                color: Colors.white
+                                                    .withValues(alpha: 0.2),
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                              ),
+                                              child: Text(
+                                                activeData.incomingNew > 0
+                                                    ? "+${activeData.incomingNew} New"
+                                                    : "0 New",
+                                                style: GoogleFonts.poppins(
+                                                  fontSize: 9.5,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          "${activeData.incomingTotal}",
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 26,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                            height: 1.1,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 6),
+                                        Divider(
+                                          height: 1,
+                                          thickness: 1,
+                                          color: Colors.white
+                                              .withValues(alpha: 0.2),
+                                        ),
+                                        const SizedBox(height: 6),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(
+                                              "Today",
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 11,
+                                                color: Colors.white
+                                                    .withValues(alpha: 0.85),
+                                              ),
+                                            ),
+                                            Text(
+                                              "0",
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            // Scrollable Content Below
                             Expanded(
-                              child: rightStage != null
-                                  ? _buildStageCard(rightStage)
-                                  : const SizedBox(),
+                              child: RefreshIndicator(
+                                color: AppColors.primary,
+                                onRefresh: vm.fetchLeads,
+                                child: SingleChildScrollView(
+                                  physics:
+                                      const AlwaysScrollableScrollPhysics(),
+                                  padding: const EdgeInsets.only(
+                                      left: 14, right: 14, top: 4, bottom: 20),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      // 3 Incoming Sub-Cards Row: WEB ENQUIRY, CALLBACK, MANUAL
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: _buildIncomingSubCard(
+                                              title: "WEB ENQUIRY",
+                                              titleColor: _isDarkMode
+                                                  ? Colors.grey.shade300
+                                                  : AppColors.sectionHeading,
+                                              count: activeData.webEnquiry,
+                                              pillText: activeData
+                                                          .webEnquiryNew >
+                                                      0
+                                                  ? "+${activeData.webEnquiryNew} New"
+                                                  : "0 New",
+                                              todayCount: 0,
+                                              newCount:
+                                                  activeData.webEnquiryNew,
+                                              newColor: AppColors.paletteGreen,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: _buildIncomingSubCard(
+                                              title: "CALLBACK",
+                                              titleColor: _isDarkMode
+                                                  ? Colors.grey.shade300
+                                                  : AppColors.sectionHeading,
+                                              count: activeData.callback,
+                                              pillText: activeData.callbackNew >
+                                                      0
+                                                  ? "+${activeData.callbackNew} New"
+                                                  : "0 New",
+                                              todayCount: 0,
+                                              newCount: activeData.callbackNew,
+                                              newColor: AppColors.paletteOrange,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: _buildIncomingSubCard(
+                                              title: "MANUAL",
+                                              titleColor: _isDarkMode
+                                                  ? Colors.grey.shade300
+                                                  : AppColors.sectionHeading,
+                                              count: activeData.manual,
+                                              pillText: activeData.manualNew > 0
+                                                  ? "+${activeData.manualNew} New"
+                                                  : "0 New",
+                                              todayCount: 0,
+                                              newCount: activeData.manualNew,
+                                              newColor: AppColors.paletteBlue,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 20),
+
+                                      // 4. PROCESSING PIPELINE Section
+                                      Text(
+                                        "PROCESSING PIPELINE (${activeData.pipelineTotal})",
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 11.5,
+                                          fontWeight: FontWeight.bold,
+                                          color: _isDarkMode
+                                              ? Colors.white70
+                                              : AppColors.sectionHeading,
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 10),
+
+                                      // 2-Column Grid of Pipeline Stages
+                                      ListView.builder(
+                                        shrinkWrap: true,
+                                        physics:
+                                            const NeverScrollableScrollPhysics(),
+                                        itemCount:
+                                            (activeStages.length / 2).ceil(),
+                                        itemBuilder: (ctx, rowIndex) {
+                                          final leftIndex = rowIndex * 2;
+                                          final rightIndex = leftIndex + 1;
+
+                                          final leftStage =
+                                              activeStages[leftIndex];
+                                          final rightStage =
+                                              rightIndex < activeStages.length
+                                                  ? activeStages[rightIndex]
+                                                  : null;
+
+                                          return Padding(
+                                            padding: const EdgeInsets.only(
+                                                bottom: 8),
+                                            child: Row(
+                                              children: [
+                                                Expanded(
+                                                    child: _buildStageCard(
+                                                        leftStage)),
+                                                const SizedBox(width: 8),
+                                                Expanded(
+                                                  child: rightStage != null
+                                                      ? _buildStageCard(
+                                                          rightStage)
+                                                      : const SizedBox(),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
                             ),
                           ],
                         ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -788,15 +1140,14 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color:
-              _isDarkMode ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+          color: _isDarkMode ? const Color(0xFF334155) : AppColors.cardBorder,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: _isDarkMode ? 0.2 : 0.02),
-            blurRadius: 4,
+            color: Colors.black.withValues(alpha: _isDarkMode ? 0.2 : 0.03),
+            blurRadius: 6,
             offset: const Offset(0, 2),
           ),
         ],
@@ -823,16 +1174,14 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
                 style: GoogleFonts.poppins(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: _isDarkMode ? Colors.white : const Color(0xFF0F172A),
+                  color: newColor,
                 ),
               ),
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
                 decoration: BoxDecoration(
-                  color: _isDarkMode
-                      ? const Color(0xFF334155)
-                      : const Color(0xFFF1F5F9),
+                  color: newColor.withValues(alpha: _isDarkMode ? 0.2 : 0.12),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
@@ -840,8 +1189,7 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
                   style: GoogleFonts.poppins(
                     fontSize: 8.5,
                     fontWeight: FontWeight.w600,
-                    color:
-                        _isDarkMode ? Colors.white70 : const Color(0xFF64748B),
+                    color: newColor,
                   ),
                 ),
               ),
@@ -886,21 +1234,20 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
   Widget _buildStageCard(PipelineStage stage) {
     return InkWell(
       onTap: () => _onStageTap(stage),
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
         decoration: BoxDecoration(
           color: _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color:
-                _isDarkMode ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+            color: _isDarkMode ? const Color(0xFF334155) : AppColors.cardBorder,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: _isDarkMode ? 0.2 : 0.02),
-              blurRadius: 4,
-              offset: const Offset(0, 1),
+              color: Colors.black.withValues(alpha: _isDarkMode ? 0.2 : 0.03),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
@@ -914,13 +1261,16 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
                   width: 24,
                   height: 24,
                   decoration: BoxDecoration(
-                    color: _isDarkMode
-                        ? stage.iconColor.withValues(alpha: 0.2)
-                        : stage.iconBg,
+                    color: stage.iconColor
+                        .withValues(alpha: _isDarkMode ? 0.2 : 0.12),
                     borderRadius: BorderRadius.circular(5),
                   ),
                   alignment: Alignment.center,
-                  child: Icon(stage.icon, size: 13, color: stage.iconColor),
+                  child: Icon(
+                    stage.icon,
+                    size: 13,
+                    color: stage.iconColor,
+                  ),
                 ),
                 const SizedBox(width: 6),
                 Expanded(
@@ -941,7 +1291,7 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
                   style: GoogleFonts.poppins(
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
-                    color: _isDarkMode ? Colors.white : const Color(0xFF0F172A),
+                    color: stage.iconColor,
                   ),
                 ),
               ],
@@ -973,7 +1323,8 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFDC2626), // Red pill
+                      color: stage.iconColor
+                          .withValues(alpha: _isDarkMode ? 0.2 : 0.12),
                       borderRadius: BorderRadius.circular(3),
                     ),
                     child: Text(
@@ -981,7 +1332,7 @@ class _LeadsListScreenState extends State<LeadsListScreen> {
                       style: GoogleFonts.poppins(
                         fontSize: 8,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: stage.iconColor,
                       ),
                     ),
                   ),

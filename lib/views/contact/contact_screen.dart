@@ -1,32 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
+import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
+import '../../models/contact_enquiry_model.dart';
+import '../../viewmodels/leads_viewmodel.dart';
 import '../widgets/crm_drawer.dart';
 import '../widgets/custom_back_button.dart';
 import '../widgets/admin_profile_avatar.dart';
-
-class ContactEnquiry {
-  final String id;
-  final String name;
-  final String phone;
-  final String email;
-  final String city;
-  final String date;
-  final String message;
-  bool isSelected;
-
-  ContactEnquiry({
-    required this.id,
-    required this.name,
-    required this.phone,
-    required this.email,
-    required this.city,
-    required this.date,
-    required this.message,
-    this.isSelected = false,
-  });
-}
 
 class ContactScreen extends StatefulWidget {
   const ContactScreen({super.key});
@@ -37,11 +18,12 @@ class ContactScreen extends StatefulWidget {
 
 class _ContactScreenState extends State<ContactScreen> {
   bool _isDarkMode = false;
-  final int _entriesPerPage = 10;
+  final int _entriesPerPage = 20;
   String _searchQuery = "";
   bool _selectAll = false;
 
   final TextEditingController _searchController = TextEditingController();
+  final List<ContactEnquiry> _enquiries = [];
 
   late final PagingController<int, ContactEnquiry> _pagingController =
       PagingController(
@@ -52,84 +34,30 @@ class _ContactScreenState extends State<ContactScreen> {
       return (state.keys!.last) + 1;
     },
     fetchPage: (pageKey) async {
-      final allFiltered = _filteredEnquiries;
-      final startIndex = (pageKey - 1) * _entriesPerPage;
-      if (startIndex >= allFiltered.length) return [];
-      final endIndex =
-          (startIndex + _entriesPerPage).clamp(0, allFiltered.length);
-      return allFiltered.sublist(startIndex, endIndex);
+      final vm = context.read<LeadsViewModel>();
+      final items = await vm.fetchContactEnquiriesPage(
+        pageKey: pageKey,
+        pageSize: _entriesPerPage,
+        searchQuery: _searchQuery,
+      );
+      if (mounted) {
+        setState(() {
+          if (pageKey == 1) {
+            _enquiries.clear();
+            _selectAll = false;
+          }
+          _enquiries.addAll(items);
+        });
+      }
+      return items;
     },
   );
-
-  final List<ContactEnquiry> _enquiries = [
-    ContactEnquiry(
-      id: "ENQ-001",
-      name: "Security Test",
-      phone: "9876543210",
-      email: "sectest2026@proton.me",
-      city: "--",
-      date: "17 Oct, 2026 13:43",
-      message: "Security audit and penetration testing enquiry for portal.",
-    ),
-    ContactEnquiry(
-      id: "ENQ-002",
-      name: "faiz",
-      phone: "7078451278",
-      email: "faz@gmail.com",
-      city: "muz",
-      date: "09 Jun, 2026 15:34",
-      message:
-          "Looking for used Swift or i20 in good condition with financing.",
-    ),
-    ContactEnquiry(
-      id: "ENQ-003",
-      name: "Aadil",
-      phone: "8533872922",
-      email: "findmycarz01@gmail.com",
-      city: "Dehradun",
-      date: "18 May, 2026 15:01",
-      message:
-          "Interested in dealer partnership and inventory listing integration.",
-    ),
-    ContactEnquiry(
-      id: "ENQ-004",
-      name: "saif",
-      phone: "4230923333",
-      email: "ilzymplyp@cloud-temp.com",
-      city: "delhi",
-      date: "08 May, 2026 12:29",
-      message:
-          "Inquiring about car finance interest rates and down payment terms.",
-    ),
-    ContactEnquiry(
-      id: "ENQ-005",
-      name: "faix",
-      phone: "7077095678",
-      email: "john@gmail.com",
-      city: "Delhi",
-      date: "08 May, 2026 12:03",
-      message:
-          "Need quotation for comprehensive insurance renewal and warranty package.",
-    ),
-  ];
 
   @override
   void dispose() {
     _pagingController.dispose();
     _searchController.dispose();
     super.dispose();
-  }
-
-  List<ContactEnquiry> get _filteredEnquiries {
-    if (_searchQuery.trim().isEmpty) return _enquiries;
-    final q = _searchQuery.toLowerCase();
-    return _enquiries.where((item) {
-      return item.name.toLowerCase().contains(q) ||
-          item.phone.contains(q) ||
-          item.email.toLowerCase().contains(q) ||
-          item.city.toLowerCase().contains(q) ||
-          item.message.toLowerCase().contains(q);
-    }).toList();
   }
 
   int get _selectedCount => _enquiries.where((e) => e.isSelected).length;
@@ -338,8 +266,9 @@ class _ContactScreenState extends State<ContactScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final filtered = _filteredEnquiries;
-    final displayedEnquiries = filtered.take(_entriesPerPage).toList();
+    final totalEntries = context.select<LeadsViewModel, int>(
+      (vm) => vm.contactTotal > 0 ? vm.contactTotal : _enquiries.length,
+    );
 
     return Scaffold(
       backgroundColor:
@@ -364,21 +293,6 @@ class _ContactScreenState extends State<ContactScreen> {
           ),
         ),
         actions: [
-          IconButton(
-            tooltip:
-                _isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode",
-            icon: Icon(
-              _isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_outlined,
-              color: _isDarkMode
-                  ? const Color(0xFFFBBF24)
-                  : const Color(0xFF334155),
-            ),
-            onPressed: () {
-              setState(() {
-                _isDarkMode = !_isDarkMode;
-              });
-            },
-          ),
           IconButton(
             icon: Icon(
               Icons.notifications_none_rounded,
@@ -629,6 +543,10 @@ class _ContactScreenState extends State<ContactScreen> {
                               ),
                             ),
                           ),
+                          firstPageErrorIndicatorBuilder: (ctx) =>
+                              _buildErrorIndicator(state.error),
+                          newPageErrorIndicatorBuilder: (ctx) =>
+                              _buildErrorIndicator(state.error),
                           newPageProgressIndicatorBuilder: (ctx) =>
                               const Padding(
                             padding: EdgeInsets.symmetric(vertical: 16),
@@ -641,13 +559,13 @@ class _ContactScreenState extends State<ContactScreen> {
                         ),
                       ),
                     ),
-                    if (displayedEnquiries.isNotEmpty)
+                    if (_enquiries.isNotEmpty)
                       SliverToBoxAdapter(
                         child: Padding(
                           padding: const EdgeInsets.only(top: 8, bottom: 20),
                           child: Center(
                             child: Text(
-                              "Showing 1 to ${displayedEnquiries.length} of ${filtered.length} entries",
+                              "Showing 1 to ${_enquiries.length} of $totalEntries entries",
                               style: GoogleFonts.poppins(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
@@ -665,6 +583,42 @@ class _ContactScreenState extends State<ContactScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildErrorIndicator(Object? error) {
+    final msg = error?.toString().replaceFirst("Exception: ", "") ??
+        "Failed to load contact enquiries";
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.error_outline,
+                size: 40, color: Color(0xFFDC2626)),
+            const SizedBox(height: 10),
+            Text(
+              msg,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                fontSize: 13,
+                color: _isDarkMode ? Colors.white70 : const Color(0xFF334155),
+              ),
+            ),
+            const SizedBox(height: 12),
+            ElevatedButton.icon(
+              onPressed: _pagingController.refresh,
+              icon: const Icon(Icons.refresh, size: 16),
+              label: const Text("Retry"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

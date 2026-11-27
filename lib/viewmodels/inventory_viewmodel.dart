@@ -1,157 +1,158 @@
 import 'package:flutter/material.dart';
+import '../core/constants/api_config.dart';
+import '../core/network/dio_client.dart';
 import '../models/inventory_vehicle_model.dart';
-// Note: Uncomment when connecting future REST API:
-// import '../core/constants/api_config.dart';
-// import '../core/network/dio_client.dart';
 
-/// ViewModel managing Inventory pagination and data state.
-/// Decouples pagination logic from UI, allowing seamless future REST API integration.
+/// ViewModel managing Inventory KPI stats, pagination, and data state.
 class InventoryViewModel extends ChangeNotifier {
-  // Uncomment when connecting future REST API:
-  // final DioClient _dioClient = DioClient();
+  final DioClient _dioClient = DioClient();
 
-  // -------------------------------------------------------------
-  // Existing local/static data store (KISS/YAGNI compliant)
-  // -------------------------------------------------------------
-  final List<InventoryVehicle> _vehicles = [
-    InventoryVehicle(
-      id: "#CARUID0978",
-      makeModel: "TOYOTA KIRLOSKAR MOTOR PVT LTD | FORTUNER",
-      subtitle: "TOYOTA KIRLOSKAR MOTOR PVT LTD FORTUNER",
-      image: "assets/images/car1.webp",
-      condition: "Used",
-      year: "2013",
-      availability: "Available",
-      company: "Find My Car",
-      agent: "Auto Care Mohammad Sajid",
-      phone: "9897323603",
-      location: "Dehradun, Uttaranchal",
-      date: "17 Nov 2026",
-      status: "Inactive",
-      visibility: "Public",
-    ),
-    InventoryVehicle(
-      id: "#CARUID0977",
-      makeModel: "HYUNDAI | XCENT",
-      subtitle: "2015 HYUNDAI MOTOR XCENT CRDI S",
-      image: "assets/images/car.webp",
-      condition: "Used",
-      year: "2015",
-      availability: "Available",
-      company: "Owner",
-      agent: "VAAHAN BAZA – NITIN KHATRI",
-      phone: "9314651357",
-      location: "Bikaner, Rajasthan",
-      date: "16 Nov 2026",
-      status: "Published",
-      visibility: "Public",
-    ),
-    InventoryVehicle(
-      id: "#CARUID0976",
-      makeModel: "MARUTI SUZUKI | BREZZA",
-      subtitle: "2020 MARUTI SUZUKI VITARA BREZZA ZXI",
-      image: "assets/images/car1.webp",
-      condition: "Used",
-      year: "2020",
-      availability: "Available",
-      company: "Find My Car",
-      agent: "MANOJ NEGI",
-      phone: "9876543210",
-      location: "Dehradun, Uttarakhand",
-      date: "14 Nov 2026",
-      status: "Published",
-      visibility: "Public",
-    ),
-    InventoryVehicle(
-      id: "#CARUID0975",
-      makeModel: "MAHINDRA | THAR ROXX",
-      subtitle: "2024 MAHINDRA THAR ROXX AX7L 4WD",
-      image: "assets/images/car.webp",
-      condition: "New",
-      year: "2024",
-      availability: "Available",
-      company: "Dealership",
-      agent: "KARAN",
-      phone: "9811234567",
-      location: "Haridwar, Uttarakhand",
-      date: "12 Nov 2026",
-      status: "Published",
-      visibility: "Public",
-    ),
-  ];
+  CarsStatsModel _stats = const CarsStatsModel();
+  bool _isStatsLoading = false;
+  String? _statsError;
 
+  final List<InventoryVehicle> _vehicles = [];
+  final List<OwnerListedCar> _ownerListedCars = [];
+  int _ownerListedTotal = 0;
+
+  CarsStatsModel get stats => _stats;
+  bool get isStatsLoading => _isStatsLoading;
+  String? get statsError => _statsError;
   List<InventoryVehicle> get vehicles => List.unmodifiable(_vehicles);
+  List<OwnerListedCar> get ownerListedCars =>
+      List.unmodifiable(_ownerListedCars);
+  int get ownerListedTotal => _ownerListedTotal;
 
-  /// Paginated fetch method called by Infinite Scroll Pagination.
-  /// Decouples data source from UI.
-  /// When REST API is ready, simply uncomment the network call below.
+  /// Fetch KPI stats from GET /cars/stats
+  Future<void> fetchStats() async {
+    _isStatsLoading = true;
+    _statsError = null;
+    notifyListeners();
+
+    try {
+      final response = await _dioClient.get(ApiConfig.carsStats);
+      if (response.statusCode == 200 && response.data != null) {
+        _stats = CarsStatsModel.fromJson(response.data);
+      } else {
+        _statsError = "Failed to load stats (${response.statusCode})";
+      }
+    } catch (e) {
+      _statsError = e.toString().replaceFirst("Exception: ", "");
+    } finally {
+      _isStatsLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Paginated fetch from GET /cars or GET /cars/my-inventory
   Future<List<InventoryVehicle>> fetchVehiclesPage({
     required int pageKey,
     required int pageSize,
     String activeTab = "All Cars",
     String searchQuery = "",
+    String endpoint = ApiConfig.cars,
   }) async {
-    // -------------------------------------------------------------------------
-    // FUTURE REST API PAGINATION IMPLEMENTATION:
-    // -------------------------------------------------------------------------
-    // try {
-    //   final response = await _dioClient.get(
-    //     ApiConfig.cars,
-    //     queryParameters: {
-    //       'page': pageKey,
-    //       'per_page': pageSize,
-    //       if (activeTab != "All Cars") 'condition': activeTab.replaceAll(" Cars", ""),
-    //       if (searchQuery.isNotEmpty) 'search': searchQuery,
-    //     },
-    //   );
-    //   if (response.statusCode == 200 && response.data != null) {
-    //     final items = (response.data['data'] as List? ?? [])
-    //         .map((json) => InventoryVehicle.fromJson(json as Map<String, dynamic>))
-    //         .toList();
-    //     return items;
-    //   }
-    //   return [];
-    // } catch (e) {
-    //   rethrow;
-    // }
-    // -------------------------------------------------------------------------
+    final response = await _dioClient.get(
+      endpoint,
+      queryParameters: {
+        'page': pageKey,
+        'per_page': pageSize,
+        if (activeTab != "All Cars")
+          'condition': activeTab.replaceAll(" Cars", ""),
+        if (searchQuery.trim().isNotEmpty) 'search': searchQuery.trim(),
+      },
+    );
 
-    // LOCAL/STATIC PAGINATION (Current State, zero API/dummy data):
-    await Future.delayed(const Duration(milliseconds: 100)); // Natural smooth async transition
+    if (response.statusCode == 200 && response.data != null) {
+      final rawList = _extractList(response.data);
 
-    final filtered = _vehicles.where((v) {
-      if (activeTab == "New Cars" && v.condition.toLowerCase() != "new") {
-        return false;
+      final parsed = rawList
+          .whereType<Map>()
+          .map((json) => InventoryVehicle.fromJson(
+              Map<String, dynamic>.from(json)))
+          .toList();
+
+      final items = parsed.where((v) {
+        if (activeTab == "New Cars") {
+          return v.condition.toLowerCase() == "new";
+        }
+        if (activeTab == "Used Cars") {
+          return v.condition.toLowerCase() == "used";
+        }
+        return true;
+      }).toList();
+
+      if (pageKey == 1) {
+        _vehicles.clear();
       }
-      if (activeTab == "Used Cars" && v.condition.toLowerCase() != "used") {
-        return false;
-      }
-
-      if (searchQuery.isNotEmpty) {
-        final q = searchQuery.toLowerCase();
-        final match = v.id.toLowerCase().contains(q) ||
-            v.makeModel.toLowerCase().contains(q) ||
-            v.subtitle.toLowerCase().contains(q) ||
-            v.phone.contains(q) ||
-            v.location.toLowerCase().contains(q) ||
-            v.agent.toLowerCase().contains(q) ||
-            v.company.toLowerCase().contains(q);
-        if (!match) return false;
-      }
-
-      return true;
-    }).toList();
-
-    final startIndex = (pageKey - 1) * pageSize;
-    if (startIndex >= filtered.length) {
-      return [];
+      _vehicles.addAll(items);
+      notifyListeners();
+      return items;
     }
 
-    final endIndex = (startIndex + pageSize) > filtered.length
-        ? filtered.length
-        : (startIndex + pageSize);
+    throw Exception("Failed to load cars (${response.statusCode})");
+  }
 
-    return filtered.sublist(startIndex, endIndex);
+  /// Paginated fetch from GET /cars/owner-listed
+  Future<List<OwnerListedCar>> fetchOwnerListedCarsPage({
+    required int pageKey,
+    required int pageSize,
+    String searchQuery = "",
+  }) async {
+    final response = await _dioClient.get(
+      ApiConfig.carsOwnerListed,
+      queryParameters: {
+        'page': pageKey,
+        'per_page': pageSize,
+        if (searchQuery.trim().isNotEmpty) 'search': searchQuery.trim(),
+      },
+    );
+
+    if (response.statusCode == 200 && response.data != null) {
+      final body = response.data;
+      final rawList = _extractList(body);
+
+      final items = rawList
+          .whereType<Map>()
+          .map((json) =>
+              OwnerListedCar.fromJson(Map<String, dynamic>.from(json)))
+          .toList();
+
+      if (pageKey == 1) {
+        _ownerListedCars.clear();
+      }
+      _ownerListedCars.addAll(items);
+
+      int? total;
+      if (body is Map) {
+        final rawTotal = body['total'] ??
+            (body['pagination'] is Map ? body['pagination']['total'] : null) ??
+            (body['meta'] is Map ? body['meta']['total'] : null) ??
+            (body['summary'] is Map ? body['summary']['total_cars'] : null) ??
+            (body['data'] is Map ? body['data']['total'] : null);
+        if (rawTotal != null) {
+          total = int.tryParse(rawTotal.toString());
+        }
+      }
+      _ownerListedTotal = total ?? _ownerListedCars.length;
+      notifyListeners();
+      return items;
+    }
+
+    throw Exception("Failed to load owner listed cars (${response.statusCode})");
+  }
+
+  List<dynamic> _extractList(dynamic body) {
+    if (body is List) return body;
+    if (body is Map) {
+      final inner = body['data'];
+      if (inner is List) return inner;
+      if (inner is Map && inner['data'] is List) {
+        return inner['data'] as List;
+      }
+      if (body['cars'] is List) return body['cars'] as List;
+    }
+    return [];
   }
 
   /// Add a newly created vehicle to the inventory store
@@ -163,6 +164,13 @@ class InventoryViewModel extends ChangeNotifier {
   /// Delete a vehicle from the inventory store
   void deleteVehicle(String id) {
     _vehicles.removeWhere((v) => v.id == id);
+    notifyListeners();
+  }
+
+  /// Delete an owner-listed car from the local list
+  void deleteOwnerListedCar(String id) {
+    _ownerListedCars.removeWhere((v) => v.id == id);
+    if (_ownerListedTotal > 0) _ownerListedTotal--;
     notifyListeners();
   }
 

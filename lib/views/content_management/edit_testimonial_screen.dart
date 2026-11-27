@@ -269,7 +269,7 @@ class _EditTestimonialScreenState extends State<EditTestimonialScreen> {
 
                     // ================= 2. STEPPER ROW (2 STEPS: Feedback, Photo & Publish) =================
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 18, 16, 14),
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: List.generate(_stepTitles.length, (index) {
@@ -280,8 +280,8 @@ class _EditTestimonialScreenState extends State<EditTestimonialScreen> {
                             child: Column(
                               children: [
                                 Container(
-                                  width: 38,
-                                  height: 38,
+                                  width: 30,
+                                  height: 30,
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
                                     color: isCompleted
@@ -315,11 +315,11 @@ class _EditTestimonialScreenState extends State<EditTestimonialScreen> {
                                   alignment: Alignment.center,
                                   child: isCompleted
                                       ? const Icon(Icons.check_rounded,
-                                          size: 18, color: Colors.white)
+                                          size: 15, color: Colors.white)
                                       : Text(
                                           "${index + 1}",
                                           style: GoogleFonts.poppins(
-                                            fontSize: 14,
+                                            fontSize: 11.5,
                                             fontWeight: FontWeight.bold,
                                             color: isCurrent
                                                 ? Colors.white
@@ -329,11 +329,11 @@ class _EditTestimonialScreenState extends State<EditTestimonialScreen> {
                                           ),
                                         ),
                                 ),
-                                const SizedBox(height: 6),
+                                const SizedBox(height: 4),
                                 Text(
                                   _stepTitles[index],
                                   style: GoogleFonts.poppins(
-                                    fontSize: 12,
+                                    fontSize: 10,
                                     fontWeight: isCurrent
                                         ? FontWeight.w600
                                         : FontWeight.w500,

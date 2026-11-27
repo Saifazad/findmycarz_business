@@ -2,17 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:provider/provider.dart';
+import '../../core/constants/api_config.dart';
 import '../../core/theme/app_colors.dart';
 import '../../models/inventory_vehicle_model.dart';
 import '../../viewmodels/inventory_viewmodel.dart';
 import '../widgets/crm_drawer.dart';
 import '../widgets/custom_back_button.dart';
 import '../widgets/admin_profile_avatar.dart';
+import '../widgets/car_image_preview_dialog.dart';
 import 'add_car_screen.dart';
 
 class CarsScreen extends StatefulWidget {
   final String title;
-  const CarsScreen({super.key, this.title = "Live Inventory"});
+  final String endpoint;
+  const CarsScreen({
+    super.key,
+    this.title = "Live Inventory",
+    this.endpoint = ApiConfig.cars,
+  });
 
   @override
   State<CarsScreen> createState() => _CarsScreenState();
@@ -41,9 +48,20 @@ class _CarsScreenState extends State<CarsScreen> {
         pageSize: _entriesPerPage,
         activeTab: _activeTab,
         searchQuery: _searchQuery,
+        endpoint: widget.endpoint,
       );
     },
   );
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<InventoryViewModel>().fetchStats();
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -490,21 +508,6 @@ class _CarsScreenState extends State<CarsScreen> {
         ),
         actions: [
           IconButton(
-            tooltip:
-                _isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode",
-            icon: Icon(
-              _isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_outlined,
-              color: _isDarkMode
-                  ? const Color(0xFFFBBF24)
-                  : const Color(0xFF334155),
-            ),
-            onPressed: () {
-              setState(() {
-                _isDarkMode = !_isDarkMode;
-              });
-            },
-          ),
-          IconButton(
             icon: Icon(
               Icons.notifications_none_rounded,
               color: _isDarkMode ? Colors.white : const Color(0xFF334155),
@@ -518,225 +521,255 @@ class _CarsScreenState extends State<CarsScreen> {
       ),
       body: PagingListener<int, InventoryVehicle>(
         controller: _pagingController,
-        builder: (context, state, fetchNextPage) => RefreshIndicator(
-          color: AppColors.primary,
-          onRefresh: () => Future.sync(() => _pagingController.refresh()),
-          child: CustomScrollView(
-            slivers: [
-              SliverPadding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                sliver: SliverToBoxAdapter(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+        builder: (context, state, fetchNextPage) => Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 12, 14, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 1. Top Buttons Row: "+ Add Vehicle" (Royal Blue) & "Export to Excel" (White with Blue Border)
+                  Row(
                     children: [
-                      // 1. Top Buttons Row: "+ Add Vehicle" (Royal Blue) & "Export to Excel" (White with Blue Border)
-                      Row(
-                        children: [
-                          const SizedBox(width: 16),
-                          SizedBox(
-                            width: 135,
-                            height: 42,
-                            child: ElevatedButton.icon(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (_) => const AddCarScreen()),
-                                );
-                              },
-                              icon: const Icon(Icons.add,
-                                  size: 16, color: Colors.white),
-                              label: FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Text(
-                                  "Add Vehicle",
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.primary,
-                                elevation: 0,
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 10),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
+                      const SizedBox(width: 16),
+                      SizedBox(
+                        width: 135,
+                        height: 42,
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => const AddCarScreen()),
+                            );
+                          },
+                          icon: const Icon(Icons.add,
+                              size: 16, color: Colors.white),
+                          label: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              "Add Vehicle",
+                              style: GoogleFonts.poppins(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
                               ),
                             ),
                           ),
-                          const SizedBox(width: 24),
-                          SizedBox(
-                            width: 135,
-                            height: 42,
-                            child: ElevatedButton.icon(
-                              onPressed: _exportToExcel,
-                              icon: const Icon(
-                                Icons.file_download_outlined,
-                                size: 16,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 24),
+                      SizedBox(
+                        width: 135,
+                        height: 42,
+                        child: ElevatedButton.icon(
+                          onPressed: _exportToExcel,
+                          icon: const Icon(
+                            Icons.file_download_outlined,
+                            size: 16,
+                            color: AppColors.primary,
+                          ),
+                          label: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              "Export to Excel",
+                              style: GoogleFonts.poppins(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w600,
                                 color: AppColors.primary,
                               ),
-                              label: FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Text(
-                                  "Export to Excel",
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 12.5,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.primary,
-                                  ),
-                                ),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.white,
-                                foregroundColor: AppColors.primary,
-                                side: const BorderSide(
-                                  color: AppColors.primary,
-                                  width: 1.5,
-                                ),
-                                elevation: 0,
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 10),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
                             ),
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 14),
-
-                      // 2. Tabs: All Cars | New Cars | Used Cars
-                      Row(
-                        children: [
-                          _buildTab("All Cars"),
-                          const SizedBox(width: 22),
-                          _buildTab("New Cars"),
-                          const SizedBox(width: 22),
-                          _buildTab("Used Cars"),
-                        ],
-                      ),
-                      Divider(
-                        height: 1,
-                        thickness: 1,
-                        color: _isDarkMode
-                            ? const Color(0xFF334155)
-                            : const Color(0xFFE2E8F0),
-                      ),
-                      const SizedBox(height: 12),
-
-                      // 3. Search Field (Full Width)
-                      TextField(
-                        controller: _searchController,
-                        onChanged: (val) {
-                          setState(() {
-                            _searchQuery = val;
-                          });
-                          _pagingController.refresh();
-                        },
-                        style: GoogleFonts.poppins(
-                          fontSize: 13,
-                          color: _isDarkMode ? Colors.white : Colors.black87,
-                        ),
-                        decoration: InputDecoration(
-                          hintText: "Search..",
-                          hintStyle: GoogleFonts.poppins(
-                            fontSize: 13,
-                            color: const Color(0xFF94A3B8),
-                          ),
-                          prefixIcon: Icon(
-                            Icons.search,
-                            size: 20,
-                            color: _isDarkMode
-                                ? Colors.grey.shade400
-                                : const Color(0xFF003366),
-                          ),
-                          suffixIcon: _searchController.text.isNotEmpty
-                              ? IconButton(
-                                  icon: const Icon(Icons.clear, size: 18),
-                                  onPressed: () {
-                                    _searchController.clear();
-                                    setState(() {
-                                      _searchQuery = "";
-                                    });
-                                    _pagingController.refresh();
-                                  },
-                                )
-                              : null,
-                          filled: true,
-                          fillColor: _isDarkMode
-                              ? const Color(0xFF1E293B)
-                              : const Color(0xFFF8FAFC),
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 14, vertical: 10),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: BorderSide(
-                              color: _isDarkMode
-                                  ? const Color(0xFF334155)
-                                  : const Color(0xFFE2E8F0),
-                            ),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: BorderSide(
-                              color: _isDarkMode
-                                  ? const Color(0xFF334155)
-                                  : const Color(0xFFE2E8F0),
-                            ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: BorderSide(
-                              color: _isDarkMode
-                                  ? const Color(0xFF00A3FF)
-                                  : const Color(0xFF003366),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: AppColors.primary,
+                            side: const BorderSide(
+                              color: AppColors.primary,
                               width: 1.5,
                             ),
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                           ),
                         ),
                       ),
-                      const SizedBox(height: 14),
                     ],
                   ),
-                ),
-              ),
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 14),
-                sliver: PagedSliverList<int, InventoryVehicle>(
-                  state: state,
-                  fetchNextPage: fetchNextPage,
-                  builderDelegate: PagedChildBuilderDelegate<InventoryVehicle>(
-                    itemBuilder: (context, vehicle, index) =>
-                        _buildVehicleCard(vehicle, index),
-                    noItemsFoundIndicatorBuilder: (context) =>
-                        _buildNoItemsFound(),
-                    firstPageProgressIndicatorBuilder: (context) =>
-                        _buildLoadingIndicator(),
-                    newPageProgressIndicatorBuilder: (context) =>
-                        _buildLoadingIndicator(),
+                  const SizedBox(height: 14),
+
+                  // 2. Tabs: All Cars | New Cars | Used Cars
+                  Row(
+                    children: [
+                      _buildTab("All Cars"),
+                      const SizedBox(width: 22),
+                      _buildTab("New Cars"),
+                      const SizedBox(width: 22),
+                      _buildTab("Used Cars"),
+                    ],
                   ),
+                  Divider(
+                    height: 1,
+                    thickness: 1,
+                    color: _isDarkMode
+                        ? const Color(0xFF334155)
+                        : const Color(0xFFE2E8F0),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // 3. Search Field (Full Width)
+                  TextField(
+                    controller: _searchController,
+                    onChanged: (val) {
+                      setState(() {
+                        _searchQuery = val;
+                      });
+                      _pagingController.refresh();
+                    },
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      color: _isDarkMode ? Colors.white : Colors.black87,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: "Search..",
+                      hintStyle: GoogleFonts.poppins(
+                        fontSize: 13,
+                        color: const Color(0xFF94A3B8),
+                      ),
+                      prefixIcon: Icon(
+                        Icons.search,
+                        size: 20,
+                        color: _isDarkMode
+                            ? Colors.grey.shade400
+                            : const Color(0xFF003366),
+                      ),
+                      suffixIcon: _searchController.text.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear, size: 18),
+                              onPressed: () {
+                                _searchController.clear();
+                                setState(() {
+                                  _searchQuery = "";
+                                });
+                                _pagingController.refresh();
+                              },
+                            )
+                          : null,
+                      filled: true,
+                      fillColor: _isDarkMode
+                          ? const Color(0xFF1E293B)
+                          : const Color(0xFFF8FAFC),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 10),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(
+                          color: _isDarkMode
+                              ? const Color(0xFF334155)
+                              : const Color(0xFFE2E8F0),
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(
+                          color: _isDarkMode
+                              ? const Color(0xFF334155)
+                              : const Color(0xFFE2E8F0),
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(
+                          color: _isDarkMode
+                              ? const Color(0xFF00A3FF)
+                              : const Color(0xFF003366),
+                          width: 1.5,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                ],
+              ),
+            ),
+            Expanded(
+              child: RefreshIndicator(
+                color: AppColors.primary,
+                onRefresh: () async {
+                  await Future.wait([
+                    context.read<InventoryViewModel>().fetchStats(),
+                    Future.sync(() => _pagingController.refresh()),
+                  ]);
+                },
+                child: CustomScrollView(
+                  slivers: [
+                    SliverPadding(
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      sliver: PagedSliverList<int, InventoryVehicle>(
+                        state: state,
+                        fetchNextPage: fetchNextPage,
+                        builderDelegate:
+                            PagedChildBuilderDelegate<InventoryVehicle>(
+                          itemBuilder: (context, vehicle, index) =>
+                              _buildVehicleCard(vehicle, index),
+                          noItemsFoundIndicatorBuilder: (context) =>
+                              _buildNoItemsFound(),
+                          firstPageProgressIndicatorBuilder: (context) =>
+                              _buildLoadingIndicator(),
+                          newPageProgressIndicatorBuilder: (context) =>
+                              _buildLoadingIndicator(),
+                          firstPageErrorIndicatorBuilder: (context) =>
+                              _buildErrorIndicator(state.error),
+                          newPageErrorIndicatorBuilder: (context) =>
+                              _buildErrorIndicator(state.error),
+                        ),
+                      ),
+                    ),
+                    const SliverToBoxAdapter(
+                      child: SizedBox(height: 20),
+                    ),
+                  ],
                 ),
               ),
-              const SliverToBoxAdapter(
-                child: SizedBox(height: 20),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 
   Widget _buildVehicleCard(InventoryVehicle vehicle, int index) {
+    final dividerColor =
+        _isDarkMode ? const Color(0xFF334155) : const Color(0xFFF1F5F9);
+    final availLower = vehicle.availability.toLowerCase();
+    final Color availBg;
+    final Color availText;
+    final Color availBorder;
+    if (availLower == 'upcoming') {
+      availBg = const Color(0xFFFFFBEB);
+      availText = const Color(0xFFB45309);
+      availBorder = const Color(0xFFFDE68A);
+    } else if (availLower == 'sold') {
+      availBg = const Color(0xFFFEF2F2);
+      availText = const Color(0xFFDC2626);
+      availBorder = const Color(0xFFFECACA);
+    } else {
+      availBg = AppColors.chipAvailableBg;
+      availText = AppColors.chipAvailableText;
+      availBorder = const Color(0xFFA7F3D0);
+    }
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: BorderRadius.circular(14),
@@ -755,16 +788,14 @@ class _CarsScreenState extends State<CarsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Top Row: Checkbox + Car Image with Badges + Info Column
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Checkbox
-              Padding(
-                padding: const EdgeInsets.only(top: 2),
-                child: SizedBox(
-                  width: 22,
-                  height: 22,
+          // Top Header Row: Checkbox + UID + Year + Condition + Availability + #Index
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 20,
+                  height: 20,
                   child: Checkbox(
                     value: vehicle.isSelected,
                     activeColor: AppColors.primary,
@@ -774,7 +805,7 @@ class _CarsScreenState extends State<CarsScreen> {
                     side: BorderSide(
                       color: _isDarkMode
                           ? const Color(0xFF64748B)
-                          : const Color(0xFF94A3B8),
+                          : const Color(0xFFCBD5E1),
                       width: 1.5,
                     ),
                     onChanged: (val) {
@@ -784,331 +815,459 @@ class _CarsScreenState extends State<CarsScreen> {
                     },
                   ),
                 ),
-              ),
-              const SizedBox(width: 8),
-
-              // Car Thumbnail with Used & Available Badges
-              Container(
-                width: 82,
-                height: 58,
-                decoration: BoxDecoration(
-                  color: _isDarkMode
-                      ? const Color(0xFF334155)
-                      : const Color(0xFFB0BEC5),
-                  borderRadius: BorderRadius.circular(6),
+                const SizedBox(width: 8),
+                Text(
+                  vehicle.id,
+                  style: GoogleFonts.poppins(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primary,
+                  ),
                 ),
-                child: Stack(
-                  children: [
-                    Center(
-                      child: Icon(
-                        Icons.directions_car_rounded,
-                        size: 26,
+                if (vehicle.year.isNotEmpty) ...[
+                  const SizedBox(width: 6),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: _isDarkMode
+                          ? const Color(0xFF334155)
+                          : const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      vehicle.year,
+                      style: GoogleFonts.poppins(
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.w600,
                         color: _isDarkMode
-                            ? Colors.white60
-                            : const Color(0xFF546E7A),
+                            ? Colors.white70
+                            : const Color(0xFF334155),
                       ),
                     ),
-                    // Top-Left: Used/New badge
-                    Positioned(
-                      top: 3,
-                      left: 3,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 5, vertical: 1.5),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF10B981),
-                          borderRadius: BorderRadius.circular(3),
-                        ),
-                        child: Text(
-                          vehicle.condition,
-                          style: GoogleFonts.poppins(
-                            fontSize: 8.5,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
+                  ),
+                ],
+                const Spacer(),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFECFDF5),
+                    borderRadius: BorderRadius.circular(5),
+                    border: Border.all(color: const Color(0xFFA7F3D0)),
+                  ),
+                  child: Text(
+                    vehicle.condition,
+                    style: GoogleFonts.poppins(
+                      fontSize: 9.5,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF059669),
                     ),
-                    // Bottom: Available banner
-                    Positioned(
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 2),
-                        decoration: const BoxDecoration(
-                          color: Color(0xFFB45309), // amber/gold
-                          borderRadius:
-                              BorderRadius.vertical(bottom: Radius.circular(6)),
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          vehicle.availability,
-                          style: GoogleFonts.poppins(
-                            fontSize: 8.5,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-              const SizedBox(width: 10),
+                const SizedBox(width: 5),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: availBg,
+                    borderRadius: BorderRadius.circular(5),
+                    border: Border.all(color: availBorder),
+                  ),
+                  child: Text(
+                    vehicle.availability,
+                    style: GoogleFonts.poppins(
+                      fontSize: 9.5,
+                      fontWeight: FontWeight.w600,
+                      color: availText,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  "#${index + 1}",
+                  style: GoogleFonts.poppins(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w600,
+                    color: _isDarkMode
+                        ? Colors.grey.shade400
+                        : const Color(0xFF64748B),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Divider(height: 1, thickness: 1, color: dividerColor),
 
-              // Right Details: UID, Year, Serial#, Make & Model, Subtitle
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          vehicle.id,
-                          style: GoogleFonts.poppins(
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 5, vertical: 1.5),
-                          decoration: BoxDecoration(
-                            color: _isDarkMode
-                                ? const Color(0xFF334155)
-                                : const Color(0xFFF1F5F9),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            vehicle.year,
-                            style: GoogleFonts.poppins(
-                              fontSize: 9.5,
-                              fontWeight: FontWeight.w600,
-                              color: _isDarkMode
-                                  ? Colors.white70
-                                  : const Color(0xFF334155),
+          // Middle Row: Car Thumbnail + Make/Model + Subtitle + Client
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                GestureDetector(
+                  onTap: vehicle.image.startsWith('http')
+                      ? () => showCarImagePreviewDialog(
+                            context,
+                            vehicle.images.isNotEmpty
+                                ? vehicle.images
+                                : [vehicle.image],
+                          )
+                      : null,
+                  child: Container(
+                    width: 104,
+                    height: 70,
+                    decoration: BoxDecoration(
+                      color: _isDarkMode
+                          ? const Color(0xFF334155)
+                          : const Color(0xFFE2E8F0),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: vehicle.image.startsWith('http')
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.network(
+                              vehicle.image,
+                              width: 104,
+                              height: 70,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Icon(
+                                Icons.directions_car_rounded,
+                                size: 28,
+                                color: _isDarkMode
+                                    ? Colors.white60
+                                    : const Color(0xFF546E7A),
+                              ),
                             ),
+                          )
+                        : Icon(
+                            Icons.directions_car_rounded,
+                            size: 28,
+                            color: _isDarkMode
+                                ? Colors.white60
+                                : const Color(0xFF546E7A),
                           ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        vehicle.makeModel,
+                        style: GoogleFonts.poppins(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.bold,
+                          color: _isDarkMode
+                              ? Colors.white
+                              : const Color(0xFF0F172A),
                         ),
-                        const Spacer(),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (vehicle.subtitle.isNotEmpty) ...[
+                        const SizedBox(height: 2),
                         Text(
-                          "#${index + 1}",
+                          vehicle.subtitle,
                           style: GoogleFonts.poppins(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
+                            fontSize: 10.5,
                             color: _isDarkMode
                                 ? Colors.grey.shade400
-                                : const Color(0xFF475569),
+                                : const Color(0xFF64748B),
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      vehicle.makeModel,
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: _isDarkMode
-                            ? Colors.white
-                            : const Color(0xFF0F172A),
-                        letterSpacing: 0.2,
+                      const SizedBox(height: 5),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.badge_outlined,
+                            size: 13,
+                            color: _isDarkMode
+                                ? Colors.grey.shade400
+                                : const Color(0xFF94A3B8),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            "Client: ",
+                            style: GoogleFonts.poppins(
+                              fontSize: 10.5,
+                              color: _isDarkMode
+                                  ? Colors.grey.shade400
+                                  : const Color(0xFF64748B),
+                            ),
+                          ),
+                          Flexible(
+                            child: Text(
+                              vehicle.company,
+                              style: GoogleFonts.poppins(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w600,
+                                color: _isDarkMode
+                                    ? Colors.white
+                                    : const Color(0xFF0F172A),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
                       ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Divider(height: 1, thickness: 1, color: dividerColor),
+
+          // Agent + Phone + Date Section
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.person_outline,
+                      size: 14,
+                      color: _isDarkMode
+                          ? Colors.grey.shade400
+                          : const Color(0xFF94A3B8),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(width: 5),
                     Text(
-                      vehicle.subtitle,
+                      "Agent: ",
                       style: GoogleFonts.poppins(
-                        fontSize: 10,
+                        fontSize: 11,
                         color: _isDarkMode
                             ? Colors.grey.shade400
                             : const Color(0xFF64748B),
                       ),
                     ),
+                    Expanded(
+                      child: Text(
+                        vehicle.agent,
+                        style: GoogleFonts.poppins(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: _isDarkMode
+                              ? Colors.white
+                              : const Color(0xFF0F172A),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                   ],
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-
-          // Middle Details: C: Find My Car
-          Row(
-            children: [
-              Text(
-                "C:  ",
-                style: GoogleFonts.poppins(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                  color: _isDarkMode
-                      ? Colors.grey.shade400
-                      : const Color(0xFF64748B),
+                const SizedBox(height: 5),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.phone_outlined,
+                      size: 13,
+                      color: _isDarkMode
+                          ? Colors.grey.shade400
+                          : const Color(0xFF94A3B8),
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      vehicle.phone,
+                      style: GoogleFonts.poppins(
+                        fontSize: 10.5,
+                        color: _isDarkMode
+                            ? Colors.grey.shade400
+                            : const Color(0xFF64748B),
+                      ),
+                    ),
+                    const Spacer(),
+                    if (vehicle.date.isNotEmpty) ...[
+                      Icon(
+                        Icons.calendar_today_outlined,
+                        size: 12,
+                        color: _isDarkMode
+                            ? Colors.grey.shade400
+                            : const Color(0xFF94A3B8),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        vehicle.date,
+                        style: GoogleFonts.poppins(
+                          fontSize: 10.5,
+                          color: _isDarkMode
+                              ? Colors.grey.shade400
+                              : const Color(0xFF64748B),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
-              ),
-              Text(
-                vehicle.company,
-                style: GoogleFonts.poppins(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.bold,
-                  color: _isDarkMode ? Colors.white : const Color(0xFF0F172A),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 3),
-
-          // A: Auto Care Mohammad Sajid
-          Row(
-            children: [
-              Text(
-                "A:  ",
-                style: GoogleFonts.poppins(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                  color: _isDarkMode
-                      ? Colors.grey.shade400
-                      : const Color(0xFF64748B),
-                ),
-              ),
-              Expanded(
-                child: Text(
-                  vehicle.agent,
-                  style: GoogleFonts.poppins(
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.bold,
-                    color: _isDarkMode ? Colors.white : const Color(0xFF0F172A),
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-
-          // Ph • Location • Date
-          Text(
-            "Ph  ${vehicle.phone} • ${vehicle.location} • ${vehicle.date}",
-            style: GoogleFonts.poppins(
-              fontSize: 10.5,
-              color:
-                  _isDarkMode ? Colors.grey.shade400 : const Color(0xFF475569),
+              ],
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 10),
+          Divider(height: 1, thickness: 1, color: dividerColor),
 
           // Bottom Row: Status Pills on Left + Action Icons on Right
-          Row(
-            children: [
-              // Status 1: Inactive or Published
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: vehicle.status.toLowerCase() == "inactive"
-                      ? AppColors.chipInactiveBg
-                      : AppColors.chipPublishedBg,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  vehicle.status,
-                  style: GoogleFonts.poppins(
-                    fontSize: 9.5,
-                    fontWeight: FontWeight.bold,
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
+            child: Row(
+              children: [
+                // Status 1: Inactive or Published
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
                     color: vehicle.status.toLowerCase() == "inactive"
-                        ? AppColors.chipInactiveText
-                        : AppColors.chipPublishedText,
+                        ? AppColors.chipInactiveBg
+                        : AppColors.chipPublishedBg,
+                    borderRadius: BorderRadius.circular(5),
+                  ),
+                  child: Text(
+                    vehicle.status,
+                    style: GoogleFonts.poppins(
+                      fontSize: 9.5,
+                      fontWeight: FontWeight.bold,
+                      color: vehicle.status.toLowerCase() == "inactive"
+                          ? AppColors.chipInactiveText
+                          : AppColors.chipPublishedText,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 5),
+                const SizedBox(width: 6),
 
-              // Status 2: Public
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: AppColors.chipPublicBg,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  vehicle.visibility,
-                  style: GoogleFonts.poppins(
-                    fontSize: 9.5,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.chipPublicText,
+                // Status 2: Public / Private
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: AppColors.chipPublicBg,
+                    borderRadius: BorderRadius.circular(5),
+                  ),
+                  child: Text(
+                    vehicle.visibility,
+                    style: GoogleFonts.poppins(
+                      fontSize: 9.5,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.chipPublicText,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 5),
+                const SizedBox(width: 6),
 
-              // Status 3: Available
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: AppColors.chipAvailableBg,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  vehicle.availability,
-                  style: GoogleFonts.poppins(
-                    fontSize: 9.5,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.chipAvailableText,
+                // Status 3: Availability
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: availBg,
+                    borderRadius: BorderRadius.circular(5),
+                  ),
+                  child: Text(
+                    vehicle.availability,
+                    style: GoogleFonts.poppins(
+                      fontSize: 9.5,
+                      fontWeight: FontWeight.bold,
+                      color: availText,
+                    ),
                   ),
                 ),
-              ),
 
-              const Spacer(),
+                const Spacer(),
 
-              // Action Icons: Edit, Delete, History
-              InkWell(
-                onTap: () => _editVehicle(vehicle),
-                child: Padding(
-                  padding: const EdgeInsets.all(4),
-                  child: Icon(
-                    Icons.edit_outlined,
-                    size: 17,
-                    color: _isDarkMode
-                        ? Colors.grey.shade400
-                        : const Color(0xFF64748B),
+                // Action Icons: Edit, Delete, History
+                InkWell(
+                  onTap: () => _editVehicle(vehicle),
+                  child: Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: Icon(
+                      Icons.edit_outlined,
+                      size: 17,
+                      color: _isDarkMode
+                          ? Colors.grey.shade400
+                          : const Color(0xFF64748B),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 10),
-              InkWell(
-                onTap: () => _deleteVehicle(vehicle),
-                child: Padding(
-                  padding: const EdgeInsets.all(4),
-                  child: Icon(
-                    Icons.delete_outline,
-                    size: 17,
-                    color: _isDarkMode
-                        ? Colors.grey.shade400
-                        : const Color(0xFF64748B),
+                const SizedBox(width: 10),
+                InkWell(
+                  onTap: () => _deleteVehicle(vehicle),
+                  child: Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: Icon(
+                      Icons.delete_outline,
+                      size: 17,
+                      color: _isDarkMode
+                          ? Colors.grey.shade400
+                          : const Color(0xFF64748B),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 10),
-              InkWell(
-                onTap: () => _viewVehicleLogs(vehicle),
-                child: Padding(
-                  padding: const EdgeInsets.all(4),
-                  child: Icon(
-                    Icons.history,
-                    size: 17,
-                    color: _isDarkMode
-                        ? Colors.grey.shade400
-                        : const Color(0xFF64748B),
+                const SizedBox(width: 10),
+                InkWell(
+                  onTap: () => _viewVehicleLogs(vehicle),
+                  child: Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: Icon(
+                      Icons.history,
+                      size: 17,
+                      color: _isDarkMode
+                          ? Colors.grey.shade400
+                          : const Color(0xFF64748B),
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildErrorIndicator(Object? error) {
+    final msg = error?.toString().replaceFirst("Exception: ", "") ??
+        "Failed to load vehicles";
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
+      child: Center(
+        child: Column(
+          children: [
+            const Icon(
+              Icons.error_outline_rounded,
+              size: 40,
+              color: AppColors.paletteRed,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              msg,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                fontSize: 12.5,
+                color: _isDarkMode ? Colors.white70 : const Color(0xFF475569),
+              ),
+            ),
+            const SizedBox(height: 10),
+            OutlinedButton(
+              onPressed: () => _pagingController.refresh(),
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: AppColors.primary),
+                foregroundColor: AppColors.primary,
+              ),
+              child: Text(
+                "Retry",
+                style: GoogleFonts.poppins(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1126,7 +1285,7 @@ class _CarsScreenState extends State<CarsScreen> {
             ),
             const SizedBox(height: 10),
             Text(
-              "No Vehicles Found",
+              "No entries found",
               style: GoogleFonts.poppins(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
