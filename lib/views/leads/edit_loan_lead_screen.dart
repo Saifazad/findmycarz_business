@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../models/crm_lead_model.dart';
 import '../../viewmodels/leads_viewmodel.dart';
+import '../../viewmodels/theme_viewmodel.dart';
 import '../widgets/admin_profile_avatar.dart';
 import '../widgets/custom_back_button.dart';
 
@@ -38,10 +39,6 @@ class _EditLoanLeadScreenState extends State<EditLoanLeadScreen> {
     "Select an option",
     "Salaried",
     "Self-Employed",
-    "Business Owner",
-    "Professional",
-    "Retired",
-    "Other",
   ];
   final TextEditingController _incomeSourceCtrl = TextEditingController();
   final TextEditingController _existingEmiCtrl = TextEditingController();
@@ -197,13 +194,13 @@ class _EditLoanLeadScreenState extends State<EditLoanLeadScreen> {
   String get _stepHeaderTitle {
     switch (_currentStep) {
       case 0:
-        return "STEP 1: APPLICANT DETAILS";
+        return "APPLICANT DETAILS";
       case 1:
-        return "STEP 2: EMPLOYMENT DETAILS";
+        return "EMPLOYMENT DETAILS";
       case 2:
-        return "STEP 3: VEHICLE & BANK";
+        return "VEHICLE & BANK";
       default:
-        return "STEP 4: ADDRESS & DOCUMENTS";
+        return "ADDRESS & DOCUMENTS";
     }
   }
 
@@ -256,12 +253,14 @@ class _EditLoanLeadScreenState extends State<EditLoanLeadScreen> {
             : "N/A";
     final progressPct = ((_currentStep + 1) * 25);
 
+    final isDark = context.watch<ThemeViewModel>().isDarkMode;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: isDark ? const Color(0xFF0F172A) : AppColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
         elevation: 0.5,
-        leading: const CustomBackButton(isDarkMode: false),
+        leading: CustomBackButton(isDarkMode: isDark),
         titleSpacing: 0,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -317,8 +316,12 @@ class _EditLoanLeadScreenState extends State<EditLoanLeadScreen> {
       body: Column(
         children: [
           Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(14),
+            child: RefreshIndicator(
+              color: AppColors.primary,
+              onRefresh: () => context.read<LeadsViewModel>().fetchLeads(),
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(14),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -486,6 +489,7 @@ class _EditLoanLeadScreenState extends State<EditLoanLeadScreen> {
                 ],
               ),
             ),
+          ),
           ),
 
           // Bottom Action Bar: Cancel / Previous & Next Step / Save
@@ -811,16 +815,49 @@ class _EditLoanLeadScreenState extends State<EditLoanLeadScreen> {
                         Icons.work_outline_rounded, "EMPLOYMENT & INCOME"),
                     const SizedBox(height: 14),
                     _buildFieldLabel("Employment Type"),
-                    DropdownButtonFormField<String>(
-                      initialValue: _employmentType,
-                      decoration: _inputDecoration("Select an option"),
-                      items: _employmentTypes
-                          .map((e) =>
-                              DropdownMenuItem(value: e, child: Text(e)))
-                          .toList(),
-                      onChanged: (val) {
-                        if (val != null) setState(() => _employmentType = val);
-                      },
+                    InkWell(
+                      onTap: () => _showSearchablePickerSheet(
+                        title: "Select Employment Type",
+                        searchHint: "Search...",
+                        options: _employmentTypes
+                            .where((e) => e != "Select an option")
+                            .toList(),
+                        selectedValue: _employmentType,
+                        onSelected: (val) =>
+                            setState(() => _employmentType = val),
+                      ),
+                      borderRadius: BorderRadius.circular(10),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 13),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                _employmentType,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 13,
+                                  color: _employmentType == "Select an option"
+                                      ? const Color(0xFF64748B)
+                                      : const Color(0xFF0F172A),
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const Icon(
+                              Icons.keyboard_arrow_down_rounded,
+                              size: 20,
+                              color: Color(0xFF475569),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 12),
                     _buildFieldLabel("Income Source"),
@@ -994,21 +1031,53 @@ class _EditLoanLeadScreenState extends State<EditLoanLeadScreen> {
                       ),
                     ] else ...[
                       _buildFieldLabel("Select Inventory Car"),
-                      DropdownButtonFormField<String>(
-                        initialValue: carOptions.contains(_selectedInventoryCar)
-                            ? _selectedInventoryCar
-                            : "Select an option",
-                        decoration: _inputDecoration("Select an option"),
-                        items: carOptions
-                            .map((e) => DropdownMenuItem(
-                                value: e,
-                                child: Text(e, overflow: TextOverflow.ellipsis)))
-                            .toList(),
-                        onChanged: (val) {
-                          if (val != null) {
-                            setState(() => _selectedInventoryCar = val);
-                          }
-                        },
+                      InkWell(
+                        onTap: () => _showSearchablePickerSheet(
+                          title: "Select Inventory Car",
+                          searchHint: "Search...",
+                          options: carOptions,
+                          selectedValue:
+                              carOptions.contains(_selectedInventoryCar)
+                                  ? _selectedInventoryCar
+                                  : "Select an option",
+                          onSelected: (val) =>
+                              setState(() => _selectedInventoryCar = val),
+                        ),
+                        borderRadius: BorderRadius.circular(10),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 13),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  carOptions.contains(_selectedInventoryCar)
+                                      ? _selectedInventoryCar
+                                      : "Select an option",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 13,
+                                    color: _selectedInventoryCar ==
+                                            "Select an option"
+                                        ? const Color(0xFF64748B)
+                                        : const Color(0xFF0F172A),
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const Icon(
+                                Icons.keyboard_arrow_down_rounded,
+                                size: 20,
+                                color: Color(0xFF475569),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ],
                     const SizedBox(height: 12),
@@ -1482,41 +1551,99 @@ class _EditLoanLeadScreenState extends State<EditLoanLeadScreen> {
                       }).toList(),
                     ),
                     const SizedBox(height: 10),
-                    DropdownButtonFormField<String>(
-                      initialValue: agentOptions.contains(_selectedAgent)
-                          ? _selectedAgent
-                          : "Select Agent",
-                      decoration: _inputDecoration(
-                        "Select Agent",
-                        prefixIcon: Icons.storefront_outlined,
+                    InkWell(
+                      onTap: () => _showSearchablePickerSheet(
+                        title: "Select Agent",
+                        searchHint: "Search agent...",
+                        options: agentOptions,
+                        selectedValue: agentOptions.contains(_selectedAgent)
+                            ? _selectedAgent
+                            : "Select Agent",
+                        onSelected: (val) =>
+                            setState(() => _selectedAgent = val),
                       ),
-                      items: agentOptions
-                          .map((e) => DropdownMenuItem(
-                              value: e,
-                              child: Text(e, overflow: TextOverflow.ellipsis)))
-                          .toList(),
-                      onChanged: (val) {
-                        if (val != null) setState(() => _selectedAgent = val);
-                      },
+                      borderRadius: BorderRadius.circular(10),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 13),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.storefront_outlined,
+                                size: 17, color: Color(0xFF64748B)),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                agentOptions.contains(_selectedAgent)
+                                    ? _selectedAgent
+                                    : "Select Agent",
+                                style: GoogleFonts.poppins(
+                                  fontSize: 13,
+                                  color: const Color(0xFF0F172A),
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const Icon(
+                              Icons.keyboard_arrow_down_rounded,
+                              size: 20,
+                              color: Color(0xFF475569),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 12),
                     _buildFieldLabel("ASSIGN ADMINISTRATOR"),
-                    DropdownButtonFormField<String>(
-                      initialValue: adminOptions.contains(_selectedAdmin)
-                          ? _selectedAdmin
-                          : "Unassigned",
-                      decoration: _inputDecoration(
-                        "Unassigned",
-                        prefixIcon: Icons.person_outline,
+                    InkWell(
+                      onTap: () => _showSearchablePickerSheet(
+                        title: "Assign Administrator",
+                        searchHint: "Search administrator...",
+                        options: adminOptions,
+                        selectedValue: adminOptions.contains(_selectedAdmin)
+                            ? _selectedAdmin
+                            : "Unassigned",
+                        onSelected: (val) =>
+                            setState(() => _selectedAdmin = val),
                       ),
-                      items: adminOptions
-                          .map((e) => DropdownMenuItem(
-                              value: e,
-                              child: Text(e, overflow: TextOverflow.ellipsis)))
-                          .toList(),
-                      onChanged: (val) {
-                        if (val != null) setState(() => _selectedAdmin = val);
-                      },
+                      borderRadius: BorderRadius.circular(10),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 13),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.person_outline,
+                                size: 17, color: Color(0xFF64748B)),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                adminOptions.contains(_selectedAdmin)
+                                    ? _selectedAdmin
+                                    : "Unassigned",
+                                style: GoogleFonts.poppins(
+                                  fontSize: 13,
+                                  color: const Color(0xFF0F172A),
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const Icon(
+                              Icons.keyboard_arrow_down_rounded,
+                              size: 20,
+                              color: Color(0xFF475569),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -1913,12 +2040,23 @@ class _EditLoanLeadScreenState extends State<EditLoanLeadScreen> {
                           prefixIcon: const Icon(Icons.search,
                               size: 19, color: Color(0xFF64748B)),
                           filled: true,
-                          fillColor: const Color(0xFFF1F5F9),
+                          fillColor: Colors.white,
                           contentPadding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 10),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
-                            borderSide: BorderSide.none,
+                            borderSide:
+                                const BorderSide(color: Color(0xFFE2E8F0)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide:
+                                const BorderSide(color: Color(0xFFE2E8F0)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(
+                                color: AppColors.primary, width: 1.5),
                           ),
                         ),
                       ),

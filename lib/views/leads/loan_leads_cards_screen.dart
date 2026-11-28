@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../models/crm_lead_model.dart';
 import '../../viewmodels/leads_viewmodel.dart';
+import '../../viewmodels/theme_viewmodel.dart';
 import '../widgets/admin_profile_avatar.dart';
 import '../widgets/crm_drawer.dart';
 import '../widgets/custom_back_button.dart';
@@ -164,7 +165,9 @@ class _LoanLeadsCardsScreenState extends State<LoanLeadsCardsScreen> {
 
   Color _statusColor(String status) {
     final s = status.toLowerCase();
-    if (s.contains('disburs') || s.contains('approv') || s.contains('complet')) {
+    if (s.contains('disburs') ||
+        s.contains('approv') ||
+        s.contains('complet')) {
       return const Color(0xFF059669);
     }
     if (s.contains('reject') || s.contains('cancel')) {
@@ -238,19 +241,22 @@ class _LoanLeadsCardsScreenState extends State<LoanLeadsCardsScreen> {
             (_categoryFilter.trim().toLowerCase() != "all" ? 1 : 0) +
             (_rtoFilter != "all" ? 1 : 0);
 
+        final isDark = context.watch<ThemeViewModel>().isDarkMode;
+
         return Scaffold(
-          backgroundColor: AppColors.background,
+          backgroundColor:
+              isDark ? const Color(0xFF0F172A) : AppColors.background,
           drawer: const CrmDrawer(),
           appBar: AppBar(
-            backgroundColor: Colors.white,
+            backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
             elevation: 0.5,
-            leading: const CustomBackButton(isDarkMode: false),
+            leading: CustomBackButton(isDarkMode: isDark),
             title: Text(
               "Leads",
               style: GoogleFonts.poppins(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: const Color(0xFF0F172A),
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
               ),
             ),
             actions: const [
