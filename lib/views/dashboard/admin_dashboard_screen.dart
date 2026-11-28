@@ -13,7 +13,7 @@ import '../widgets/stat_metric_card.dart';
 import '../widgets/loan_pipeline_card.dart';
 import '../leads/leads_list_screen.dart';
 import '../leads/insurance_leads_screen.dart';
-import '../leads/loan_leads_cards_screen.dart';
+import '../leads/login_leads_screen.dart';
 import '../contact/contact_screen.dart';
 import '../cars/add_car_screen.dart';
 import '../profile/admin_profile_screen.dart';
@@ -57,8 +57,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => LoanLeadsCardsScreen(
-          initialType: initialType,
+        builder: (_) => LoginLeadsScreen(
+          loanType: initialType,
           loggedInOnly: loggedInOnly,
         ),
       ),

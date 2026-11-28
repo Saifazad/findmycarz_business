@@ -389,12 +389,13 @@ class _EditTestimonialScreenState extends State<EditTestimonialScreen> {
                       child: Row(
                         children: [
                           if (_currentStep > 0) ...[
-                            // Back Button (Compact proportional width for mobile)
-                            SizedBox(
-                              width: 95,
+                            // Back Button
+                            Expanded(
+                              flex: 2,
                               child: OutlinedButton(
                                 onPressed: _previousStep,
                                 style: OutlinedButton.styleFrom(
+                                  minimumSize: const Size(0, 46),
                                   side: const BorderSide(
                                     color: AppColors.primary,
                                     width: 1.5,
@@ -404,9 +405,9 @@ class _EditTestimonialScreenState extends State<EditTestimonialScreen> {
                                       ? const Color(0xFF1E293B)
                                       : Colors.white,
                                   padding:
-                                      const EdgeInsets.symmetric(vertical: 13),
+                                      const EdgeInsets.symmetric(vertical: 12),
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(9),
+                                    borderRadius: BorderRadius.circular(10),
                                   ),
                                 ),
                                 child: Text(
@@ -422,20 +423,22 @@ class _EditTestimonialScreenState extends State<EditTestimonialScreen> {
                             const SizedBox(width: 12),
                           ],
 
-                          // Next / Update Button (Expanded with FittedBox for perfect mobile rendering)
+                          // Next / Update Button
                           Expanded(
+                            flex: 3,
                             child: ElevatedButton(
                               onPressed: _nextStep,
                               style: ElevatedButton.styleFrom(
+                                minimumSize: const Size(0, 46),
                                 backgroundColor: AppColors.primary,
                                 foregroundColor: Colors.white,
                                 elevation: 0,
                                 padding: const EdgeInsets.symmetric(
-                                  vertical: 13,
-                                  horizontal: 10,
+                                  vertical: 12,
+                                  horizontal: 14,
                                 ),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(9),
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
                               ),
                               child: FittedBox(

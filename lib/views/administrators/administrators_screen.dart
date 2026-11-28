@@ -178,36 +178,39 @@ class _AdministratorsScreenState extends State<AdministratorsScreen> {
                                 : null,
                           ),
                           child: Center(
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  "Approved",
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 13,
-                                    fontWeight: vm.mainTab == "Approved" ? FontWeight.w700 : FontWeight.w500,
-                                    color: vm.mainTab == "Approved" ? const Color(0xFF003366) : const Color(0xFF64748B),
-                                  ),
-                                ),
-                                const SizedBox(width: 6),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                                  decoration: BoxDecoration(
-                                    color: vm.mainTab == "Approved"
-                                        ? const Color(0xFF003366).withOpacity(0.1)
-                                        : Colors.grey.withOpacity(0.15),
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Text(
-                                    "${vm.approvedCount}",
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    "Approved",
                                     style: GoogleFonts.poppins(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13,
+                                      fontWeight: vm.mainTab == "Approved" ? FontWeight.w700 : FontWeight.w500,
                                       color: vm.mainTab == "Approved" ? const Color(0xFF003366) : const Color(0xFF64748B),
                                     ),
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(width: 6),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                                    decoration: BoxDecoration(
+                                      color: vm.mainTab == "Approved"
+                                          ? const Color(0xFF003366).withOpacity(0.1)
+                                          : Colors.grey.withOpacity(0.15),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Text(
+                                      "${vm.approvedCount}",
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                        color: vm.mainTab == "Approved" ? const Color(0xFF003366) : const Color(0xFF64748B),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
@@ -238,36 +241,39 @@ class _AdministratorsScreenState extends State<AdministratorsScreen> {
                                 : null,
                           ),
                           child: Center(
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  "UnApproved",
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 13,
-                                    fontWeight: vm.mainTab == "UnApproved" ? FontWeight.w700 : FontWeight.w500,
-                                    color: vm.mainTab == "UnApproved" ? Colors.redAccent : const Color(0xFF64748B),
-                                  ),
-                                ),
-                                const SizedBox(width: 6),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                                  decoration: BoxDecoration(
-                                    color: vm.mainTab == "UnApproved"
-                                        ? Colors.redAccent.withOpacity(0.15)
-                                        : Colors.grey.withOpacity(0.15),
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Text(
-                                    "${vm.unapprovedCount}",
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    "UnApproved",
                                     style: GoogleFonts.poppins(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13,
+                                      fontWeight: vm.mainTab == "UnApproved" ? FontWeight.w700 : FontWeight.w500,
                                       color: vm.mainTab == "UnApproved" ? Colors.redAccent : const Color(0xFF64748B),
                                     ),
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(width: 6),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                                    decoration: BoxDecoration(
+                                      color: vm.mainTab == "UnApproved"
+                                          ? Colors.redAccent.withOpacity(0.15)
+                                          : Colors.grey.withOpacity(0.15),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Text(
+                                      "${vm.unapprovedCount}",
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                        color: vm.mainTab == "UnApproved" ? Colors.redAccent : const Color(0xFF64748B),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
@@ -519,6 +525,7 @@ class _AdministratorsScreenState extends State<AdministratorsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
                           child: Text(
@@ -528,25 +535,24 @@ class _AdministratorsScreenState extends State<AdministratorsScreen> {
                               fontWeight: FontWeight.w700,
                               color: const Color(0xFF0F172A),
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: badgeBg,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            badgeLabel,
-                            style: GoogleFonts.poppins(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              color: badgeText,
+                        if (isUnapproved)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: badgeBg,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              badgeLabel,
+                              style: GoogleFonts.poppins(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: badgeText,
+                              ),
                             ),
                           ),
-                        ),
                       ],
                     ),
                     const SizedBox(height: 2),
@@ -556,6 +562,8 @@ class _AdministratorsScreenState extends State<AdministratorsScreen> {
                         fontSize: 11,
                         color: const Color(0xFF64748B),
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
@@ -581,7 +589,7 @@ class _AdministratorsScreenState extends State<AdministratorsScreen> {
                   ),
                 ),
               ),
-              if (admin.role?.code != null && admin.role!.code.isNotEmpty)
+              if (admin.role?.code != null && admin.role!.code.isNotEmpty) ...[
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
@@ -597,6 +605,51 @@ class _AdministratorsScreenState extends State<AdministratorsScreen> {
                     ),
                   ),
                 ),
+                const SizedBox(width: 8),
+              ],
+              // ✏️ Edit Action Button (inline with Role)
+              InkWell(
+                onTap: () async {
+                  final res = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          AddAdministratorScreen(initialAdmin: admin),
+                    ),
+                  );
+                  if (res == true && context.mounted) {
+                    context
+                        .read<AdministratorsViewModel>()
+                        .fetchAdministrators();
+                  }
+                },
+                borderRadius: BorderRadius.circular(6),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.edit_outlined,
+                          size: 13, color: Color(0xFF475569)),
+                      const SizedBox(width: 4),
+                      Text(
+                        "Edit",
+                        style: GoogleFonts.poppins(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF334155),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
 
@@ -695,147 +748,163 @@ class _AdministratorsScreenState extends State<AdministratorsScreen> {
           const Divider(height: 1, color: Color(0xFFF1F5F9)),
           const SizedBox(height: 10),
 
-          // Action Strip (Web CRM: Edit, Delete, Auto Login / Approve)
+          // Action Strip (Web CRM: Delete, Auto Login / Approve)
           Row(
             children: [
-              // ✏️ Edit Action Button
-              InkWell(
-                onTap: () async {
-                  final res = await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => AddAdministratorScreen(initialAdmin: admin),
-                    ),
-                  );
-                  if (res == true && context.mounted) {
-                    context.read<AdministratorsViewModel>().fetchAdministrators();
-                  }
-                },
-                borderRadius: BorderRadius.circular(6),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF1F5F9),
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.edit_outlined, size: 14, color: Color(0xFF475569)),
-                      const SizedBox(width: 4),
-                      Text(
-                        "Edit",
-                        style: GoogleFonts.poppins(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF334155),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-
               // 🗑️ Delete Action Button
-              InkWell(
-                onTap: () => _showDeleteConfirmation(context, admin),
-                borderRadius: BorderRadius.circular(6),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Colors.red.shade50,
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: Colors.red.shade200),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.delete_outline_rounded, size: 14, color: Colors.red.shade600),
-                      const SizedBox(width: 4),
-                      Text(
-                        "Delete",
-                        style: GoogleFonts.poppins(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.red.shade700,
-                        ),
+              Expanded(
+                child: InkWell(
+                  onTap: () => _showDeleteConfirmation(context, admin),
+                  borderRadius: BorderRadius.circular(6),
+                  child: Container(
+                    height: 34,
+                    alignment: Alignment.center,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade50,
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: Colors.red.shade200),
+                    ),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.delete_outline_rounded,
+                              size: 14, color: Colors.red.shade600),
+                          const SizedBox(width: 4),
+                          Text(
+                            "Delete",
+                            style: GoogleFonts.poppins(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.red.shade700,
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ),
-
-              const Spacer(),
-
-              // Web Parity: Auto Login or Staff Approval
               if (isUnapproved) ...[
-                // Staff is Unapproved -> Approve Button + Web Cyan/Blue Login Button
-                ElevatedButton.icon(
-                  onPressed: () => _showApproveConfirmation(context, admin),
-                  icon: const Icon(Icons.check_circle_outline_rounded, size: 13, color: Colors.white),
-                  label: Text(
-                    "Approve",
-                    style: GoogleFonts.poppins(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
+                const SizedBox(width: 8),
+                Expanded(
+                  child: SizedBox(
+                    height: 34,
+                    child: ElevatedButton(
+                      onPressed: () =>
+                          _showApproveConfirmation(context, admin),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF10B981),
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(6)),
+                      ),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.check_circle_outline_rounded,
+                                size: 13, color: Colors.white),
+                            const SizedBox(width: 4),
+                            Text(
+                              "Approve",
+                              style: GoogleFonts.poppins(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF10B981),
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                  ),
-                ),
-                const SizedBox(width: 6),
-                ElevatedButton.icon(
-                  onPressed: () => _showAutoLoginConfirmation(context, admin),
-                  icon: const Icon(Icons.login_rounded, size: 13, color: Colors.white),
-                  label: Text(
-                    "Login",
-                    style: GoogleFonts.poppins(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0284C7),
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
                   ),
                 ),
               ] else ...[
-                // Staff is Approved -> Web Cyan/Blue Login Button
-                ElevatedButton.icon(
-                  onPressed: () => _showAutoLoginConfirmation(context, admin),
-                  icon: const Icon(Icons.login_rounded, size: 14, color: Colors.white),
-                  label: Text(
-                    "Login",
-                    style: GoogleFonts.poppins(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Container(
+                    height: 34,
+                    alignment: Alignment.center,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    decoration: BoxDecoration(
+                      color: badgeBg,
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: badgeText.withValues(alpha: 0.35),
+                      ),
                     ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0284C7),
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            isActive
+                                ? Icons.check_circle_outline_rounded
+                                : Icons.cancel_outlined,
+                            size: 13,
+                            color: badgeText,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            badgeLabel,
+                            style: GoogleFonts.poppins(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w700,
+                              color: badgeText,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ],
+              const SizedBox(width: 8),
+              Expanded(
+                child: SizedBox(
+                  height: 34,
+                  child: ElevatedButton(
+                    onPressed: () =>
+                        _showAutoLoginConfirmation(context, admin),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF0284C7),
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6)),
+                    ),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.login_rounded,
+                              size: 13, color: Colors.white),
+                          const SizedBox(width: 4),
+                          Text(
+                            "Login",
+                            style: GoogleFonts.poppins(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         ],

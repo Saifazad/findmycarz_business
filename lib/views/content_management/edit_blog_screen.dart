@@ -37,12 +37,16 @@ class _EditBlogScreenState extends State<EditBlogScreen> {
   late TextEditingController _descCtrl;
   late TextEditingController _imagePathCtrl;
   late TextEditingController _dateCtrl;
+  late TextEditingController _publishDateCtrl;
   late List<_GalleryMediaItem> _mediaGallery;
   String _publishingStatus = "Active";
   String _visibility = "Public";
   String _publishDateStr = "2026-09-01 14:26";
+  late String _tempStatus;
+  late String _tempVisibility;
   bool _isEditingStatus = false;
   bool _isEditingVisibility = false;
+  bool _isEditingPublishDate = false;
 
   final List<String> _stepTitles = ["Details", "Media", "Publish"];
   final List<String> _stepSubtitles = [
@@ -65,6 +69,9 @@ class _EditBlogScreenState extends State<EditBlogScreen> {
     _publishingStatus = widget.blog.isActive ? "Active" : "Draft";
     _visibility = "Public";
     _publishDateStr = "2026-09-01 14:26";
+    _tempStatus = _publishingStatus;
+    _tempVisibility = _visibility;
+    _publishDateCtrl = TextEditingController(text: _publishDateStr);
     _mediaGallery = (widget.blog.imagePath != null &&
             widget.blog.imagePath!.trim().isNotEmpty)
         ? [_GalleryMediaItem(path: widget.blog.imagePath!)]
@@ -79,6 +86,7 @@ class _EditBlogScreenState extends State<EditBlogScreen> {
     _descCtrl.dispose();
     _imagePathCtrl.dispose();
     _dateCtrl.dispose();
+    _publishDateCtrl.dispose();
     super.dispose();
   }
 
@@ -1211,8 +1219,10 @@ class _EditBlogScreenState extends State<EditBlogScreen> {
                     InkWell(
                       onTap: () {
                         setState(() {
+                          _tempStatus = _publishingStatus;
                           _isEditingStatus = !_isEditingStatus;
                           _isEditingVisibility = false;
+                          _isEditingPublishDate = false;
                         });
                       },
                       child: Padding(
@@ -1232,58 +1242,107 @@ class _EditBlogScreenState extends State<EditBlogScreen> {
                 ),
                 if (_isEditingStatus) ...[
                   const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? const Color(0xFF0F172A)
-                          : const Color(0xFFF8FAFC),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: isDark
-                            ? const Color(0xFF334155)
-                            : const Color(0xFFE2E8F0),
+                  DropdownButtonFormField<String>(
+                    initialValue: ["Active", "Draft", "Inactive"]
+                            .contains(_tempStatus)
+                        ? _tempStatus
+                        : "Active",
+                    dropdownColor:
+                        isDark ? const Color(0xFF1E293B) : Colors.white,
+                    icon: Icon(
+                      Icons.keyboard_arrow_down,
+                      size: 18,
+                      color: isDark ? Colors.white54 : const Color(0xFF64748B),
+                    ),
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                    ),
+                    decoration: InputDecoration(
+                      isDense: true,
+                      filled: true,
+                      fillColor:
+                          isDark ? const Color(0xFF0F172A) : Colors.white,
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 10),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(
+                          color: isDark
+                              ? const Color(0xFF334155)
+                              : const Color(0xFFCBD5E1),
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(
+                          color: isDark
+                              ? const Color(0xFF334155)
+                              : const Color(0xFFCBD5E1),
+                        ),
+                      ),
+                      focusedBorder: const OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(8)),
+                        borderSide: BorderSide(
+                          color: AppColors.primary,
+                          width: 1.5,
+                        ),
                       ),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: ["Active", "Draft", "Inactive"].map((s) {
-                        final isSel = _publishingStatus == s;
-                        return InkWell(
-                          onTap: () {
-                            setState(() {
-                              _publishingStatus = s;
-                              _isEditingStatus = false;
-                            });
-                          },
-                          borderRadius: BorderRadius.circular(6),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: isSel
-                                  ? AppColors.primary
-                                  : Colors.transparent,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              s,
-                              style: GoogleFonts.poppins(
-                                fontSize: 12,
-                                fontWeight: isSel
-                                    ? FontWeight.bold
-                                    : FontWeight.normal,
-                                color: isSel
-                                    ? Colors.white
-                                    : (isDark
-                                        ? Colors.white70
-                                        : const Color(0xFF475569)),
-                              ),
+                    items: ["Active", "Draft", "Inactive"].map((s) {
+                      return DropdownMenuItem<String>(
+                        value: s,
+                        child: Text(s),
+                      );
+                    }).toList(),
+                    onChanged: (val) {
+                      if (val != null) {
+                        setState(() => _tempStatus = val);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      InkWell(
+                        onTap: () {
+                          setState(() {
+                            _publishingStatus = _tempStatus;
+                            _isEditingStatus = false;
+                          });
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 4, vertical: 4),
+                          child: Text(
+                            "OK",
+                            style: GoogleFonts.poppins(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primary,
                             ),
                           ),
-                        );
-                      }).toList(),
-                    ),
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      InkWell(
+                        onTap: () {
+                          setState(() => _isEditingStatus = false);
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 4, vertical: 4),
+                          child: Text(
+                            "Cancel",
+                            style: GoogleFonts.poppins(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
                 const SizedBox(height: 12),
@@ -1326,8 +1385,10 @@ class _EditBlogScreenState extends State<EditBlogScreen> {
                     InkWell(
                       onTap: () {
                         setState(() {
+                          _tempVisibility = _visibility;
                           _isEditingVisibility = !_isEditingVisibility;
                           _isEditingStatus = false;
+                          _isEditingPublishDate = false;
                         });
                       },
                       child: Padding(
@@ -1346,59 +1407,93 @@ class _EditBlogScreenState extends State<EditBlogScreen> {
                   ],
                 ),
                 if (_isEditingVisibility) ...[
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? const Color(0xFF0F172A)
-                          : const Color(0xFFF8FAFC),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: isDark
-                            ? const Color(0xFF334155)
-                            : const Color(0xFFE2E8F0),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: ["Public", "Private", "Password"].map((v) {
-                        final isSel = _visibility == v;
+                  const SizedBox(height: 6),
+                  RadioGroup<String>(
+                    groupValue: _tempVisibility,
+                    onChanged: (val) {
+                      if (val != null) {
+                        setState(() => _tempVisibility = val);
+                      }
+                    },
+                    child: Column(
+                      children: ["Public", "Private"].map((v) {
                         return InkWell(
                           onTap: () {
-                            setState(() {
-                              _visibility = v;
-                              _isEditingVisibility = false;
-                            });
+                            setState(() => _tempVisibility = v);
                           },
-                          borderRadius: BorderRadius.circular(6),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: isSel
-                                  ? AppColors.primary
-                                  : Colors.transparent,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              v,
-                              style: GoogleFonts.poppins(
-                                fontSize: 12,
-                                fontWeight: isSel
-                                    ? FontWeight.bold
-                                    : FontWeight.normal,
-                                color: isSel
-                                    ? Colors.white
-                                    : (isDark
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 2),
+                            child: Row(
+                              children: [
+                                SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: Radio<String>(
+                                    value: v,
+                                    activeColor: AppColors.primary,
+                                    materialTapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  v,
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 13,
+                                    color: isDark
                                         ? Colors.white70
-                                        : const Color(0xFF475569)),
-                              ),
+                                        : const Color(0xFF64748B),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         );
                       }).toList(),
                     ),
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      InkWell(
+                        onTap: () {
+                          setState(() {
+                            _visibility = _tempVisibility;
+                            _isEditingVisibility = false;
+                          });
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 4, vertical: 4),
+                          child: Text(
+                            "OK",
+                            style: GoogleFonts.poppins(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      InkWell(
+                        onTap: () {
+                          setState(() => _isEditingVisibility = false);
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 4, vertical: 4),
+                          child: Text(
+                            "Cancel",
+                            style: GoogleFonts.poppins(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
                 const SizedBox(height: 12),
@@ -1439,7 +1534,14 @@ class _EditBlogScreenState extends State<EditBlogScreen> {
                     ),
                     const Spacer(),
                     InkWell(
-                      onTap: _pickPublishDateTime,
+                      onTap: () {
+                        setState(() {
+                          _publishDateCtrl.text = _publishDateStr;
+                          _isEditingPublishDate = !_isEditingPublishDate;
+                          _isEditingStatus = false;
+                          _isEditingVisibility = false;
+                        });
+                      },
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 4, vertical: 2),
@@ -1455,6 +1557,104 @@ class _EditBlogScreenState extends State<EditBlogScreen> {
                     ),
                   ],
                 ),
+                if (_isEditingPublishDate) ...[
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _publishDateCtrl,
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                    ),
+                    decoration: InputDecoration(
+                      isDense: true,
+                      hintText: "YYYY-MM-DD HH:MM",
+                      suffixIcon: IconButton(
+                        icon: const Icon(
+                          Icons.calendar_month_outlined,
+                          size: 18,
+                          color: AppColors.inputIcon,
+                        ),
+                        onPressed: _pickPublishDateTime,
+                      ),
+                      filled: true,
+                      fillColor:
+                          isDark ? const Color(0xFF0F172A) : Colors.white,
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 10),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(
+                          color: isDark
+                              ? const Color(0xFF334155)
+                              : const Color(0xFFCBD5E1),
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(
+                          color: isDark
+                              ? const Color(0xFF334155)
+                              : const Color(0xFFCBD5E1),
+                        ),
+                      ),
+                      focusedBorder: const OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(8)),
+                        borderSide: BorderSide(
+                          color: AppColors.primary,
+                          width: 1.5,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      InkWell(
+                        onTap: () {
+                          setState(() {
+                            final val = _publishDateCtrl.text.trim();
+                            if (val.isNotEmpty) {
+                              _publishDateStr = val;
+                              _dateCtrl.text = val;
+                            }
+                            _isEditingPublishDate = false;
+                          });
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 4, vertical: 4),
+                          child: Text(
+                            "OK",
+                            style: GoogleFonts.poppins(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      InkWell(
+                        onTap: () {
+                          setState(() => _isEditingPublishDate = false);
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 4, vertical: 4),
+                          child: Text(
+                            "Cancel",
+                            style: GoogleFonts.poppins(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),
@@ -1487,8 +1687,7 @@ class _EditBlogScreenState extends State<EditBlogScreen> {
     final mm = time.minute.toString().padLeft(2, '0');
 
     setState(() {
-      _publishDateStr = "$y-$m-$d $hh:$mm";
-      _dateCtrl.text = _publishDateStr;
+      _publishDateCtrl.text = "$y-$m-$d $hh:$mm";
     });
   }
 
