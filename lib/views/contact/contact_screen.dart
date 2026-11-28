@@ -206,10 +206,6 @@ class _ContactScreenState extends State<ContactScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final totalEntries = context.select<LeadsViewModel, int>(
-      (vm) => vm.contactTotal > 0 ? vm.contactTotal : _enquiries.length,
-    );
-
     return Scaffold(
       backgroundColor:
           _isDarkMode ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
@@ -491,24 +487,6 @@ class _ContactScreenState extends State<ContactScreen> {
                         ),
                       ),
                     ),
-                    if (_enquiries.isNotEmpty)
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 8, bottom: 20),
-                          child: Center(
-                            child: Text(
-                              "Showing 1 to ${_enquiries.length} of $totalEntries entries",
-                              style: GoogleFonts.poppins(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                                color: _isDarkMode
-                                    ? Colors.grey.shade400
-                                    : const Color(0xFF64748B),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
                   ],
                 ),
               ),
