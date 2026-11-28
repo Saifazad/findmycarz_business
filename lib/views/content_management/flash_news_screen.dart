@@ -1,30 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
+import '../../models/flash_news_item_model.dart';
+import '../../viewmodels/cms_viewmodel.dart';
 import '../widgets/crm_drawer.dart';
 import '../widgets/custom_back_button.dart';
 import '../widgets/admin_profile_avatar.dart';
 import 'add_flash_announcement_screen.dart';
 
-class FlashNewsItem {
-  final String id;
-  String text;
-  int order;
-  String type;
-  bool isActive;
-  String linkTarget;
-  String? url;
-
-  FlashNewsItem({
-    required this.id,
-    required this.text,
-    this.order = 0,
-    this.type = "Text Only",
-    this.isActive = true,
-    this.linkTarget = "New Tab",
-    this.url,
-  });
-}
+export '../../models/flash_news_item_model.dart';
 
 class FlashNewsScreen extends StatefulWidget {
   const FlashNewsScreen({super.key});
@@ -36,17 +21,15 @@ class FlashNewsScreen extends StatefulWidget {
 class _FlashNewsScreenState extends State<FlashNewsScreen> {
   bool _isDarkMode = false;
 
-  final List<FlashNewsItem> _flashItems = [
-    FlashNewsItem(
-      id: "FLASH-001",
-      text:
-          "Welcome to Find My Car, your trusted destination for buying and selling new and pre-owned cars.",
-      order: 0,
-      type: "Text Only",
-      isActive: true,
-      linkTarget: "New Tab",
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<CmsViewModel>().fetchFlashNews();
+      }
+    });
+  }
 
   Future<void> _navigateToAdd() async {
     final newItem = await Navigator.push<FlashNewsItem>(
@@ -56,18 +39,14 @@ class _FlashNewsScreenState extends State<FlashNewsScreen> {
       ),
     );
 
-    if (newItem != null) {
-      setState(() {
-        _flashItems.add(newItem);
-      });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Flash announcement saved successfully!"),
-            backgroundColor: Color(0xFF0F766E),
-          ),
-        );
-      }
+    if (newItem != null && mounted) {
+      context.read<CmsViewModel>().addFlashNewsLocal(newItem);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Flash announcement saved successfully!"),
+          backgroundColor: Color(0xFF0F766E),
+        ),
+      );
     }
   }
 
@@ -178,9 +157,9 @@ class _FlashNewsScreenState extends State<FlashNewsScreen> {
                       const SizedBox(width: 10),
                       ElevatedButton(
                         onPressed: () {
-                          setState(() {
-                            _flashItems.removeWhere((i) => i.id == item.id);
-                          });
+                          context
+                              .read<CmsViewModel>()
+                              .removeFlashNewsLocal(item.id);
                           Navigator.pop(ctx);
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
@@ -220,6 +199,9 @@ class _FlashNewsScreenState extends State<FlashNewsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final vm = context.watch<CmsViewModel>();
+    final flashItems = vm.flashNews;
+
     return Scaffold(
       backgroundColor:
           _isDarkMode ? const Color(0xFF0F172A) : AppColors.background,
@@ -243,14 +225,6 @@ class _FlashNewsScreenState extends State<FlashNewsScreen> {
           ),
         ),
         actions: [
-          IconButton(
-            icon: Icon(
-              Icons.notifications_none_rounded,
-              color: _isDarkMode ? Colors.white : const Color(0xFF334155),
-            ),
-            onPressed: () {},
-          ),
-          const SizedBox(width: 4),
           const AdminProfileAvatar(),
           const SizedBox(width: 14),
         ],
@@ -265,11 +239,11 @@ class _FlashNewsScreenState extends State<FlashNewsScreen> {
               children: [
                 Expanded(
                   child: Text(
-                    _flashItems.isEmpty
+                    flashItems.isEmpty
                         ? "No Announcements"
-                        : _flashItems.length == 1
+                        : flashItems.length == 1
                             ? "1 Announcement"
-                            : "${_flashItems.length} Announcements",
+                            : "${flashItems.length} Announcements",
                     style: GoogleFonts.poppins(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -310,39 +284,84 @@ class _FlashNewsScreenState extends State<FlashNewsScreen> {
 
           // 4. Flash Items List
           Expanded(
-            child: _flashItems.isEmpty
-                ? Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 40),
-                    child: Center(
-                      child: Column(
-                        children: [
-                          Icon(
-                            Icons.campaign_outlined,
-                            size: 44,
-                            color: _isDarkMode
-                                ? Colors.grey.shade600
-                                : Colors.grey.shade400,
-                          ),
-                          const SizedBox(height: 10),
-                          Text(
-                            "No Flash Announcements",
-                            style: GoogleFonts.poppins(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: _isDarkMode
-                                  ? Colors.grey.shade400
-                                  : Colors.grey.shade600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+            child: vm.isFlashNewsLoading && flashItems.isEmpty
+                ? const Center(
+                    child: CircularProgressIndicator(color: AppColors.primary),
                   )
-                : ListView.builder(
-                    padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
-                    itemCount: _flashItems.length,
-                    itemBuilder: (ctx, index) {
-                      final item = _flashItems[index];
+                : vm.flashNewsError != null && flashItems.isEmpty
+                    ? Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.error_outline,
+                                size: 42,
+                                color: Color(0xFFDC2626),
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                vm.flashNewsError!,
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 13,
+                                  color: _isDarkMode
+                                      ? Colors.white70
+                                      : const Color(0xFF334155),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              ElevatedButton.icon(
+                                onPressed: vm.fetchFlashNews,
+                                icon: const Icon(Icons.refresh, size: 16),
+                                label: const Text("Retry"),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primary,
+                                  foregroundColor: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    : flashItems.isEmpty
+                        ? Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 40),
+                            child: Center(
+                              child: Column(
+                                children: [
+                                  Icon(
+                                    Icons.campaign_outlined,
+                                    size: 44,
+                                    color: _isDarkMode
+                                        ? Colors.grey.shade600
+                                        : Colors.grey.shade400,
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    "No Flash Announcements",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: _isDarkMode
+                                          ? Colors.grey.shade400
+                                          : Colors.grey.shade600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          )
+                        : RefreshIndicator(
+                            color: AppColors.primary,
+                            onRefresh: vm.fetchFlashNews,
+                            child: ListView.builder(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+                              itemCount: flashItems.length,
+                              itemBuilder: (ctx, index) {
+                                final item = flashItems[index];
 
                       return Container(
                         margin: const EdgeInsets.only(bottom: 12),
@@ -569,8 +588,9 @@ class _FlashNewsScreenState extends State<FlashNewsScreen> {
                           ],
                         ),
                       );
-                    },
-                  ),
+                              },
+                            ),
+                          ),
           ),
         ],
       ),

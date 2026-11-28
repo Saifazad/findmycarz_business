@@ -6,6 +6,7 @@ import '../../core/theme/app_colors.dart';
 import '../../models/contact_enquiry_model.dart';
 import '../../viewmodels/leads_viewmodel.dart';
 import '../widgets/crm_drawer.dart';
+import '../widgets/crm_detail_dialog.dart';
 import '../widgets/custom_back_button.dart';
 import '../widgets/admin_profile_avatar.dart';
 
@@ -164,112 +165,47 @@ class _ContactScreenState extends State<ContactScreen> {
   }
 
   void _viewEnquiryDetails(ContactEnquiry enquiry) {
-    showModalBottomSheet(
+    showCrmDetailDialog(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) {
-        return Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    "Enquiry Details",
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color:
-                          _isDarkMode ? Colors.white : const Color(0xFF0F172A),
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.pop(ctx),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              _buildDetailRow("Name", enquiry.name),
-              _buildDetailRow("Phone", enquiry.phone),
-              _buildDetailRow("Email", enquiry.email),
-              _buildDetailRow("City", enquiry.city),
-              _buildDetailRow("Date & Time", enquiry.date),
-              _buildDetailRow("Message", enquiry.message),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF00A3FF),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  onPressed: () => Navigator.pop(ctx),
-                  child: Text(
-                    "Close",
-                    style: GoogleFonts.poppins(
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildDetailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 100,
-            child: Text(
-              label,
-              style: GoogleFonts.poppins(
-                fontSize: 12,
-                color: _isDarkMode
-                    ? Colors.grey.shade400
-                    : const Color(0xFF64748B),
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: GoogleFonts.poppins(
-                fontSize: 12.5,
-                fontWeight: FontWeight.bold,
-                color: _isDarkMode ? Colors.white : const Color(0xFF0F172A),
-              ),
-            ),
-          ),
-        ],
-      ),
+      isDarkMode: _isDarkMode,
+      headerIcon: Icons.mail_outline_rounded,
+      title: "Enquiry Details",
+      badgeText: enquiry.id.isNotEmpty ? "#${enquiry.id}" : "",
+      summaryIcon: Icons.person_outline_rounded,
+      summaryTitle: enquiry.name,
+      summarySubtitle: "${enquiry.city} • ${enquiry.date}",
+      rows: [
+        CrmDetailRow(
+          icon: Icons.calendar_today_outlined,
+          label: "Date & Time",
+          value: enquiry.date,
+        ),
+        CrmDetailRow(
+          icon: Icons.location_on_outlined,
+          label: "City",
+          value: enquiry.city,
+        ),
+        CrmDetailRow(
+          icon: Icons.phone_outlined,
+          label: "Phone",
+          value: enquiry.phone,
+        ),
+        CrmDetailRow(
+          icon: Icons.mail_outline_rounded,
+          label: "Email",
+          value: enquiry.email,
+        ),
+        CrmDetailRow(
+          icon: Icons.chat_bubble_outline_rounded,
+          label: "Message",
+          value: enquiry.message,
+        ),
+      ],
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final totalEntries = context.select<LeadsViewModel, int>(
-      (vm) => vm.contactTotal > 0 ? vm.contactTotal : _enquiries.length,
-    );
-
     return Scaffold(
       backgroundColor:
           _isDarkMode ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
@@ -293,14 +229,6 @@ class _ContactScreenState extends State<ContactScreen> {
           ),
         ),
         actions: [
-          IconButton(
-            icon: Icon(
-              Icons.notifications_none_rounded,
-              color: _isDarkMode ? Colors.white : const Color(0xFF334155),
-            ),
-            onPressed: () {},
-          ),
-          const SizedBox(width: 4),
           const AdminProfileAvatar(),
           const SizedBox(width: 14),
         ],
@@ -559,24 +487,6 @@ class _ContactScreenState extends State<ContactScreen> {
                         ),
                       ),
                     ),
-                    if (_enquiries.isNotEmpty)
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 8, bottom: 20),
-                          child: Center(
-                            child: Text(
-                              "Showing 1 to ${_enquiries.length} of $totalEntries entries",
-                              style: GoogleFonts.poppins(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                                color: _isDarkMode
-                                    ? Colors.grey.shade400
-                                    : const Color(0xFF64748B),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
                   ],
                 ),
               ),
@@ -596,8 +506,7 @@ class _ContactScreenState extends State<ContactScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.error_outline,
-                size: 40, color: Color(0xFFDC2626)),
+            const Icon(Icons.error_outline, size: 40, color: Color(0xFFDC2626)),
             const SizedBox(height: 10),
             Text(
               msg,

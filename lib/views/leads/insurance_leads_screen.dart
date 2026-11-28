@@ -6,6 +6,7 @@ import '../../core/theme/app_colors.dart';
 import '../../models/insurance_lead_model.dart';
 import '../../viewmodels/leads_viewmodel.dart';
 import '../widgets/crm_drawer.dart';
+import '../widgets/crm_detail_dialog.dart';
 import '../widgets/custom_back_button.dart';
 import '../widgets/admin_profile_avatar.dart';
 
@@ -24,6 +25,7 @@ class _InsuranceLeadsScreenState extends State<InsuranceLeadsScreen> {
 
   final TextEditingController _searchController = TextEditingController();
   final List<InsuranceLead> _leads = [];
+  final Set<String> _expandedMessageLeadIds = {};
 
   late final PagingController<int, InsuranceLead> _pagingController =
       PagingController(
@@ -164,120 +166,68 @@ class _InsuranceLeadsScreenState extends State<InsuranceLeadsScreen> {
   }
 
   void _viewLeadDetails(InsuranceLead lead) {
-    showModalBottomSheet(
+    showCrmDetailDialog(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) {
-        return Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    "Lead Details (${lead.id})",
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color:
-                          _isDarkMode ? Colors.white : const Color(0xFF0F172A),
-                    ),
-                  ),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: lead.statusColor,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      lead.status,
-                      style: GoogleFonts.poppins(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 14),
-              _buildDetailRow("Owner Name", lead.ownerName),
-              _buildDetailRow("Registration No.", lead.regNumber),
-              _buildDetailRow("Phone", lead.phone),
-              _buildDetailRow("Email", lead.email),
-              _buildDetailRow("City", lead.city),
-              _buildDetailRow("Previous Claim", lead.previousClaim),
-              _buildDetailRow("Current Insurance", lead.currentInsurance),
-              _buildDetailRow(
-                  "Prev. Company", lead.previousInsuranceCompany),
-              _buildDetailRow("Description", lead.description),
-              _buildDetailRow("Submitted Date", lead.date),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF00A3FF),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  onPressed: () => Navigator.pop(ctx),
-                  child: Text(
-                    "Close",
-                    style: GoogleFonts.poppins(
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildDetailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 130,
+      isDarkMode: _isDarkMode,
+      headerIcon: Icons.shield_outlined,
+      title: "Insurance Lead Details",
+      badgeText: lead.id,
+      summaryIcon: Icons.directions_car_filled_outlined,
+      summaryTitle: lead.ownerName,
+      summarySubtitle: "Reg: ${lead.regNumber} • ${lead.city}",
+      rows: [
+        CrmDetailRow(
+          icon: Icons.calendar_today_outlined,
+          label: "Submitted Date",
+          value: lead.date,
+        ),
+        CrmDetailRow(
+          icon: Icons.phone_outlined,
+          label: "Phone",
+          value: lead.phone,
+        ),
+        CrmDetailRow(
+          icon: Icons.mail_outline_rounded,
+          label: "Email",
+          value: lead.email,
+        ),
+        CrmDetailRow(
+          icon: Icons.location_on_outlined,
+          label: "City",
+          value: lead.city,
+        ),
+        CrmDetailRow(
+          icon: Icons.verified_user_outlined,
+          label: "Insurance Info",
+          value:
+              "Current: ${lead.currentInsurance} • Prev Claim: ${lead.previousClaim} (${lead.previousInsuranceCompany})",
+        ),
+        CrmDetailRow(
+          icon: Icons.notes_outlined,
+          label: "Description",
+          value: lead.description,
+        ),
+        CrmDetailRow(
+          icon: Icons.info_outline_rounded,
+          label: "Status",
+          value: lead.status,
+          customValue: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            decoration: BoxDecoration(
+              color: lead.statusColor.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(6),
+            ),
             child: Text(
-              label,
+              lead.status,
               style: GoogleFonts.poppins(
-                fontSize: 12,
-                color: _isDarkMode
-                    ? Colors.grey.shade400
-                    : const Color(0xFF64748B),
+                fontSize: 11.5,
+                fontWeight: FontWeight.w600,
+                color: lead.statusColor,
               ),
             ),
           ),
-          Expanded(
-            child: Text(
-              value,
-              style: GoogleFonts.poppins(
-                fontSize: 12.5,
-                fontWeight: FontWeight.bold,
-                color: _isDarkMode ? Colors.white : const Color(0xFF0F172A),
-              ),
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -306,14 +256,6 @@ class _InsuranceLeadsScreenState extends State<InsuranceLeadsScreen> {
           ),
         ),
         actions: [
-          IconButton(
-            icon: Icon(
-              Icons.notifications_none_rounded,
-              color: _isDarkMode ? Colors.white : const Color(0xFF334155),
-            ),
-            onPressed: () {},
-          ),
-          const SizedBox(width: 4),
           const AdminProfileAvatar(),
           const SizedBox(width: 14),
         ],
@@ -732,74 +674,132 @@ class _InsuranceLeadsScreenState extends State<InsuranceLeadsScreen> {
           ),
           const SizedBox(height: 10),
 
-          // Row 2: CUSTOMER INQUIRY Box
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: softCardBg,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+          // Row 2: CUSTOMER INQUIRY Box (with View message toggle)
+          Builder(
+            builder: (context) {
+              final key = lead.dbId.isNotEmpty ? lead.dbId : lead.id;
+              final isExpanded = _expandedMessageLeadIds.contains(key);
+              return Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: softCardBg,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(
-                      Icons.chat_outlined,
-                      size: 13.5,
-                      color: Color(0xFF0F766E),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.chat_outlined,
+                          size: 13.5,
+                          color: Color(0xFF0F766E),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          "CUSTOMER INQUIRY",
+                          style: GoogleFonts.poppins(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFF0F766E),
+                            letterSpacing: 0.4,
+                          ),
+                        ),
+                        const Spacer(),
+                        InkWell(
+                          onTap: () {
+                            setState(() {
+                              if (isExpanded) {
+                                _expandedMessageLeadIds.remove(key);
+                              } else {
+                                _expandedMessageLeadIds.add(key);
+                              }
+                            });
+                          },
+                          borderRadius: BorderRadius.circular(7),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: _isDarkMode
+                                  ? const Color(0xFF1E293B)
+                                  : Colors.white,
+                              borderRadius: BorderRadius.circular(7),
+                              border: Border.all(color: softBorder),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  isExpanded
+                                      ? Icons.visibility_off_outlined
+                                      : Icons.visibility_outlined,
+                                  size: 13.5,
+                                  color: _isDarkMode
+                                      ? Colors.white
+                                      : const Color(0xFF0F172A),
+                                ),
+                                const SizedBox(width: 5),
+                                Text(
+                                  isExpanded ? "Hide message" : "View message",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: _isDarkMode
+                                        ? Colors.white
+                                        : const Color(0xFF0F172A),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 6),
-                    Text(
-                      "CUSTOMER INQUIRY",
-                      style: GoogleFonts.poppins(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF0F766E),
-                        letterSpacing: 0.4,
+                    if (isExpanded) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        lead.ownerName,
+                        style: GoogleFonts.poppins(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: _isDarkMode
+                              ? Colors.white
+                              : const Color(0xFF0F172A),
+                        ),
                       ),
-                    ),
+                      if (lead.id.isNotEmpty) ...[
+                        const SizedBox(height: 6),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: _isDarkMode
+                                ? const Color(0xFF1E293B)
+                                : Colors.white,
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: softBorder),
+                          ),
+                          child: Text(
+                            lead.id,
+                            style: GoogleFonts.poppins(
+                              fontSize: 11.5,
+                              color: _isDarkMode
+                                  ? Colors.grey.shade300
+                                  : const Color(0xFF475569),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ],
                   ],
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  lead.ownerName,
-                  style: GoogleFonts.poppins(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: _isDarkMode ? Colors.white : const Color(0xFF0F172A),
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                if (lead.id.isNotEmpty) ...[
-                  const SizedBox(height: 6),
-                  Container(
-                    width: double.infinity,
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color:
-                          _isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: softBorder),
-                    ),
-                    child: Text(
-                      lead.id,
-                      style: GoogleFonts.poppins(
-                        fontSize: 11.5,
-                        color: _isDarkMode
-                            ? Colors.grey.shade300
-                            : const Color(0xFF475569),
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ],
-            ),
+              );
+            },
           ),
           const SizedBox(height: 8),
 

@@ -1,31 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
+import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
+import '../../models/blog_item_model.dart';
+import '../../viewmodels/cms_viewmodel.dart';
 import '../widgets/crm_drawer.dart';
 import '../widgets/custom_back_button.dart';
 import '../widgets/admin_profile_avatar.dart';
 import 'edit_blog_screen.dart';
 
-class BlogItem {
-  final String id;
-  String title;
-  String author;
-  String date;
-  bool isActive;
-  String? imagePath;
-  String? description;
-
-  BlogItem({
-    required this.id,
-    required this.title,
-    required this.author,
-    required this.date,
-    required this.isActive,
-    this.imagePath,
-    this.description,
-  });
-}
+export '../../models/blog_item_model.dart';
 
 class BlogsScreen extends StatefulWidget {
   const BlogsScreen({super.key});
@@ -36,10 +21,11 @@ class BlogsScreen extends StatefulWidget {
 
 class _BlogsScreenState extends State<BlogsScreen> {
   bool _isDarkMode = false;
-  final int _entriesPerPage = 10;
+  final int _entriesPerPage = 20;
   String _searchQuery = "";
 
   final TextEditingController _searchController = TextEditingController();
+  final List<BlogItem> _blogs = [];
 
   late final PagingController<int, BlogItem> _pagingController =
       PagingController(
@@ -50,76 +36,27 @@ class _BlogsScreenState extends State<BlogsScreen> {
       return (state.keys!.last) + 1;
     },
     fetchPage: (pageKey) async {
-      final allFiltered = _filteredBlogs;
-      final startIndex = (pageKey - 1) * _entriesPerPage;
-      if (startIndex >= allFiltered.length) return [];
-      final endIndex =
-          (startIndex + _entriesPerPage).clamp(0, allFiltered.length);
-      return allFiltered.sublist(startIndex, endIndex);
+      final vm = context.read<CmsViewModel>();
+      final items = await vm.fetchBlogsPage(
+        pageKey: pageKey,
+        pageSize: _entriesPerPage,
+        searchQuery: _searchQuery,
+      );
+      if (mounted) {
+        setState(() {
+          if (pageKey == 1) _blogs.clear();
+          _blogs.addAll(items);
+        });
+      }
+      return items;
     },
   );
-
-  final List<BlogItem> _blogs = [
-    BlogItem(
-      id: "BLOG-001",
-      title: "Festivals are coming... Godowns must be filled",
-      author: "Nitish Bhardwaj",
-      date: "01 Sep, 2026",
-      isActive: true,
-      imagePath: null,
-      description: "Festivals are coming... Godowns must be filled",
-    ),
-    BlogItem(
-      id: "BLOG-002",
-      title:
-          '"Loan Approval First, Car Shopping Next — Choose Your Dream Car with Confidence!"',
-      author: "Nitish Bhardwaj",
-      date: "01 Sep, 2026",
-      isActive: true,
-      imagePath: null,
-    ),
-    BlogItem(
-      id: "BLOG-003",
-      title: "BMW",
-      author: "faiz",
-      date: "09 Jun, 2026",
-      isActive: false,
-      imagePath: null,
-    ),
-    BlogItem(
-      id: "BLOG-004",
-      title: "Toyota Cars",
-      author: "admin",
-      date: "08 May, 2026",
-      isActive: false,
-      imagePath: "assets/images/car.webp",
-    ),
-    BlogItem(
-      id: "BLOG-005",
-      title:
-          "Price list of Toyota Cars 2019, The Change of Interior & Exterior",
-      author: "Ajmal Alam",
-      date: "08 Dec, 2025",
-      isActive: true,
-      imagePath: "assets/images/car1.webp",
-    ),
-  ];
 
   @override
   void dispose() {
     _pagingController.dispose();
     _searchController.dispose();
     super.dispose();
-  }
-
-  List<BlogItem> get _filteredBlogs {
-    if (_searchQuery.trim().isEmpty) return _blogs;
-    final q = _searchQuery.toLowerCase();
-    return _blogs.where((b) {
-      return b.title.toLowerCase().contains(q) ||
-          b.author.toLowerCase().contains(q) ||
-          b.date.toLowerCase().contains(q);
-    }).toList();
   }
 
   void _openAddBlogScreen() async {
@@ -285,8 +222,7 @@ class _BlogsScreenState extends State<BlogsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final filtered = _filteredBlogs;
-    final displayedBlogs = filtered;
+    final displayedBlogs = _blogs;
 
     return Scaffold(
       backgroundColor:
@@ -311,14 +247,6 @@ class _BlogsScreenState extends State<BlogsScreen> {
           ),
         ),
         actions: [
-          IconButton(
-            icon: Icon(
-              Icons.notifications_none_rounded,
-              color: _isDarkMode ? Colors.white : const Color(0xFF334155),
-            ),
-            onPressed: () {},
-          ),
-          const SizedBox(width: 4),
           const AdminProfileAvatar(),
           const SizedBox(width: 14),
         ],
@@ -510,6 +438,10 @@ class _BlogsScreenState extends State<BlogsScreen> {
                               ),
                             ),
                           ),
+                          firstPageErrorIndicatorBuilder: (ctx) =>
+                              _buildErrorIndicator(state.error),
+                          newPageErrorIndicatorBuilder: (ctx) =>
+                              _buildErrorIndicator(state.error),
                           newPageProgressIndicatorBuilder: (ctx) =>
                               const Padding(
                             padding: EdgeInsets.symmetric(vertical: 16),
@@ -528,6 +460,42 @@ class _BlogsScreenState extends State<BlogsScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildErrorIndicator(Object? error) {
+    final msg = error?.toString().replaceFirst("Exception: ", "") ??
+        "Failed to load blogs";
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.error_outline,
+                size: 40, color: Color(0xFFDC2626)),
+            const SizedBox(height: 10),
+            Text(
+              msg,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                fontSize: 13,
+                color: _isDarkMode ? Colors.white70 : const Color(0xFF334155),
+              ),
+            ),
+            const SizedBox(height: 12),
+            ElevatedButton.icon(
+              onPressed: _pagingController.refresh,
+              icon: const Icon(Icons.refresh, size: 16),
+              label: const Text("Retry"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -569,19 +537,33 @@ class _BlogsScreenState extends State<BlogsScreen> {
                       : const Color(0xFFE2E8F0),
                   alignment: Alignment.center,
                   child: blog.imagePath != null
-                      ? Image.asset(
-                          blog.imagePath!,
-                          width: 80,
-                          height: 56,
-                          fit: BoxFit.cover,
-                          errorBuilder: (c, o, s) => Icon(
-                            Icons.image_outlined,
-                            size: 24,
-                            color: _isDarkMode
-                                ? Colors.grey.shade500
-                                : Colors.grey.shade400,
-                          ),
-                        )
+                      ? (blog.imagePath!.startsWith('http')
+                          ? Image.network(
+                              blog.imagePath!,
+                              width: 80,
+                              height: 56,
+                              fit: BoxFit.cover,
+                              errorBuilder: (c, o, s) => Icon(
+                                Icons.image_outlined,
+                                size: 24,
+                                color: _isDarkMode
+                                    ? Colors.grey.shade500
+                                    : Colors.grey.shade400,
+                              ),
+                            )
+                          : Image.asset(
+                              blog.imagePath!,
+                              width: 80,
+                              height: 56,
+                              fit: BoxFit.cover,
+                              errorBuilder: (c, o, s) => Icon(
+                                Icons.image_outlined,
+                                size: 24,
+                                color: _isDarkMode
+                                    ? Colors.grey.shade500
+                                    : Colors.grey.shade400,
+                              ),
+                            ))
                       : Icon(
                           Icons.image_outlined,
                           size: 24,
@@ -656,8 +638,6 @@ class _BlogsScreenState extends State<BlogsScreen> {
                             : const Color(0xFF0F172A),
                         height: 1.3,
                       ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),

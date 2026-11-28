@@ -1,31 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
+import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
+import '../../models/car_loan_content_model.dart';
+import '../../viewmodels/cms_viewmodel.dart';
 import '../widgets/crm_drawer.dart';
 import '../widgets/custom_back_button.dart';
 import '../widgets/admin_profile_avatar.dart';
 import 'edit_car_loan_screen.dart';
 
-class CarLoanContentItem {
-  final String id;
-  String title;
-  String category;
-  String publishedDate;
-  bool isActive;
-  String description;
-  String visibility;
-
-  CarLoanContentItem({
-    required this.id,
-    required this.title,
-    required this.category,
-    required this.publishedDate,
-    required this.isActive,
-    this.description = "",
-    this.visibility = "public",
-  });
-}
+export '../../models/car_loan_content_model.dart';
 
 class CarLoansScreen extends StatefulWidget {
   const CarLoansScreen({super.key});
@@ -36,10 +21,11 @@ class CarLoansScreen extends StatefulWidget {
 
 class _CarLoansScreenState extends State<CarLoansScreen> {
   bool _isDarkMode = false;
-  final int _entriesPerPage = 10;
+  final int _entriesPerPage = 20;
   String _searchQuery = "";
 
   final TextEditingController _searchController = TextEditingController();
+  final List<CarLoanContentItem> _loanContents = [];
 
   late final PagingController<int, CarLoanContentItem> _pagingController =
       PagingController(
@@ -50,70 +36,27 @@ class _CarLoansScreenState extends State<CarLoansScreen> {
       return (state.keys!.last) + 1;
     },
     fetchPage: (pageKey) async {
-      final allFiltered = _filteredList;
-      final startIndex = (pageKey - 1) * _entriesPerPage;
-      if (startIndex >= allFiltered.length) return [];
-      final endIndex =
-          (startIndex + _entriesPerPage).clamp(0, allFiltered.length);
-      return allFiltered.sublist(startIndex, endIndex);
+      final vm = context.read<CmsViewModel>();
+      final items = await vm.fetchCarLoansPage(
+        pageKey: pageKey,
+        pageSize: _entriesPerPage,
+        searchQuery: _searchQuery,
+      );
+      if (mounted) {
+        setState(() {
+          if (pageKey == 1) _loanContents.clear();
+          _loanContents.addAll(items);
+        });
+      }
+      return items;
     },
   );
-
-  final List<CarLoanContentItem> _loanContents = [
-    CarLoanContentItem(
-      id: "LOAN-001",
-      title: "Sale Purchase",
-      category: "Used Car Loan",
-      publishedDate: "08 Dec, 2025",
-      isActive: true,
-      description:
-          "Quick finance for pre-owned car purchase with low interest rates.",
-    ),
-    CarLoanContentItem(
-      id: "LOAN-002",
-      title: "New Car Loan",
-      category: "New Car Loan",
-      publishedDate: "08 Dec, 2025",
-      isActive: true,
-      description:
-          "Up to 100% on-road funding for brand new cars from top banks.",
-    ),
-    CarLoanContentItem(
-      id: "LOAN-003",
-      title: "BT + Topup Car Loan",
-      category: "Used Car Loan",
-      publishedDate: "08 Dec, 2025",
-      isActive: true,
-      description:
-          "Balance transfer your existing car loan and get extra top-up cash.",
-    ),
-    CarLoanContentItem(
-      id: "LOAN-004",
-      title: "Refinance",
-      category: "Used Car Loan",
-      publishedDate: "08 Dec, 2025",
-      isActive: true,
-      description:
-          "Unlock cash against your fully paid car with quick refinance approval.",
-    ),
-  ];
 
   @override
   void dispose() {
     _pagingController.dispose();
     _searchController.dispose();
     super.dispose();
-  }
-
-  List<CarLoanContentItem> get _filteredList {
-    if (_searchQuery.trim().isEmpty) return _loanContents;
-    final q = _searchQuery.toLowerCase();
-    return _loanContents.where((item) {
-      return item.title.toLowerCase().contains(q) ||
-          item.category.toLowerCase().contains(q) ||
-          item.publishedDate.toLowerCase().contains(q) ||
-          item.description.toLowerCase().contains(q);
-    }).toList();
   }
 
   void _openAddLoanScreen() async {
@@ -267,7 +210,7 @@ class _CarLoansScreenState extends State<CarLoansScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final filtered = _filteredList;
+    final filtered = _loanContents;
 
     return Scaffold(
       backgroundColor:
@@ -286,14 +229,6 @@ class _CarLoansScreenState extends State<CarLoansScreen> {
           ),
         ),
         actions: [
-          IconButton(
-            icon: Icon(
-              Icons.notifications_none_rounded,
-              color: _isDarkMode ? Colors.white : const Color(0xFF334155),
-            ),
-            onPressed: () {},
-          ),
-          const SizedBox(width: 4),
           const AdminProfileAvatar(),
           const SizedBox(width: 14),
         ],
@@ -486,6 +421,10 @@ class _CarLoansScreenState extends State<CarLoansScreen> {
                               ),
                             ),
                           ),
+                          firstPageErrorIndicatorBuilder: (ctx) =>
+                              _buildErrorIndicator(state.error),
+                          newPageErrorIndicatorBuilder: (ctx) =>
+                              _buildErrorIndicator(state.error),
                           newPageProgressIndicatorBuilder: (ctx) =>
                               const Padding(
                             padding: EdgeInsets.symmetric(vertical: 16),
@@ -504,6 +443,42 @@ class _CarLoansScreenState extends State<CarLoansScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildErrorIndicator(Object? error) {
+    final msg = error?.toString().replaceFirst("Exception: ", "") ??
+        "Failed to load car loan contents";
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.error_outline,
+                size: 40, color: Color(0xFFDC2626)),
+            const SizedBox(height: 10),
+            Text(
+              msg,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                fontSize: 13,
+                color: _isDarkMode ? Colors.white70 : const Color(0xFF334155),
+              ),
+            ),
+            const SizedBox(height: 12),
+            ElevatedButton.icon(
+              onPressed: _pagingController.refresh,
+              icon: const Icon(Icons.refresh, size: 16),
+              label: const Text("Retry"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

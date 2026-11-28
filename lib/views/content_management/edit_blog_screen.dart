@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../core/theme/app_colors.dart';
 import '../widgets/custom_back_button.dart';
 import '../widgets/admin_profile_avatar.dart';
@@ -21,9 +23,9 @@ class EditBlogScreen extends StatefulWidget {
 
 class _GalleryMediaItem {
   final String path;
-  final bool isVideo;
+  final bool isVideo = false;
 
-  _GalleryMediaItem({required this.path, this.isVideo = false});
+  _GalleryMediaItem({required this.path});
 }
 
 class _EditBlogScreenState extends State<EditBlogScreen> {
@@ -63,7 +65,10 @@ class _EditBlogScreenState extends State<EditBlogScreen> {
     _publishingStatus = widget.blog.isActive ? "Active" : "Draft";
     _visibility = "Public";
     _publishDateStr = "2026-09-01 14:26";
-    _mediaGallery = [];
+    _mediaGallery = (widget.blog.imagePath != null &&
+            widget.blog.imagePath!.trim().isNotEmpty)
+        ? [_GalleryMediaItem(path: widget.blog.imagePath!)]
+        : [];
   }
 
   @override
@@ -75,6 +80,30 @@ class _EditBlogScreenState extends State<EditBlogScreen> {
     _imagePathCtrl.dispose();
     _dateCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickCoverImage() async {
+    try {
+      final picker = ImagePicker();
+      final file = await picker.pickImage(source: ImageSource.gallery);
+      if (file == null || !mounted) return;
+      setState(() {
+        _imagePathCtrl.text = file.path;
+      });
+    } catch (_) {}
+  }
+
+  Future<void> _pickGalleryImages() async {
+    try {
+      final picker = ImagePicker();
+      final files = await picker.pickMultiImage();
+      if (files.isEmpty || !mounted) return;
+      setState(() {
+        for (final f in files) {
+          _mediaGallery.add(_GalleryMediaItem(path: f.path));
+        }
+      });
+    } catch (_) {}
   }
 
   void _scrollToTop() {
@@ -560,6 +589,63 @@ class _EditBlogScreenState extends State<EditBlogScreen> {
     );
   }
 
+  Widget _buildCoverImagePreview(String path, bool isDark) {
+    Widget fallback() => Container(
+          height: 130,
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          alignment: Alignment.center,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.image_outlined,
+                size: 36,
+                color: isDark ? Colors.white54 : Colors.grey.shade600,
+              ),
+              const SizedBox(height: 6),
+              Text(
+                path,
+                style: GoogleFonts.poppins(
+                  fontSize: 11.5,
+                  color: isDark ? Colors.white54 : Colors.grey.shade600,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        );
+
+    if (path.startsWith('http')) {
+      return Image.network(
+        path,
+        height: 130,
+        width: double.infinity,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => fallback(),
+      );
+    }
+    if (path.startsWith('assets/')) {
+      return Image.asset(
+        path,
+        height: 130,
+        width: double.infinity,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => fallback(),
+      );
+    }
+    return Image.file(
+      File(path),
+      height: 130,
+      width: double.infinity,
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) => fallback(),
+    );
+  }
+
   // ================= COVER IMAGE CARD =================
   Widget _buildCoverImageCard(bool isDark) {
     return Container(
@@ -608,44 +694,7 @@ class _EditBlogScreenState extends State<EditBlogScreen> {
                     children: [
                       ClipRRect(
                         borderRadius: BorderRadius.circular(8),
-                        child: Image.asset(
-                          _imagePathCtrl.text,
-                          height: 130,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Container(
-                            height: 130,
-                            decoration: BoxDecoration(
-                              color: isDark
-                                  ? const Color(0xFF0F172A)
-                                  : const Color(0xFFF8FAFC),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            alignment: Alignment.center,
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.image_outlined,
-                                  size: 36,
-                                  color: isDark
-                                      ? Colors.white54
-                                      : Colors.grey.shade600,
-                                ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  _imagePathCtrl.text,
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 11.5,
-                                    color: isDark
-                                        ? Colors.white54
-                                        : Colors.grey.shade600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
+                        child: _buildCoverImagePreview(_imagePathCtrl.text, isDark),
                       ),
                       Positioned(
                         top: 8,
@@ -676,11 +725,7 @@ class _EditBlogScreenState extends State<EditBlogScreen> {
                     ],
                   )
                 : InkWell(
-                    onTap: () {
-                      setState(() {
-                        _imagePathCtrl.text = "assets/images/car.webp";
-                      });
-                    },
+                    onTap: _pickCoverImage,
                     borderRadius: BorderRadius.circular(8),
                     child: CustomPaint(
                       painter: _DashedRectPainter(
@@ -793,21 +838,7 @@ class _EditBlogScreenState extends State<EditBlogScreen> {
                 padding: const EdgeInsets.all(12),
                 child: _mediaGallery.isEmpty
                     ? InkWell(
-                        onTap: () {
-                          setState(() {
-                            _mediaGallery.addAll([
-                              _GalleryMediaItem(
-                                  path: "assets/images/car.webp",
-                                  isVideo: false),
-                              _GalleryMediaItem(
-                                  path: "assets/images/car1.webp",
-                                  isVideo: false),
-                              _GalleryMediaItem(
-                                  path: "assets/images/car.webp",
-                                  isVideo: true),
-                            ]);
-                          });
-                        },
+                        onTap: _pickGalleryImages,
                         borderRadius: BorderRadius.circular(8),
                         child: Container(
                           height: 110,
@@ -871,22 +902,69 @@ class _EditBlogScreenState extends State<EditBlogScreen> {
                                       child: Stack(
                                         fit: StackFit.expand,
                                         children: [
-                                          Image.asset(
-                                            item.path,
-                                            fit: BoxFit.cover,
-                                            errorBuilder: (_, __, ___) =>
-                                                Container(
-                                              color: const Color(0xFF1E293B),
-                                              alignment: Alignment.center,
-                                              child: Icon(
-                                                item.isVideo
-                                                    ? Icons.videocam_outlined
-                                                    : Icons.image_outlined,
-                                                color: Colors.white54,
-                                                size: 20,
-                                              ),
-                                            ),
-                                          ),
+                                          item.path.startsWith('http')
+                                              ? Image.network(
+                                                  item.path,
+                                                  fit: BoxFit.cover,
+                                                  errorBuilder: (_, __, ___) =>
+                                                      Container(
+                                                    color:
+                                                        const Color(0xFF1E293B),
+                                                    alignment: Alignment.center,
+                                                    child: Icon(
+                                                      item.isVideo
+                                                          ? Icons
+                                                              .videocam_outlined
+                                                          : Icons
+                                                              .image_outlined,
+                                                      color: Colors.white54,
+                                                      size: 20,
+                                                    ),
+                                                  ),
+                                                )
+                                              : (item.path.startsWith('assets/')
+                                                  ? Image.asset(
+                                                      item.path,
+                                                      fit: BoxFit.cover,
+                                                      errorBuilder:
+                                                          (_, __, ___) =>
+                                                              Container(
+                                                        color: const Color(
+                                                            0xFF1E293B),
+                                                        alignment:
+                                                            Alignment.center,
+                                                        child: Icon(
+                                                          item.isVideo
+                                                              ? Icons
+                                                                  .videocam_outlined
+                                                              : Icons
+                                                                  .image_outlined,
+                                                          color: Colors.white54,
+                                                          size: 20,
+                                                        ),
+                                                      ),
+                                                    )
+                                                  : Image.file(
+                                                      File(item.path),
+                                                      fit: BoxFit.cover,
+                                                      errorBuilder:
+                                                          (_, __, ___) =>
+                                                              Container(
+                                                        color: const Color(
+                                                            0xFF1E293B),
+                                                        alignment:
+                                                            Alignment.center,
+                                                        child: Icon(
+                                                          item.isVideo
+                                                              ? Icons
+                                                                  .videocam_outlined
+                                                              : Icons
+                                                                  .image_outlined,
+                                                          color: Colors.white54,
+                                                          size: 20,
+                                                        ),
+                                                      ),
+                                                    )),
                                           if (item.isVideo)
                                             Container(
                                               color: Colors.black.withValues(

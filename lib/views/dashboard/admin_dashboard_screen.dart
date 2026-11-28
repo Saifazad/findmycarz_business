@@ -13,6 +13,7 @@ import '../widgets/stat_metric_card.dart';
 import '../widgets/loan_pipeline_card.dart';
 import '../leads/leads_list_screen.dart';
 import '../leads/insurance_leads_screen.dart';
+import '../leads/loan_leads_cards_screen.dart';
 import '../contact/contact_screen.dart';
 import '../cars/add_car_screen.dart';
 import '../profile/admin_profile_screen.dart';
@@ -48,6 +49,18 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       context,
       MaterialPageRoute(
         builder: (_) => LeadsListScreen(initialType: initialType),
+      ),
+    );
+  }
+
+  void _navigateToLeadCards(String initialType, {bool loggedInOnly = false}) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => LoanLeadsCardsScreen(
+          initialType: initialType,
+          loggedInOnly: loggedInOnly,
+        ),
       ),
     );
   }
@@ -810,8 +823,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 stats: stats.usedCarLoans,
                 isDarkMode: _isDarkMode,
                 onTap: () => _navigateToLeads("Used Car Loan"),
-                onViewLoggedIn: () => _navigateToLeads("Used Car Loan"),
-                onAllLeads: () => _navigateToLeads("Used Car Loan"),
+                onViewLoggedIn: () =>
+                    _navigateToLeadCards("Used Car Loan", loggedInOnly: true),
+                onAllLeads: () => _navigateToLeadCards("Used Car Loan"),
               ),
               LoanPipelineCard(
                 title: "New Car Loan",
@@ -820,8 +834,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 stats: stats.newCarLoans,
                 isDarkMode: _isDarkMode,
                 onTap: () => _navigateToLeads("New Car Loan"),
-                onViewLoggedIn: () => _navigateToLeads("New Car Loan"),
-                onAllLeads: () => _navigateToLeads("New Car Loan"),
+                onViewLoggedIn: () =>
+                    _navigateToLeadCards("New Car Loan", loggedInOnly: true),
+                onAllLeads: () => _navigateToLeadCards("New Car Loan"),
               ),
               LoanPipelineCard(
                 title: "BT & Top-Up Loan",
@@ -830,8 +845,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 stats: stats.btTopupLoans,
                 isDarkMode: _isDarkMode,
                 onTap: () => _navigateToLeads("BT & Top-Up Loan"),
-                onViewLoggedIn: () => _navigateToLeads("BT & Top-Up Loan"),
-                onAllLeads: () => _navigateToLeads("BT & Top-Up Loan"),
+                onViewLoggedIn: () => _navigateToLeadCards("BT & Top-Up Loan",
+                    loggedInOnly: true),
+                onAllLeads: () => _navigateToLeadCards("BT & Top-Up Loan"),
               ),
               LoanPipelineCard(
                 title: "Car Loan Refinance",
@@ -840,8 +856,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 stats: stats.refinanceLoans,
                 isDarkMode: _isDarkMode,
                 onTap: () => _navigateToLeads("Refinance"),
-                onViewLoggedIn: () => _navigateToLeads("Refinance"),
-                onAllLeads: () => _navigateToLeads("Refinance"),
+                onViewLoggedIn: () =>
+                    _navigateToLeadCards("Refinance", loggedInOnly: true),
+                onAllLeads: () => _navigateToLeadCards("Refinance"),
               ),
               LoanPipelineCard(
                 title: "Personal Loan",
@@ -850,8 +867,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 stats: stats.personalLoans,
                 isDarkMode: _isDarkMode,
                 onTap: () => _navigateToLeads("Personal Loan"),
-                onViewLoggedIn: () => _navigateToLeads("Personal Loan"),
-                onAllLeads: () => _navigateToLeads("Personal Loan"),
+                onViewLoggedIn: () =>
+                    _navigateToLeadCards("Personal Loan", loggedInOnly: true),
+                onAllLeads: () => _navigateToLeadCards("Personal Loan"),
               ),
               LoanPipelineCard(
                 title: "Business Loan",
@@ -860,8 +878,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 stats: stats.businessLoans,
                 isDarkMode: _isDarkMode,
                 onTap: () => _navigateToLeads("Business Loan"),
-                onViewLoggedIn: () => _navigateToLeads("Business Loan"),
-                onAllLeads: () => _navigateToLeads("Business Loan"),
+                onViewLoggedIn: () =>
+                    _navigateToLeadCards("Business Loan", loggedInOnly: true),
+                onAllLeads: () => _navigateToLeadCards("Business Loan"),
               ),
               LoanPipelineCard(
                 title: "Home Loan",
@@ -870,8 +889,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 stats: stats.homeLoans,
                 isDarkMode: _isDarkMode,
                 onTap: () => _navigateToLeads("Home Loan"),
-                onViewLoggedIn: () => _navigateToLeads("Home Loan"),
-                onAllLeads: () => _navigateToLeads("Home Loan"),
+                onViewLoggedIn: () =>
+                    _navigateToLeadCards("Home Loan", loggedInOnly: true),
+                onAllLeads: () => _navigateToLeadCards("Home Loan"),
               ),
               LoanPipelineCard(
                 title: "Loan Against Property",
@@ -880,8 +900,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 stats: stats.lapLoans,
                 isDarkMode: _isDarkMode,
                 onTap: () => _navigateToLeads("Loan Against Property"),
-                onViewLoggedIn: () => _navigateToLeads("Loan Against Property"),
-                onAllLeads: () => _navigateToLeads("Loan Against Property"),
+                onViewLoggedIn: () => _navigateToLeadCards(
+                    "Loan Against Property",
+                    loggedInOnly: true),
+                onAllLeads: () =>
+                    _navigateToLeadCards("Loan Against Property"),
               ),
               const SizedBox(height: 24),
 
