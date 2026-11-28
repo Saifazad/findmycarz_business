@@ -311,7 +311,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           IconButton(
             tooltip: _isDarkMode ? "Light Mode" : "Dark Mode",
             icon: Icon(
-              _isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_outlined,
+              _isDarkMode ? Icons.dark_mode_outlined : Icons.light_mode_rounded,
               color: _isDarkMode ? const Color(0xFFFBBF24) : Colors.black87,
             ),
             onPressed: () {

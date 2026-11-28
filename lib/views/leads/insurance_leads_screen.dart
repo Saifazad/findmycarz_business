@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../models/insurance_lead_model.dart';
 import '../../viewmodels/leads_viewmodel.dart';
+import '../../viewmodels/theme_viewmodel.dart';
 import '../widgets/crm_drawer.dart';
 import '../widgets/crm_detail_dialog.dart';
 import '../widgets/custom_back_button.dart';
@@ -18,7 +19,7 @@ class InsuranceLeadsScreen extends StatefulWidget {
 }
 
 class _InsuranceLeadsScreenState extends State<InsuranceLeadsScreen> {
-  bool _isDarkMode = false;
+  bool get _isDarkMode => context.watch<ThemeViewModel>().isDarkMode;
   final int _entriesPerPage = 20;
   String _searchQuery = "";
   bool _selectAll = false;

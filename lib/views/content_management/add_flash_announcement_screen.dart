@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
+import '../../viewmodels/theme_viewmodel.dart';
 import '../widgets/custom_back_button.dart';
 import '../widgets/admin_profile_avatar.dart';
 import 'flash_news_screen.dart';
@@ -17,7 +19,7 @@ class AddFlashAnnouncementScreen extends StatefulWidget {
 
 class _AddFlashAnnouncementScreenState
     extends State<AddFlashAnnouncementScreen> {
-  bool _isDarkMode = false;
+  bool get _isDarkMode => context.watch<ThemeViewModel>().isDarkMode;
 
   late TextEditingController _titleController;
   late TextEditingController _urlController;

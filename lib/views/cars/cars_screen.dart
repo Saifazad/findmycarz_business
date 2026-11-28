@@ -6,6 +6,7 @@ import '../../core/constants/api_config.dart';
 import '../../core/theme/app_colors.dart';
 import '../../models/inventory_vehicle_model.dart';
 import '../../viewmodels/inventory_viewmodel.dart';
+import '../../viewmodels/theme_viewmodel.dart';
 import '../widgets/crm_drawer.dart';
 import '../widgets/custom_back_button.dart';
 import '../widgets/admin_profile_avatar.dart';
@@ -26,7 +27,7 @@ class CarsScreen extends StatefulWidget {
 }
 
 class _CarsScreenState extends State<CarsScreen> {
-  bool _isDarkMode = false;
+  bool get _isDarkMode => context.watch<ThemeViewModel>().isDarkMode;
   String _activeTab = "All Cars"; // "All Cars", "New Cars", "Used Cars"
   final int _entriesPerPage = 10;
   String _searchQuery = "";
