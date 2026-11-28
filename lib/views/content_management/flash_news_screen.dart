@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../models/flash_news_item_model.dart';
 import '../../viewmodels/cms_viewmodel.dart';
+import '../../viewmodels/theme_viewmodel.dart';
 import '../widgets/crm_drawer.dart';
 import '../widgets/custom_back_button.dart';
 import '../widgets/admin_profile_avatar.dart';
@@ -19,7 +20,7 @@ class FlashNewsScreen extends StatefulWidget {
 }
 
 class _FlashNewsScreenState extends State<FlashNewsScreen> {
-  bool _isDarkMode = false;
+  bool get _isDarkMode => context.watch<ThemeViewModel>().isDarkMode;
 
   @override
   void initState() {
